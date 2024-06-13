@@ -182,40 +182,60 @@ THcLADHodoPlane::~THcLADHodoPlane() {
   delete[] fNegThresh;
   fNegThresh = 0;
 
-  /*
+  delete[] fPosCenter;
+  fPosCenter = 0;
 
-  delete [] fPosCenter; fPosCenter = 0;
+  // delete[] fHodoPosMinPh;
+  // fHodoPosMinPh = NULL;
+  // delete[] fHodoNegMinPh;
+  // fHodoNegMinPh = NULL;
+  // delete[] fHodoPosPhcCoeff;
+  // fHodoPosPhcCoeff = NULL;
+  // delete[] fHodoNegPhcCoeff;
+  // fHodoNegPhcCoeff = NULL;
+  // delete[] fHodoPosTimeOffset;
+  // fHodoPosTimeOffset = NULL;
+  // delete[] fHodoNegTimeOffset;
+  // fHodoNegTimeOffset = NULL;
+  delete[] fHodoPosInvAdcOffset;
+  fHodoPosInvAdcOffset = NULL;
+  delete[] fHodoNegInvAdcOffset;
+  fHodoNegInvAdcOffset = NULL;
+  delete[] fHodoPosInvAdcLinear;
+  fHodoPosInvAdcLinear = NULL;
+  delete[] fHodoPosAdcTimeWindowMax;
+  fHodoPosAdcTimeWindowMax = NULL;
+  delete[] fHodoPosAdcTimeWindowMin;
+  fHodoPosAdcTimeWindowMin = NULL;
+  delete[] fHodoNegAdcTimeWindowMax;
+  fHodoNegAdcTimeWindowMax = NULL;
+  delete[] fHodoNegAdcTimeWindowMin;
+  fHodoNegAdcTimeWindowMin = NULL;
+  delete[] fHodoNegInvAdcLinear;
+  fHodoNegInvAdcLinear = NULL;
+  delete[] fHodoPosInvAdcAdc;
+  fHodoPosInvAdcAdc = NULL;
+  delete[] fHodoNegInvAdcAdc;
+  fHodoNegInvAdcAdc = NULL;
+  delete[] fHodoVelFit;
+  fHodoVelFit = NULL;
+  delete[] fHodoCableFit;
+  fHodoCableFit = NULL;
+  delete[] fHodo_LCoeff;
+  fHodo_LCoeff = NULL;
+  delete[] fHodoPos_c1;
+  fHodoPos_c1 = NULL;
+  delete[] fHodoNeg_c1;
+  fHodoNeg_c1 = NULL;
+  delete[] fHodoPos_c2;
+  fHodoPos_c2 = NULL;
+  delete[] fHodoNeg_c2;
+  fHodoNeg_c2 = NULL;
 
-  delete [] fHodoPosMinPh; fHodoPosMinPh = NULL;
-  delete [] fHodoNegMinPh; fHodoNegMinPh = NULL;
-  delete [] fHodoPosPhcCoeff; fHodoPosPhcCoeff = NULL;
-  delete [] fHodoNegPhcCoeff; fHodoNegPhcCoeff = NULL;
-  delete [] fHodoPosTimeOffset; fHodoPosTimeOffset = NULL;
-  delete [] fHodoNegTimeOffset; fHodoNegTimeOffset = NULL;
-  delete [] fHodoPosInvAdcOffset; fHodoPosInvAdcOffset = NULL;
-  delete [] fHodoNegInvAdcOffset; fHodoNegInvAdcOffset = NULL;
-  delete [] fHodoPosInvAdcLinear; fHodoPosInvAdcLinear = NULL;
-  delete [] fHodoNegInvAdcLinear; fHodoNegInvAdcLinear = NULL;
-  delete [] fHodoPosAdcTimeWindowMax; fHodoPosAdcTimeWindowMax = NULL;
-  delete [] fHodoPosAdcTimeWindowMin; fHodoPosAdcTimeWindowMin = NULL;
-  delete [] fHodoNegAdcTimeWindowMax; fHodoNegAdcTimeWindowMax = NULL;
-  delete [] fHodoNegAdcTimeWindowMin; fHodoNegAdcTimeWindowMin = NULL;
-  delete [] fHodoNegInvAdcLinear; fHodoNegInvAdcLinear = NULL;
-  delete [] fHodoPosInvAdcAdc; fHodoPosInvAdcAdc = NULL;
-  delete [] fHodoNegInvAdcAdc; fHodoNegInvAdcAdc = NULL;
-  delete [] fHodoVelFit;                 fHodoVelFit = NULL;
-  delete [] fHodoCableFit;               fHodoCableFit = NULL;
-  delete [] fHodo_LCoeff;                fHodo_LCoeff = NULL;
-  delete [] fHodoPos_c1;                 fHodoPos_c1 = NULL;
-  delete [] fHodoNeg_c1;                 fHodoNeg_c1 = NULL;
-  delete [] fHodoPos_c2;                 fHodoPos_c2 = NULL;
-  delete [] fHodoNeg_c2;                 fHodoNeg_c2 = NULL;
-
-
-  delete [] fHodoVelLight; fHodoVelLight = NULL;
-  delete [] fHodoSigma; fHodoSigma = NULL;
-
-  */
+  delete[] fHodoVelLight;
+  fHodoVelLight = NULL;
+  // delete[] fHodoSigma;
+  // fHodoSigma = NULL;
 }
 
 //_______________________________________________________________________________________
@@ -352,20 +372,19 @@ void THcLADHodoPlane::Clear(Option_t *opt) {
     fGoodNegAdcTdcDiffTime.at(ielem) = kBig;
   }
 
-  /*
-  //Clear Good TDC Variables
+  // Clear Good TDC Variables
   for (UInt_t ielem = 0; ielem < fGoodPosTdcTimeUnCorr.size(); ielem++) {
-    fGoodPosTdcTimeUnCorr.at(ielem)    = kBig;
-    fGoodPosTdcTimeCorr.at(ielem)      = kBig;
-    fGoodPosTdcTimeTOFCorr.at(ielem)   = kBig;
-    fGoodPosTdcTimeWalkCorr.at(ielem)  = kBig;
+    fGoodPosTdcTimeUnCorr.at(ielem) = kBig;
+    fGoodPosTdcTimeCorr.at(ielem) = kBig;
+    fGoodPosTdcTimeTOFCorr.at(ielem) = kBig;
+    fGoodPosTdcTimeWalkCorr.at(ielem) = kBig;
   }
 
   for (UInt_t ielem = 0; ielem < fGoodNegTdcTimeUnCorr.size(); ielem++) {
-    fGoodNegTdcTimeUnCorr.at(ielem)    = kBig;
-    fGoodNegTdcTimeCorr.at(ielem)      = kBig;
-    fGoodNegTdcTimeTOFCorr.at(ielem)   = kBig;
-    fGoodNegTdcTimeWalkCorr.at(ielem)  = kBig;
+    fGoodNegTdcTimeUnCorr.at(ielem) = kBig;
+    fGoodNegTdcTimeCorr.at(ielem) = kBig;
+    fGoodNegTdcTimeTOFCorr.at(ielem) = kBig;
+    fGoodNegTdcTimeWalkCorr.at(ielem) = kBig;
   }
 
   for (UInt_t ielem = 0; ielem < fGoodDiffDistTrack.size(); ielem++) {
@@ -378,7 +397,6 @@ void THcLADHodoPlane::Clear(Option_t *opt) {
   fScinXPos = kBig;
   fTrackXPosition = kBig;
   fTrackYPosition = kBig;
-  */
 }
 
 //_______________________________________________________________________________________
@@ -462,6 +480,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoNegPhcCoeff = new Double_t[fNelem];
   fHodoPosTimeOffset = new Double_t[fNelem];
   fHodoNegTimeOffset = new Double_t[fNelem];
+  */
   fHodoVelLight = new Double_t[fNelem];
   fHodoPosInvAdcOffset = new Double_t[fNelem];
   fHodoNegInvAdcOffset = new Double_t[fNelem];
@@ -469,7 +488,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoNegInvAdcLinear = new Double_t[fNelem];
   fHodoPosInvAdcAdc = new Double_t[fNelem];
   fHodoNegInvAdcAdc = new Double_t[fNelem];
-  fHodoSigma = new Double_t[fNelem];
+  // fHodoSigma = new Double_t[fNelem];
 
   //New Time-Walk Calibration Parameters
   fHodoVelFit=new Double_t [fNelem];
@@ -479,7 +498,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoNeg_c1=new Double_t [fNelem];
   fHodoPos_c2=new Double_t [fNelem];
   fHodoNeg_c2=new Double_t [fNelem];
-  */
+  
 
   for (Int_t j = 0; j < (Int_t)fNelem; j++) {
     Int_t index = parent->GetScinIndex(fPlaneNum - 1, j);
@@ -487,13 +506,13 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     fHodoPosAdcTimeWindowMax[j] = parent->GetHodoPosAdcTimeWindowMax(index);
     fHodoNegAdcTimeWindowMin[j] = parent->GetHodoNegAdcTimeWindowMin(index);
     fHodoNegAdcTimeWindowMax[j] = parent->GetHodoNegAdcTimeWindowMax(index);
-    /*
-    fHodoPosMinPh[j] = parent->GetHodoPosMinPh(index);
-    fHodoNegMinPh[j] = parent->GetHodoNegMinPh(index);
-    fHodoPosPhcCoeff[j] = parent->GetHodoPosPhcCoeff(index);
-    fHodoNegPhcCoeff[j] = parent->GetHodoNegPhcCoeff(index);
-    fHodoPosTimeOffset[j] = parent->GetHodoPosTimeOffset(index);
-    fHodoNegTimeOffset[j] = parent->GetHodoNegTimeOffset(index);
+    
+    // fHodoPosMinPh[j] = parent->GetHodoPosMinPh(index);
+    // fHodoNegMinPh[j] = parent->GetHodoNegMinPh(index);
+    // fHodoPosPhcCoeff[j] = parent->GetHodoPosPhcCoeff(index);
+    // fHodoNegPhcCoeff[j] = parent->GetHodoNegPhcCoeff(index);
+    // fHodoPosTimeOffset[j] = parent->GetHodoPosTimeOffset(index);
+    // fHodoNegTimeOffset[j] = parent->GetHodoNegTimeOffset(index);
     fHodoPosInvAdcOffset[j] = parent->GetHodoPosInvAdcOffset(index);
     fHodoNegInvAdcOffset[j] = parent->GetHodoNegInvAdcOffset(index);
     fHodoPosInvAdcLinear[j] = parent->GetHodoPosInvAdcLinear(index);
@@ -510,10 +529,10 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     fHodoNeg_c1[j] = parent->GetHodoNeg_c1(index);
     fHodoPos_c2[j] = parent->GetHodoPos_c2(index);
     fHodoNeg_c2[j] = parent->GetHodoNeg_c2(index);
-    Double_t possigma = parent->GetHodoPosSigma(index);
-    Double_t negsigma = parent->GetHodoNegSigma(index);
-    fHodoSigma[j] = TMath::Sqrt(possigma*possigma+negsigma*negsigma)/2.0;
-    */
+    // Double_t possigma = parent->GetHodoPosSigma(index);
+    // Double_t negsigma = parent->GetHodoNegSigma(index);
+    // fHodoSigma[j] = TMath::Sqrt(possigma*possigma+negsigma*negsigma)/2.0;
+    
   }
 
   //  fTdc_Thrs = parent->GetTDCThrs();
@@ -543,17 +562,15 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fGoodPosAdcTdcDiffTime = vector<Double_t>(fNelem, 0.0);
   fGoodNegAdcTdcDiffTime = vector<Double_t>(fNelem, 0.0);
 
-  /*
-  fGoodPosTdcTimeUnCorr  = vector<Double_t> (fNelem, 0.0);
-  fGoodNegTdcTimeUnCorr  = vector<Double_t> (fNelem, 0.0);
-  fGoodPosTdcTimeCorr    = vector<Double_t> (fNelem, 0.0);
-  fGoodNegTdcTimeCorr    = vector<Double_t> (fNelem, 0.0);
-  fGoodPosTdcTimeTOFCorr = vector<Double_t> (fNelem, 0.0);
-  fGoodNegTdcTimeTOFCorr = vector<Double_t> (fNelem, 0.0);
-  fGoodPosTdcTimeWalkCorr = vector<Double_t> (fNelem, 0.0);
-  fGoodNegTdcTimeWalkCorr = vector<Double_t> (fNelem, 0.0);
-  fGoodDiffDistTrack      = vector<Double_t> (fNelem, 0.0);
-  */
+  fGoodPosTdcTimeUnCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodNegTdcTimeUnCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodPosTdcTimeCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodNegTdcTimeCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodPosTdcTimeTOFCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodNegTdcTimeTOFCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodPosTdcTimeWalkCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodNegTdcTimeWalkCorr = vector<Double_t>(fNelem, 0.0);
+  fGoodDiffDistTrack = vector<Double_t>(fNelem, 0.0);
 
   return 0;
 }
@@ -1320,9 +1337,152 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPosADCtime(adctime_pos);
       ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetNegADCtime(adctime_neg);
 
-      fNScinHits++;
-    } // if valid tdc/adc at least in one end
 
+      // Calculate Time-Walk Correction
+
+      // Define GoodTdcUnCorrTime
+      if (btdcraw_pos && badcraw_pos) {
+        fGoodPosTdcTimeUnCorr.at(padnum - 1) = tdc_pos * fScinTdcToTime;
+        tw_corr_pos = 1. / pow(adcamp_pos / fTdc_Thrs, fHodoPos_c2[padnum - 1]) -
+                      1. / pow(200. / fTdc_Thrs, fHodoPos_c2[padnum - 1]);
+
+        fGoodPosTdcTimeWalkCorr.at(padnum - 1) = tdc_pos * fScinTdcToTime - tw_corr_pos;
+      }
+      if (btdcraw_neg && badcraw_neg) {
+        fGoodNegTdcTimeUnCorr.at(padnum - 1) = tdc_neg * fScinTdcToTime;
+
+        // tw_corr_neg = fHodoNeg_c1[padnum-1]/pow(adcamp_neg/fTdc_Thrs,fHodoNeg_c2[padnum-1]) -
+        // fHodoNeg_c1[padnum-1]/pow(200./fTdc_Thrs, fHodoNeg_c2[padnum-1]);
+
+        tw_corr_neg = 1. / pow(adcamp_neg / fTdc_Thrs, fHodoNeg_c2[padnum - 1]) -
+                      1. / pow(200. / fTdc_Thrs, fHodoNeg_c2[padnum - 1]);
+
+        fGoodNegTdcTimeWalkCorr.at(padnum - 1) = tdc_neg * fScinTdcToTime - tw_corr_neg;
+      }
+
+      // Do corrections if valid TDC on both ends of bar
+      if ((btdcraw_pos && btdcraw_neg) && (badcraw_pos && badcraw_neg)) {
+        // Do the pulse height correction to the time.  (Position dependent corrections later)
+        Double_t adc_timec_pos = adctime_pos;
+        Double_t adc_timec_neg = adctime_neg;
+        Double_t timec_pos, timec_neg;
+        if (fTofUsingInvAdc) {
+          timec_pos = tdc_pos * fScinTdcToTime - fHodoPosInvAdcOffset[index] -
+                      fHodoPosInvAdcAdc[index] / TMath::Sqrt(TMath::Max(20.0 * .020, adcint_pos));
+          timec_neg = tdc_neg * fScinTdcToTime - fHodoNegInvAdcOffset[index] -
+                      fHodoNegInvAdcAdc[index] / TMath::Sqrt(TMath::Max(20.0 * .020, adcint_neg));
+        } else { // FADC style
+          timec_pos = tdc_pos * fScinTdcToTime - tw_corr_pos + fHodo_LCoeff[index];
+          timec_neg = tdc_neg * fScinTdcToTime - tw_corr_neg - 2 * fHodoCableFit[index] + fHodo_LCoeff[index];
+          adc_timec_pos = adc_timec_pos - tw_corr_pos + fHodo_LCoeff[index];
+          adc_timec_neg = adc_timec_neg - tw_corr_neg - 2 * fHodoCableFit[index] + fHodo_LCoeff[index];
+        }
+
+        Double_t TWCorrDiff =
+            fGoodNegTdcTimeWalkCorr.at(padnum - 1) - 2 * fHodoCableFit[index] - fGoodPosTdcTimeWalkCorr.at(padnum - 1);
+
+        Double_t fHitDistCorr = 0.5 * TWCorrDiff * fHodoVelFit[index];
+
+        fGoodDiffDistTrack.at(index) = fHitDistCorr;
+
+        Double_t vellight = fHodoVelLight[index]; // read from hodo_cuts.param, where it is set fixed to 15.0
+
+        Double_t dist_from_center = 0.5 * (timec_neg - timec_pos) * vellight;
+        Double_t scint_center = 0.5 * (fPosLeft + fPosRight);
+        Double_t hit_position = scint_center + dist_from_center;
+        hit_position = TMath::Min(hit_position, fPosLeft);
+        hit_position = TMath::Max(hit_position, fPosRight);
+        Double_t scin_corrected_time, postime, negtime;
+        Double_t adc_postime = adc_timec_pos;
+        Double_t adc_negtime = adc_timec_neg;
+        if (fTofUsingInvAdc) {
+          timec_pos -= (fPosLeft - hit_position) / fHodoPosInvAdcLinear[index];
+          timec_neg -= (hit_position - fPosRight) / fHodoNegInvAdcLinear[index];
+          scin_corrected_time = 0.5 * (timec_pos + timec_neg);
+          if (fCosmicFlag) {
+            postime = timec_pos + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            negtime = timec_neg + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+          } else {
+            postime = timec_pos - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            negtime = timec_neg - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+          }
+        } else {
+          scin_corrected_time = 0.5 * (timec_neg + timec_pos);
+          timec_pos = scin_corrected_time;
+          timec_neg = scin_corrected_time;
+          Double_t adc_time_corrected = 0.5 * (adc_timec_pos + adc_timec_neg);
+          if (fCosmicFlag) {
+            postime = timec_pos + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            negtime = timec_neg + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            adc_postime = adc_time_corrected + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            adc_negtime = adc_time_corrected + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+          } else {
+            postime = timec_pos - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            negtime = timec_neg - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            adc_postime = adc_time_corrected - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+            adc_negtime = adc_time_corrected - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+          }
+        }
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPaddleCenter(fPosCenter[index]);
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))
+            ->SetCorrectedTimes(timec_pos, timec_neg, postime, negtime, scin_corrected_time);
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPosADCpeak(adcamp_pos);
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetNegADCpeak(adcamp_neg);
+        // ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPosADCCorrtime(adc_postime);
+        // ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetNegADCCorrtime(adc_negtime);
+        // ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition(fHitDistCorr); //
+
+        fGoodPosTdcTimeCorr.at(padnum - 1) = timec_pos;
+        fGoodNegTdcTimeCorr.at(padnum - 1) = timec_neg;
+        fGoodPosTdcTimeTOFCorr.at(padnum - 1) = postime;
+        fGoodNegTdcTimeTOFCorr.at(padnum - 1) = negtime;
+      } else {
+        Double_t timec_pos, timec_neg;
+        timec_pos = tdc_pos;
+        timec_neg = tdc_neg;
+        if (btdcraw_pos && badcraw_pos) {
+          if (fTofUsingInvAdc) {
+            timec_pos = tdc_pos * fScinTdcToTime - fHodoPosInvAdcOffset[index] -
+                        fHodoPosInvAdcAdc[index] / TMath::Sqrt(TMath::Max(20.0 * .020, adcint_pos));
+          } else { // FADC style
+            timec_pos = tdc_pos * fScinTdcToTime - tw_corr_pos + fHodo_LCoeff[index];
+          }
+        }
+        if (btdcraw_neg && badcraw_neg) {
+          if (fTofUsingInvAdc) {
+            timec_neg = tdc_neg * fScinTdcToTime - fHodoNegInvAdcOffset[index] -
+                        fHodoNegInvAdcAdc[index] / TMath::Sqrt(TMath::Max(20.0 * .020, adcint_neg));
+          } else { // FADC style
+            timec_neg = tdc_neg * fScinTdcToTime - tw_corr_neg - 2 * fHodoCableFit[index] + fHodo_LCoeff[index];
+          }
+        }
+        Double_t adc_neg = 0., adc_pos = 0.;
+        if (badcraw_neg)
+          adc_neg = adcamp_neg;
+        if (badcraw_pos)
+          adc_pos = adcamp_pos;
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPaddleCenter(fPosCenter[index]);
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCorrectedTimes(timec_pos, timec_neg);
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetNegADCpeak(adc_neg); // needed for new TWCOrr
+        ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPosADCpeak(adc_pos); // needed for new TWCOrr
+        if (badcraw_neg) {
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetNegADCtime(adctime_neg);
+        } else {
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetNegADCtime(-999.);
+        }
+        if (badcraw_pos) {
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPosADCtime(adctime_pos);
+        } else {
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPosADCtime(-999.);
+        }
+        // ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition(kBig); //
+        fGoodPosTdcTimeCorr.at(padnum - 1) = timec_pos;
+        fGoodNegTdcTimeCorr.at(padnum - 1) = timec_neg;
+        fGoodPosTdcTimeTOFCorr.at(padnum - 1) = kBig;
+        fGoodNegTdcTimeTOFCorr.at(padnum - 1) = kBig;
+      }
+      fNScinHits++;
+    }
     ihit++;
   } // while loop
 
@@ -1330,7 +1490,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     cout << "THcScintillatorPlane::ProcessHits " << fPlaneNum << " " << nexthit << "/" << nrawhits << endl;
     cout << " Ref problem end *******" << endl;
   }
-
   return (ihit);
 }
 

@@ -1,56 +1,89 @@
-#include "THcSignalHit.h"
-#include "THcLADSpectrometer.h"
-#include "THcHitList.h"
 #include "THcLADHodoscope.h"
+#include "THaCutList.h"
 #include "THaEvData.h"
 #include "THaGlobals.h"
-#include "THaCutList.h"
+#include "THcDetectorMap.h"
+#include "THcGlobals.h"
+#include "THcHitList.h"
+#include "THcLADSpectrometer.h"
+#include "THcParmList.h"
+#include "THcSignalHit.h"
 #include "VarDef.h"
 #include "VarType.h"
-#include "THcGlobals.h"
-#include "THcParmList.h"
-#include "THcDetectorMap.h"
 
 //_________________________________________________________________
-THcLADHodoscope::THcLADHodoscope( const char* name, const char* description,
-				  THaApparatus* apparatus) :
-  THaNonTrackingDetector(name, description, apparatus)
-{
+THcLADHodoscope::THcLADHodoscope(const char *name, const char *description, THaApparatus *apparatus)
+    : THaNonTrackingDetector(name, description, apparatus) {
   // Constructor
   fNPlanes = 1;
-
 }
 
 //_________________________________________________________________
-THcLADHodoscope::~THcLADHodoscope()
-{
+THcLADHodoscope::~THcLADHodoscope() {
   // Destructor
 
-  for(int ip = 0; ip < fNPlanes; ip++)
+  for (int ip = 0; ip < fNPlanes; ip++)
     delete fPlanes[ip];
-  delete [] fPlanes;
+  delete[] fPlanes;
 
-  delete [] fNPaddle;      fNPaddle      = NULL;
-  delete [] fTdcOffset;    fTdcOffset    = NULL;
-  delete [] fAdcTdcOffset; fAdcTdcOffset = NULL;
-  delete [] fHodoSlop;     fHodoSlop     = NULL;
+  delete[] fNPaddle;
+  fNPaddle = NULL;
+  delete[] fTdcOffset;
+  fTdcOffset = NULL;
+  delete[] fAdcTdcOffset;
+  fAdcTdcOffset = NULL;
+  delete[] fHodoSlop;
+  fHodoSlop = NULL;
 
-  delete [] fHodoNegAdcTimeWindowMin; fHodoNegAdcTimeWindowMin = NULL;
-  delete [] fHodoNegAdcTimeWindowMax; fHodoNegAdcTimeWindowMax = NULL;
-  delete [] fHodoPosAdcTimeWindowMin; fHodoPosAdcTimeWindowMin = NULL;
-  delete [] fHodoPosAdcTimeWindowMax; fHodoPosAdcTimeWindowMax = NULL;
+  delete[] fHodoNegAdcTimeWindowMin;
+  fHodoNegAdcTimeWindowMin = NULL;
+  delete[] fHodoNegAdcTimeWindowMax;
+  fHodoNegAdcTimeWindowMax = NULL;
+  delete[] fHodoPosAdcTimeWindowMin;
+  fHodoPosAdcTimeWindowMin = NULL;
+  delete[] fHodoPosAdcTimeWindowMax;
+  fHodoPosAdcTimeWindowMax = NULL;
 
+  delete[] fPlaneNames;
+  fPlaneNames = NULL;
+
+  delete[] fHodoVelLight;
+  fHodoVelLight = NULL;
+  delete[] fHodoPosInvAdcOffset;
+  fHodoPosInvAdcOffset = NULL;
+  delete[] fHodoNegInvAdcOffset;
+  fHodoNegInvAdcOffset = NULL;
+  delete[] fHodoPosInvAdcLinear;
+  fHodoPosInvAdcLinear = NULL;
+  delete[] fHodoNegInvAdcLinear;
+  fHodoNegInvAdcLinear = NULL;
+  delete[] fHodoPosInvAdcAdc;
+  fHodoPosInvAdcAdc = NULL;
+  delete[] fHodoNegInvAdcAdc;
+  fHodoNegInvAdcAdc = NULL;
+
+  // Time walk
+  delete[] fHodoVelFit;
+  fHodoVelFit = NULL;
+  delete[] fHodoCableFit;
+  fHodoCableFit = NULL;
+  delete[] fHodo_LCoeff;
+  fHodo_LCoeff = NULL;
+  delete[] fHodoPos_c1;
+  fHodoPos_c1 = NULL;
+  delete[] fHodoNeg_c1;
+  fHodoNeg_c1 = NULL;
+  delete[] fHodoPos_c2;
+  fHodoPos_c2 = NULL;
+  delete[] fHodoNeg_c2;
+  fHodoNeg_c2 = NULL;
 }
 
 //_________________________________________________________________
-void THcLADHodoscope::Clear( Option_t* opt )
-{
-
-}
+void THcLADHodoscope::Clear(Option_t *opt) {}
 //_________________________________________________________________
 
-void THcLADHodoscope::Setup(const char* name, const char* description)
-{
+void THcLADHodoscope::Setup(const char *name, const char *description) {
   /**
      Create the scintillator plane objects for the hodoscope.
 
@@ -58,55 +91,55 @@ void THcLADHodoscope::Setup(const char* name, const char* description)
      planes and their names.
 
   */
-  if( IsZombie()) return;
+  if (IsZombie())
+    return;
 
   // fDebug = 1;  // Keep this at one while we're working on the code
 
   char prefix[2];
 
-  prefix[0]=tolower(GetApparatus()->GetName()[0]);
-  prefix[1]='\0';
+  prefix[0] = tolower(GetApparatus()->GetName()[0]);
+  prefix[1] = '\0';
 
   TString temp(prefix[0]);
-  
-  TString histname=temp+"_timehist";
-  
+
+  TString histname = temp + "_timehist";
+
   string planenamelist;
-  DBRequest listextra[]={
-    {"hodo_num_planes", &fNPlanes, kInt},
-    {"hodo_plane_names",&planenamelist, kString},
-    {"hodo_tdcrefcut", &fTDC_RefTimeCut, kInt, 0, 1},
-    {"hodo_adcrefcut", &fADC_RefTimeCut, kInt, 0, 1},
-    {0}
-  };
-  //fNPlanes = 4; 		// Default if not defined
-  fTDC_RefTimeCut = 0;		// Minimum allowed reference times
+  DBRequest listextra[] = {{"hodo_num_planes", &fNPlanes, kInt},
+                           {"hodo_plane_names", &planenamelist, kString},
+                           {"hodo_tdcrefcut", &fTDC_RefTimeCut, kInt, 0, 1},
+                           {"hodo_adcrefcut", &fADC_RefTimeCut, kInt, 0, 1},
+                           {0}};
+  // fNPlanes = 4; 		// Default if not defined
+  fTDC_RefTimeCut = 0; // Minimum allowed reference times
   fADC_RefTimeCut = 0;
-  gHcParms->LoadParmValues((DBRequest*)&listextra,prefix);
+  gHcParms->LoadParmValues((DBRequest *)&listextra, prefix);
 
   cout << "Plane Name List : " << planenamelist << endl;
 
   vector<string> plane_names = Podd::vsplit(planenamelist);
   // Plane names
-  if(plane_names.size() != (UInt_t) fNPlanes) {
-    cout << "ERROR: Number of planes " << fNPlanes << " doesn't agree with number of plane names " << plane_names.size() << endl;
+  if (plane_names.size() != (UInt_t)fNPlanes) {
+    cout << "ERROR: Number of planes " << fNPlanes << " doesn't agree with number of plane names " << plane_names.size()
+         << endl;
     // Should quit.  Is there an official way to quit?
   }
 
-  fPlaneNames = new char* [fNPlanes];
-  for(Int_t i=0;i<fNPlanes;i++) {
-    fPlaneNames[i] = new char[plane_names[i].length()+1];
+  fPlaneNames = new char *[fNPlanes];
+  for (Int_t i = 0; i < fNPlanes; i++) {
+    fPlaneNames[i] = new char[plane_names[i].length() + 1];
     strcpy(fPlaneNames[i], plane_names[i].c_str());
   }
 
   // Probably shouldn't assume that description is defined
-  char* desc = new char[strlen(description)+100];
-  fPlanes = new THcLADHodoPlane* [fNPlanes];
-  for(Int_t i=0;i < fNPlanes;i++) {
+  char *desc = new char[strlen(description) + 100];
+  fPlanes    = new THcLADHodoPlane *[fNPlanes];
+  for (Int_t i = 0; i < fNPlanes; i++) {
     strcpy(desc, description);
     strcat(desc, " Plane ");
     strcat(desc, fPlaneNames[i]);
-    fPlanes[i] = new THcLADHodoPlane(fPlaneNames[i], desc, i+1, this); // Number planes starting from zero!!
+    fPlanes[i] = new THcLADHodoPlane(fPlaneNames[i], desc, i + 1, this); // Number planes starting from zero!!
     cout << "Created Scintillator Plane " << fPlaneNames[i] << ", " << desc << endl;
   }
   // // Save the nominal particle mass
@@ -114,20 +147,18 @@ void THcLADHodoscope::Setup(const char* name, const char* description)
   // fPartMass = app->GetParticleMass();
   // fBetaNominal = app->GetBetaAtPcentral();
 
-
-  delete [] desc;
+  delete[] desc;
 }
 
 //_________________________________________________________________
-THaAnalysisObject::EStatus THcLADHodoscope::Init( const TDatime& date )
-{
+THaAnalysisObject::EStatus THcLADHodoscope::Init(const TDatime &date) {
   Setup(GetName(), GetTitle());
 
   char EngineDID[] = "xSCIN";
-  EngineDID[0] = toupper(GetApparatus()->GetName()[0]);
-  if( gHcDetectorMap->FillMap(fDetMap, EngineDID) < 0 ) {
-    static const char* const here = "Init()";
-    Error( Here(here), "Error filling detectormap for %s.", EngineDID );
+  EngineDID[0]     = toupper(GetApparatus()->GetName()[0]);
+  if (gHcDetectorMap->FillMap(fDetMap, EngineDID) < 0) {
+    static const char *const here = "Init()";
+    Error(Here(here), "Error filling detectormap for %s.", EngineDID);
     return kInitError;
   }
 
@@ -137,19 +168,17 @@ THaAnalysisObject::EStatus THcLADHodoscope::Init( const TDatime& date )
   // so that they can get the pointer to the hitlist.
   cout << " Hodo tdc ref time cut = " << fTDC_RefTimeCut << " " << fADC_RefTimeCut << endl;
 
-  InitHitList(fDetMap, "THcRawHodoHit", fDetMap->GetTotNumChan()+1,
-	      fTDC_RefTimeCut, fADC_RefTimeCut);
+  InitHitList(fDetMap, "THcRawHodoHit", fDetMap->GetTotNumChan() + 1, fTDC_RefTimeCut, fADC_RefTimeCut);
 
   EStatus status;
-  if( (status = THaNonTrackingDetector::Init( date )) )
+  if ((status = THaNonTrackingDetector::Init(date)))
     return fStatus = status;
-  
-  for(Int_t ip=0;ip<fNPlanes;ip++) {
-    if((status = fPlanes[ip]->Init( date ))) {
-      return fStatus=status;
+
+  for (Int_t ip = 0; ip < fNPlanes; ip++) {
+    if ((status = fPlanes[ip]->Init(date))) {
+      return fStatus = status;
     }
   }
-
 
   // fNScinHits     = new Int_t [fNPlanes];
   // fGoodPlaneTime = new Bool_t [fNPlanes];
@@ -168,120 +197,160 @@ THaAnalysisObject::EStatus THcLADHodoscope::Init( const TDatime& date )
   //   fScinHitPaddle.emplace_back(fNPaddle[ip], 0);
   // }
 
-  fPresentP = 0;
-  THaVar* vpresent = gHaVars->Find(Form("%s.present",GetApparatus()->GetName()));
-  if(vpresent) {
-    fPresentP = (Bool_t *) vpresent->GetValuePointer();
+  fPresentP        = 0;
+  THaVar *vpresent = gHaVars->Find(Form("%s.present", GetApparatus()->GetName()));
+  if (vpresent) {
+    fPresentP = (Bool_t *)vpresent->GetValuePointer();
   }
-  
+
   return kOK;
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::End(THaRunBase* run)
-{
+Int_t THcLADHodoscope::End(THaRunBase *run) {
   // Do we really need this function?
 
   return 0;
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::DefineVariables( EMode mode )
-{
-
-  return 0;
-
-}
+Int_t THcLADHodoscope::DefineVariables(EMode mode) { return 0; }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::ReadDatabase( const TDatime& date )
-{
+Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   cout << "THcLADHodoscope::ReadDatabase()" << endl;
   char prefix[2];
   prefix[0] = tolower(GetApparatus()->GetName()[0]); // "lad"
   prefix[1] = '\0';
 
-  // First, get # of planes
-  DBRequest list[] = {
-    {"hodo_num_planes", &fNPlanes, kInt},
-    {0}
-  };
-
-  gHcParms->LoadParmValues((DBRequest*)&list, prefix);
-
   // since we define each hodoscope as a separate detector
   // we will need to use the detector name to load parameters
   // for each detector -- to be updated
-  fNPaddle = new Int_t [fNPlanes];
-  for(int ip = 0; ip < fNPlanes; ip++)
-    {
-      DBRequest list2[] = {
-	{Form("hodo_%d_nr", ip),      &fNPaddle[ip], kInt},
-	{0}
-      };
+  fNPaddle = new Int_t[fNPlanes];
+  for (int ip = 0; ip < fNPlanes; ip++) {
+    DBRequest list2[] = {{Form("hodo_%d_nr", ip), &fNPaddle[ip], kInt}, {0}};
 
-      gHcParms->LoadParmValues((DBRequest*)&list2, prefix);
-    }
+    gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
+  }
 
   // for all planes
   fTdcOffset    = new Int_t[fNPlanes];
   fAdcTdcOffset = new Double_t[fNPlanes];
   fHodoSlop     = new Double_t[fNPlanes];
-  for(int ip = 0; ip < fNPlanes; ip++)
-    {
-      fTdcOffset[ip] = 0;
-      fAdcTdcOffset[ip] = 0;
-      fHodoSlop[ip] = 0;
-    }
+  for (int ip = 0; ip < fNPlanes; ip++) {
+    fTdcOffset[ip]    = 0;
+    fAdcTdcOffset[ip] = 0;
+    fHodoSlop[ip]     = 0;
+  }
 
   // for all elements
-  fMaxHodoScin = fNPaddle[0] * fNPlanes;
-  fHodoPosAdcTimeWindowMin = new Double_t [fMaxHodoScin];
-  fHodoPosAdcTimeWindowMax = new Double_t [fMaxHodoScin];
-  fHodoNegAdcTimeWindowMin = new Double_t [fMaxHodoScin];
-  fHodoNegAdcTimeWindowMax = new Double_t [fMaxHodoScin];
+  fMaxHodoScin             = fNPaddle[0] * fNPlanes;
+  fHodoPosAdcTimeWindowMin = new Double_t[fMaxHodoScin];
+  fHodoPosAdcTimeWindowMax = new Double_t[fMaxHodoScin];
+  fHodoNegAdcTimeWindowMin = new Double_t[fMaxHodoScin];
+  fHodoNegAdcTimeWindowMax = new Double_t[fMaxHodoScin];
 
-  for(int ii=0; ii < fMaxHodoScin; ii++)
-    {
-      fHodoPosAdcTimeWindowMin[ii] = -1000.;
-      fHodoPosAdcTimeWindowMax[ii] = 1000.;
-      fHodoNegAdcTimeWindowMin[ii] = -1000.;
-      fHodoNegAdcTimeWindowMax[ii] = 1000.;
-    }      
+  fHodoVelLight        = new Double_t[fMaxHodoScin];
+  fHodoPosInvAdcOffset = new Double_t[fMaxHodoScin];
+  fHodoNegInvAdcOffset = new Double_t[fMaxHodoScin];
+  fHodoPosInvAdcAdc    = new Double_t[fMaxHodoScin];
+  fHodoNegInvAdcAdc    = new Double_t[fMaxHodoScin];
+  fHodoPosInvAdcLinear = new Double_t[fMaxHodoScin];
+  fHodoNegInvAdcLinear = new Double_t[fMaxHodoScin];
 
-  DBRequest list3[] = {
-    {"cosmicflag",                       &fCosmicFlag,            kInt,            0,  1},
-    {"hodo_tdc_offset",                  fTdcOffset,              kInt,     (UInt_t) fNPlanes, 1},
-    {"hodo_adc_tdc_offset",              fAdcTdcOffset,           kDouble,  (UInt_t) fNPlanes, 1},
-    {"hodo_PosAdcTimeWindowMin",         fHodoPosAdcTimeWindowMin, kDouble,  (UInt_t) fMaxHodoScin, 1},
-    {"hodo_PosAdcTimeWindowMax",         fHodoPosAdcTimeWindowMax, kDouble,  (UInt_t) fMaxHodoScin, 1},
-    {"hodo_NegAdcTimeWindowMin",         fHodoNegAdcTimeWindowMin, kDouble,  (UInt_t) fMaxHodoScin, 1},
-    {"hodo_NegAdcTimeWindowMax",         fHodoNegAdcTimeWindowMax, kDouble,  (UInt_t) fMaxHodoScin, 1},
-    {0}
-  };
+  // Time walk
+  fHodoVelFit   = new Double_t[fMaxHodoScin];
+  fHodoCableFit = new Double_t[fMaxHodoScin];
+  fHodo_LCoeff  = new Double_t[fMaxHodoScin];
+  fHodoPos_c1   = new Double_t[fMaxHodoScin];
+  fHodoNeg_c1   = new Double_t[fMaxHodoScin];
+  fHodoPos_c2   = new Double_t[fMaxHodoScin];
+  fHodoNeg_c2   = new Double_t[fMaxHodoScin];
 
-  fCosmicFlag = 0;
-  fScinTdcMin = 0;
-  fScinTdcMax = 0;
+  for (int ii = 0; ii < fMaxHodoScin; ii++) {
+    fHodoPosAdcTimeWindowMin[ii] = -1000.;
+    fHodoPosAdcTimeWindowMax[ii] = 1000.;
+    fHodoNegAdcTimeWindowMin[ii] = -1000.;
+    fHodoNegAdcTimeWindowMax[ii] = 1000.;
+  }
+
+  DBRequest list3[] = {{"cosmicflag", &fCosmicFlag, kInt, 0, 1},
+                       {"hodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
+                       {"hodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
+                       {"hodo_PosAdcTimeWindowMin", fHodoPosAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_PosAdcTimeWindowMax", fHodoPosAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_NegAdcTimeWindowMin", fHodoNegAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_NegAdcTimeWindowMax", fHodoNegAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {0}};
+
+  fCosmicFlag    = 0;
+  fScinTdcMin    = 0;
+  fScinTdcMax    = 0;
   fScinTdcToTime = 0;
 
-  gHcParms->LoadParmValues((DBRequest*)&list3, prefix);
+  gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
+
+  // remove. Using only for testing
+  bool fTofUsingInvAdc = false;
+
+  char prefix_HMS[2];
+  prefix_HMS[0] = 'h'; //hms
+  prefix_HMS[1] = '\0';
+  //end remove
+  if (fTofUsingInvAdc) {
+    DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                        {"hodo_pos_invadc_offset", &fHodoPosInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_neg_invadc_offset", &fHodoNegInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_pos_invadc_linear", &fHodoPosInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_neg_invadc_linear", &fHodoNegInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_pos_invadc_adc", &fHodoPosInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_neg_invadc_adc", &fHodoNegInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {0}};
+    gHcParms->LoadParmValues((DBRequest *)&list, prefix_HMS);
+  };
+
+  DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c1_Pos", &fHodoPos_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c1_Neg", &fHodoNeg_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c2_Pos", &fHodoPos_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c2_Neg", &fHodoNeg_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {0}};
+
+  // fTdc_Thrs = 1.0;
+  // Set Default Values if NOT defined in param file
+  for (int i = 0; i < fMaxHodoScin; i++) {
+
+    // Turn OFF Time-Walk Correction if param file NOT found
+    fHodoPos_c1[i] = 0.0;
+    fHodoPos_c2[i] = 0.0;
+    fHodoNeg_c1[i] = 0.0;
+    fHodoNeg_c2[i] = 0.0;
+  }
+  for (int i = 0; i < fMaxHodoScin; i++) {
+    // Set scin Velocity/Cable to default
+    fHodoCableFit[i] = 0.0;
+    fHodoVelFit[i]   = 15.0;
+    // set time coeff between paddles to default
+    fHodo_LCoeff[i] = 0.0;
+  }
+
+  gHcParms->LoadParmValues((DBRequest *)&list4, prefix_HMS);
 
   return kOK;
-
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::Decode( const THaEvData& evdata )
-{
+Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
 
   // Decode raw data and pass it to hitlist
   // Read raw data -- THcHitList::DecodeToHitList
   // Processing hitlist for each plane -- THcLADHodoPlane::ProcessHits
 
   Bool_t present = kTRUE;
-  if(fPresentP) {
+  if (fPresentP) {
     present = *fPresentP;
   }
 
@@ -290,49 +359,39 @@ Int_t THcLADHodoscope::Decode( const THaEvData& evdata )
   // To analyze pedestal events -- Must define "Pedestal_event" cut in the cuts .def file
   // do we want to do this? or calculate pedestal for each event (using the first # of samples, e.g)
   // keeping it for now
-  if(gHaCuts->Result("Pedestal_event")) {
+  if (gHaCuts->Result("Pedestal_event")) {
     Int_t nexthit = 0;
-    for(Int_t ip = 0; ip < fNPlanes; ip++) {
+    for (Int_t ip = 0; ip < fNPlanes; ip++) {
       nexthit = fPlanes[ip]->AccumulatePedestals(fRawHitList, nexthit);
     }
-    fAnalyzePedestals = 1;    // Analyze pedestals first normal events
+    fAnalyzePedestals = 1; // Analyze pedestals first normal events
     return (0);
-  }	
-  if(fAnalyzePedestals) {
-    for(Int_t ip =0; ip < fNPlanes; ip++) {
+  }
+  if (fAnalyzePedestals) {
+    for (Int_t ip = 0; ip < fNPlanes; ip++) {
       fPlanes[ip]->CalculatePedestals();
     }
-    fAnalyzePedestals = 0;    // Don't analyze pedestals next event
+    fAnalyzePedestals = 0; // Don't analyze pedestals next event
   }
-
 
   Int_t nexthit = 0;
-  for(Int_t iplane = 0; iplane < fNPlanes; iplane++) {
+  for (Int_t iplane = 0; iplane < fNPlanes; iplane++) {
 
     nexthit = fPlanes[iplane]->ProcessHits(fRawHitList, nexthit);
-
   }
-    
+
   return fNHits;
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::CoarseProcess( TClonesArray& tracks )
-{
+Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
   // Loop over all tracks and get corrected time
 
-
   return 0;
-
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::FineProcess( TClonesArray& tracks )
-{
-
-  return 0;
-}
+Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) { return 0; }
 
 ClassImp(THcLADHodoscope)
-

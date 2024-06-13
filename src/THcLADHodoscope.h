@@ -43,6 +43,22 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t  GetHodoNegAdcTimeWindowMax(Int_t iii) const { return fHodoNegAdcTimeWindowMax[iii]; } 
   Double_t  GetHodoNegAdcTimeWindowMin(Int_t iii) const { return fHodoNegAdcTimeWindowMin[iii]; }
 
+  Double_t GetHodoVelLight(Int_t iii) const {return fHodoVelLight[iii];}
+  Double_t GetHodoPosInvAdcOffset(Int_t iii) const {return fHodoPosInvAdcOffset[iii];}
+  Double_t GetHodoNegInvAdcOffset(Int_t iii) const {return fHodoNegInvAdcOffset[iii];}
+  Double_t GetHodoPosInvAdcLinear(Int_t iii) const {return fHodoPosInvAdcLinear[iii];}
+  Double_t GetHodoNegInvAdcLinear(Int_t iii) const {return fHodoNegInvAdcLinear[iii];}
+  Double_t GetHodoPosInvAdcAdc(Int_t iii) const {return fHodoPosInvAdcAdc[iii];}
+  Double_t GetHodoNegInvAdcAdc(Int_t iii) const {return fHodoNegInvAdcAdc[iii];}
+
+  //Time walk
+  Double_t GetHodoVelFit(Int_t iii) const {return fHodoVelFit[iii];}
+  Double_t GetHodoCableFit(Int_t iii) const {return fHodoCableFit[iii];}
+  Double_t GetHodoLCoeff(Int_t iii) const {return fHodo_LCoeff[iii];}
+  Double_t GetHodoPos_c1(Int_t iii) const {return fHodoPos_c1[iii];}
+  Double_t GetHodoNeg_c1(Int_t iii) const {return fHodoNeg_c1[iii];}
+  Double_t GetHodoPos_c2(Int_t iii) const {return fHodoPos_c2[iii];}
+  Double_t GetHodoNeg_c2(Int_t iii) const {return fHodoNeg_c2[iii];}
 
  protected:
 
@@ -56,6 +72,24 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Int_t    *fTdcOffset;
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
+
+  Double_t *fHodoVelLight;
+  Double_t *fHodoPosInvAdcOffset;
+  Double_t *fHodoNegInvAdcOffset;
+  Double_t *fHodoPosInvAdcAdc;
+  Double_t *fHodoNegInvAdcAdc;
+  Double_t *fHodoPosInvAdcLinear;
+  Double_t *fHodoNegInvAdcLinear;
+
+  //Time walk
+  Double_t *fHodoVelFit;
+  Double_t *fHodoCableFit;
+  Double_t *fHodo_LCoeff;
+  Double_t *fHodoPos_c1;
+  Double_t *fHodoNeg_c1;
+  Double_t *fHodoPos_c2;
+  Double_t *fHodoNeg_c2;
+
 
   Int_t     fAnalyzePedestals;
 
