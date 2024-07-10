@@ -291,13 +291,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
-  // remove. Using only for testing
-  bool fTofUsingInvAdc = false;
 
-  char prefix_HMS[2];
-  prefix_HMS[0] = 'h'; //hms
-  prefix_HMS[1] = '\0';
-  //end remove
   if (fTofUsingInvAdc) {
     DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                         {"hodo_pos_invadc_offset", &fHodoPosInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
@@ -307,7 +301,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                         {"hodo_pos_invadc_adc", &fHodoPosInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
                         {"hodo_neg_invadc_adc", &fHodoNegInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
                         {0}};
-    gHcParms->LoadParmValues((DBRequest *)&list, prefix_HMS);
+    gHcParms->LoadParmValues((DBRequest *)&list, prefix);
   };
 
   DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
@@ -337,7 +331,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
     fHodo_LCoeff[i] = 0.0;
   }
 
-  gHcParms->LoadParmValues((DBRequest *)&list4, prefix_HMS);
+  gHcParms->LoadParmValues((DBRequest *)&list4, prefix);
 
   return kOK;
 }

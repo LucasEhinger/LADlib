@@ -73,6 +73,7 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
 
+  Int_t fTofUsingInvAdc;
   Double_t *fHodoVelLight;
   Double_t *fHodoPosInvAdcOffset;
   Double_t *fHodoNegInvAdcOffset;
