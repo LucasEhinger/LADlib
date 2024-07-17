@@ -174,7 +174,7 @@ protected:
   Double_t fScinYPos;
   Double_t fTrackXPosition;
   Double_t fTrackYPosition;
-  Double_t *fPosCenter;         /* array with centers for all scintillators in the plane */
+  Double_t *fPosCenter; /* array with centers for all scintillators in the plane */
 
   Int_t fDebugAdc;
   Int_t fADCMode;
@@ -189,8 +189,8 @@ protected:
 
   Double_t fDzpos;
   Double_t fHodoSlop;
-    Double_t fPosLeft;            /* NOTE: "left" = "bottom" for a Y scintillator */
-  Double_t fPosRight;           /* NOTE: "right" = "top" for a Y scintillator */
+  Double_t fPosLeft;  /* NOTE: "left" = "bottom" for a Y scintillator */
+  Double_t fPosRight; /* NOTE: "right" = "top" for a Y scintillator */
   Int_t fTdcOffset;
   Double_t fAdcTdcOffset;
   Double_t fScinTdcMin;
