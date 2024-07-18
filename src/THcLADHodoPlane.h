@@ -44,122 +44,122 @@ public:
 protected:
   TClonesArray *fHodoHits;
 
-  TClonesArray *frPosTdcTimeRaw;
-  TClonesArray *frPosTdcTime;
-  TClonesArray *frNegTdcTimeRaw;
-  TClonesArray *frNegTdcTime;
+  TClonesArray *frTopTdcTimeRaw;
+  TClonesArray *frTopTdcTime;
+  TClonesArray *frBtmTdcTimeRaw;
+  TClonesArray *frBtmTdcTime;
 
-  Double_t fPosTdcRefTime;
-  Double_t fNegTdcRefTime;
-  Double_t fPosTdcRefDiffTime;
-  Double_t fNegTdcRefDiffTime;
+  Double_t fTopTdcRefTime;
+  Double_t fBtmTdcRefTime;
+  Double_t fTopTdcRefDiffTime;
+  Double_t fBtmTdcRefDiffTime;
 
-  Double_t fPosAdcRefTime;
-  Double_t fNegAdcRefTime;
-  Double_t fPosAdcRefDiffTime;
-  Double_t fNegAdcRefDiffTime;
+  Double_t fTopAdcRefTime;
+  Double_t fBtmAdcRefTime;
+  Double_t fTopAdcRefDiffTime;
+  Double_t fBtmAdcRefDiffTime;
 
   // Counters
   Int_t fTotNumTdcHits;
-  Int_t fTotNumPosTdcHits;
-  Int_t fTotNumNegTdcHits;
+  Int_t fTotNumTopTdcHits;
+  Int_t fTotNumBtmTdcHits;
 
   Int_t fTotNumAdcHits;
-  Int_t fTotNumPosAdcHits;
-  Int_t fTotNumNegAdcHits;
+  Int_t fTotNumTopAdcHits;
+  Int_t fTotNumBtmAdcHits;
 
-  Int_t fTotNumGoodPosAdcHits;
-  Int_t fTotNumGoodNegAdcHits;
+  Int_t fTotNumGoodTopAdcHits;
+  Int_t fTotNumGoodBtmAdcHits;
   Int_t fTotNumGoodAdcHits;
 
-  Int_t fTotNumGoodPosTdcHits;
-  Int_t fTotNumGoodNegTdcHits;
+  Int_t fTotNumGoodTopTdcHits;
+  Int_t fTotNumGoodBtmTdcHits;
   Int_t fTotNumGoodTdcHits;
 
-  vector<Int_t> fNumGoodPosAdcHits;
-  vector<Int_t> fNumGoodNegAdcHits;
-  vector<Int_t> fNumGoodPosTdcHits;
-  vector<Int_t> fNumGoodNegTdcHits;
+  vector<Int_t> fNumGoodTopAdcHits;
+  vector<Int_t> fNumGoodBtmAdcHits;
+  vector<Int_t> fNumGoodTopTdcHits;
+  vector<Int_t> fNumGoodBtmTdcHits;
 
-  vector<Double_t> fGoodPosAdcPed;
-  vector<Double_t> fGoodPosAdcMult;
-  vector<Double_t> fGoodPosAdcHitUsed;
-  vector<Double_t> fGoodPosAdcPulseInt;
-  vector<Double_t> fGoodPosAdcPulseAmp;
-  vector<Double_t> fGoodPosAdcPulseTime;
-  vector<Double_t> fGoodPosAdcTdcDiffTime;
+  vector<Double_t> fGoodTopAdcPed;
+  vector<Double_t> fGoodTopAdcMult;
+  vector<Double_t> fGoodTopAdcHitUsed;
+  vector<Double_t> fGoodTopAdcPulseInt;
+  vector<Double_t> fGoodTopAdcPulseAmp;
+  vector<Double_t> fGoodTopAdcPulseTime;
+  vector<Double_t> fGoodTopAdcTdcDiffTime;
 
-  vector<Double_t> fGoodNegAdcPed;
-  vector<Double_t> fGoodNegAdcMult;
-  vector<Double_t> fGoodNegAdcHitUsed;
-  vector<Double_t> fGoodNegAdcPulseInt;
-  vector<Double_t> fGoodNegAdcPulseAmp;
-  vector<Double_t> fGoodNegAdcPulseTime;
-  vector<Double_t> fGoodNegAdcTdcDiffTime;
+  vector<Double_t> fGoodBtmAdcPed;
+  vector<Double_t> fGoodBtmAdcMult;
+  vector<Double_t> fGoodBtmAdcHitUsed;
+  vector<Double_t> fGoodBtmAdcPulseInt;
+  vector<Double_t> fGoodBtmAdcPulseAmp;
+  vector<Double_t> fGoodBtmAdcPulseTime;
+  vector<Double_t> fGoodBtmAdcTdcDiffTime;
 
-  TClonesArray *frPosAdcPedRaw;
-  TClonesArray *frPosAdcPed;
-  TClonesArray *frPosAdcPulseIntRaw;
-  TClonesArray *frPosAdcPulseInt;
-  TClonesArray *frPosAdcPulseAmpRaw;
-  TClonesArray *frPosAdcPulseAmp;
-  TClonesArray *frPosAdcPulseTimeRaw;
-  TClonesArray *frPosAdcPulseTime;
-  TClonesArray *frPosAdcErrorFlag;
+  TClonesArray *frTopAdcPedRaw;
+  TClonesArray *frTopAdcPed;
+  TClonesArray *frTopAdcPulseIntRaw;
+  TClonesArray *frTopAdcPulseInt;
+  TClonesArray *frTopAdcPulseAmpRaw;
+  TClonesArray *frTopAdcPulseAmp;
+  TClonesArray *frTopAdcPulseTimeRaw;
+  TClonesArray *frTopAdcPulseTime;
+  TClonesArray *frTopAdcErrorFlag;
 
-  TClonesArray *frPosAdcSampPedRaw;
-  TClonesArray *frPosAdcSampPed;
-  TClonesArray *frPosAdcSampPulseIntRaw;
-  TClonesArray *frPosAdcSampPulseInt;
-  TClonesArray *frPosAdcSampPulseAmpRaw;
-  TClonesArray *frPosAdcSampPulseAmp;
-  TClonesArray *frPosAdcSampPulseTimeRaw;
-  TClonesArray *frPosAdcSampPulseTime;
+  TClonesArray *frTopAdcSampPedRaw;
+  TClonesArray *frTopAdcSampPed;
+  TClonesArray *frTopAdcSampPulseIntRaw;
+  TClonesArray *frTopAdcSampPulseInt;
+  TClonesArray *frTopAdcSampPulseAmpRaw;
+  TClonesArray *frTopAdcSampPulseAmp;
+  TClonesArray *frTopAdcSampPulseTimeRaw;
+  TClonesArray *frTopAdcSampPulseTime;
 
-  TClonesArray *frNegAdcPedRaw;
-  TClonesArray *frNegAdcPed;
-  TClonesArray *frNegAdcPulseIntRaw;
-  TClonesArray *frNegAdcPulseInt;
-  TClonesArray *frNegAdcPulseAmpRaw;
-  TClonesArray *frNegAdcPulseAmp;
-  TClonesArray *frNegAdcPulseTimeRaw;
-  TClonesArray *frNegAdcPulseTime;
-  TClonesArray *frNegAdcErrorFlag;
+  TClonesArray *frBtmAdcPedRaw;
+  TClonesArray *frBtmAdcPed;
+  TClonesArray *frBtmAdcPulseIntRaw;
+  TClonesArray *frBtmAdcPulseInt;
+  TClonesArray *frBtmAdcPulseAmpRaw;
+  TClonesArray *frBtmAdcPulseAmp;
+  TClonesArray *frBtmAdcPulseTimeRaw;
+  TClonesArray *frBtmAdcPulseTime;
+  TClonesArray *frBtmAdcErrorFlag;
 
-  TClonesArray *frNegAdcSampPedRaw;
-  TClonesArray *frNegAdcSampPed;
-  TClonesArray *frNegAdcSampPulseIntRaw;
-  TClonesArray *frNegAdcSampPulseInt;
-  TClonesArray *frNegAdcSampPulseAmpRaw;
-  TClonesArray *frNegAdcSampPulseAmp;
-  TClonesArray *frNegAdcSampPulseTimeRaw;
-  TClonesArray *frNegAdcSampPulseTime;
+  TClonesArray *frBtmAdcSampPedRaw;
+  TClonesArray *frBtmAdcSampPed;
+  TClonesArray *frBtmAdcSampPulseIntRaw;
+  TClonesArray *frBtmAdcSampPulseInt;
+  TClonesArray *frBtmAdcSampPulseAmpRaw;
+  TClonesArray *frBtmAdcSampPulseAmp;
+  TClonesArray *frBtmAdcSampPulseTimeRaw;
+  TClonesArray *frBtmAdcSampPulseTime;
 
-  vector<Double_t> fPosAdcSampWaveform;
-  vector<Double_t> fNegAdcSampWaveform;
+  vector<Double_t> fTopAdcSampWaveform;
+  vector<Double_t> fBtmAdcSampWaveform;
 
   // Hodoscopoe "GOOD" TDC Variables
-  vector<Double_t> fGoodPosTdcTimeUnCorr;
-  vector<Double_t> fGoodPosTdcTimeCorr;
-  vector<Double_t> fGoodPosTdcTimeTOFCorr;
+  vector<Double_t> fGoodTopTdcTimeUnCorr;
+  vector<Double_t> fGoodTopTdcTimeCorr;
+  vector<Double_t> fGoodTopTdcTimeTOFCorr;
 
-  vector<Double_t> fGoodNegTdcTimeUnCorr;
-  vector<Double_t> fGoodNegTdcTimeCorr;
-  vector<Double_t> fGoodNegTdcTimeTOFCorr;
+  vector<Double_t> fGoodBtmTdcTimeUnCorr;
+  vector<Double_t> fGoodBtmTdcTimeCorr;
+  vector<Double_t> fGoodBtmTdcTimeTOFCorr;
 
   // Time Walk Corrected
-  vector<Double_t> fGoodPosTdcTimeWalkCorr;
-  vector<Double_t> fGoodNegTdcTimeWalkCorr;
+  vector<Double_t> fGoodTopTdcTimeWalkCorr;
+  vector<Double_t> fGoodBtmTdcTimeWalkCorr;
   vector<Double_t> fGoodDiffDistTrack;
 
-  TClonesArray *frPosTDCHits;
-  TClonesArray *frPosADCHits;
-  TClonesArray *frPosADCSums;
-  TClonesArray *frPosADCPeds;
-  TClonesArray *frNegTDCHits;
-  TClonesArray *frNegADCHits;
-  TClonesArray *frNegADCSums;
-  TClonesArray *frNegADCPeds;
+  TClonesArray *frTopTdcHits;
+  TClonesArray *frTopAdcHits;
+  TClonesArray *frTopAdcSums;
+  TClonesArray *frTopAdcPeds;
+  TClonesArray *frBtmTdcHits;
+  TClonesArray *frBtmAdcHits;
+  TClonesArray *frBtmAdcSums;
+  TClonesArray *frBtmAdcPeds;
 
   Int_t fPlaneNum;
   Int_t fNelem;
@@ -189,8 +189,8 @@ protected:
 
   Double_t fDzpos;
   Double_t fHodoSlop;
-  Double_t fPosLeft;  /* NOTE: "left" = "bottom" for a Y scintillator */
-  Double_t fPosRight; /* NOTE: "right" = "top" for a Y scintillator */
+  Double_t fPosBtm;  /* NOTE: "left" = "bottom" for a Y scintillator */
+  Double_t fPosTop; /* NOTE: "right" = "top" for a Y scintillator */
   Int_t fTdcOffset;
   Double_t fAdcTdcOffset;
   Double_t fScinTdcMin;
@@ -198,52 +198,52 @@ protected:
   Double_t fScinTdcToTime;
   Double_t fBetaNominal;
 
-  Double_t *fHodoPosAdcTimeWindowMin;
-  Double_t *fHodoPosAdcTimeWindowMax;
-  Double_t *fHodoNegAdcTimeWindowMin;
-  Double_t *fHodoNegAdcTimeWindowMax;
+  Double_t *fHodoTopAdcTimeWindowMin;
+  Double_t *fHodoTopAdcTimeWindowMax;
+  Double_t *fHodoBtmAdcTimeWindowMin;
+  Double_t *fHodoBtmAdcTimeWindowMax;
 
   // Hodoscope Calib Parameters
   Int_t fTofUsingInvAdc;
   Double_t *fHodoVelLight;
-  Double_t *fHodoPosInvAdcOffset;
-  Double_t *fHodoNegInvAdcOffset;
-  Double_t *fHodoPosInvAdcAdc;
-  Double_t *fHodoNegInvAdcAdc;
-  Double_t *fHodoPosInvAdcLinear;
-  Double_t *fHodoNegInvAdcLinear;
+  Double_t *fHodoTopInvAdcOffset;
+  Double_t *fHodoBtmInvAdcOffset;
+  Double_t *fHodoTopInvAdcAdc;
+  Double_t *fHodoBtmInvAdcAdc;
+  Double_t *fHodoTopInvAdcLinear;
+  Double_t *fHodoBtmInvAdcLinear;
 
   // Time-Walk Parameters
   Double_t *fHodoVelFit;
   Double_t *fHodoCableFit;
   Double_t *fHodo_LCoeff;
-  Double_t *fHodoPos_c1;
-  Double_t *fHodoNeg_c1;
-  Double_t *fHodoPos_c2;
-  Double_t *fHodoNeg_c2;
+  Double_t *fHodoTop_c1;
+  Double_t *fHodoBtm_c1;
+  Double_t *fHodoTop_c2;
+  Double_t *fHodoBtm_c2;
   Double_t fTdc_Thrs;
 
-  Double_t tw_corr_pos;
-  Double_t tw_corr_neg;
+  Double_t tw_corr_top;
+  Double_t tw_corr_btm;
 
   // Pedestal calculations
   Int_t fNPedestalEvents; /* Number of pedestal events */
   Int_t fMinPeds;         /* Only analyze/update if num events > */
-  Int_t *fPosPedSum;      /* Accumulators for pedestals */
-  Int_t *fPosPedSum2;
-  Int_t *fPosPedLimit;
-  Int_t *fPosPedCount;
-  Int_t *fNegPedSum;
-  Int_t *fNegPedSum2;
-  Int_t *fNegPedLimit;
-  Int_t *fNegPedCount;
+  Int_t *fTopPedSum;      /* Accumulators for pedestals */
+  Int_t *fTopPedSum2;
+  Int_t *fTopPedLimit;
+  Int_t *fTopPedCount;
+  Int_t *fBtmPedSum;
+  Int_t *fBtmPedSum2;
+  Int_t *fBtmPedLimit;
+  Int_t *fBtmPedCount;
 
-  Double_t *fPosPed;
-  Double_t *fPosSig;
-  Double_t *fPosThresh;
-  Double_t *fNegPed;
-  Double_t *fNegSig;
-  Double_t *fNegThresh;
+  Double_t *fTopPed;
+  Double_t *fTopSig;
+  Double_t *fTopThresh;
+  Double_t *fBtmPed;
+  Double_t *fBtmSig;
+  Double_t *fBtmThresh;
 
   enum { kADCStandard = 0, kADCDynamicPedestal, kADCSampleIntegral, kADCSampIntDynPed };
 

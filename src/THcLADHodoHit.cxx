@@ -3,25 +3,25 @@
 #include <iostream>
 
 //___________________________________________________________________
-THcLADHodoHit::THcLADHodoHit(Int_t postdc, Int_t negtdc, Double_t posadc, Double_t negadc, Int_t ipad,
+THcLADHodoHit::THcLADHodoHit(Int_t toptdc, Int_t btmtdc, Double_t topadc, Double_t btmadc, Int_t ipad,
                              THcLADHodoPlane *hp)
-    : fPosTDC(postdc), fNegTDC(negtdc), fPosADC_Ped(posadc), fNegADC_Ped(negadc), fPaddleNumber(ipad), fPlane(hp) {}
+    : fTopTDC(toptdc), fBtmTDC(btmtdc), fTopADC_Ped(topadc), fBtmADC_Ped(btmadc), fPaddleNumber(ipad), fPlane(hp) {}
 
 //___________________________________________________________________
 THcLADHodoHit::~THcLADHodoHit() {}
 
-void THcLADHodoHit::SetCorrectedTimes(Double_t pos, Double_t neg, Double_t postof, Double_t negtof, Double_t timeave) {
-  fPosCorrectedTime = pos;
-  fNegCorrectedTime = neg;
-  fPosTOFCorrectedTime = postof;
-  fNegTOFCorrectedTime = negtof;
+void THcLADHodoHit::SetCorrectedTimes(Double_t top, Double_t btm, Double_t toptof, Double_t btmtof, Double_t timeave) {
+  fTopCorrectedTime = top;
+  fBtmCorrectedTime = btm;
+  fTopTOFCorrectedTime = toptof;
+  fBtmTOFCorrectedTime = btmtof;
   fScinCorrectedTime = timeave;
   fHasCorrectedTimes = kTRUE;
 }
 
-void THcLADHodoHit::SetCorrectedTimes(Double_t pos, Double_t neg) {
-  fPosCorrectedTime = pos;
-  fNegCorrectedTime = neg;
+void THcLADHodoHit::SetCorrectedTimes(Double_t top, Double_t btm) {
+  fTopCorrectedTime = top;
+  fBtmCorrectedTime = btm;
   fHasCorrectedTimes = kFALSE;
 }
 

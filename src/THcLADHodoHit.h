@@ -7,44 +7,44 @@
 
 class THcLADHodoHit : public TObject {
 public:
-  THcLADHodoHit(Int_t postdc, Int_t negtdc, Double_t posadc, Double_t negadc, Int_t ipad, THcLADHodoPlane *hp);
+  THcLADHodoHit(Int_t toptdc, Int_t btmtdc, Double_t topadc, Double_t btmadc, Int_t ipad, THcLADHodoPlane *hp);
   virtual ~THcLADHodoHit();
 
-  Double_t GetPosADC() const { return fPosADC_Ped; }
-  Double_t GetNegADC() const { return fNegADC_Ped; }
-  Double_t GetPosADCpeak() const { return fPosADC_Peak; }
-  Double_t GetNegADCpeak() const { return fNegADC_Peak; }
-  Double_t GetPosADCtime() const { return fPosADC_Time; }
-  Double_t GetNegADCtime() const { return fNegADC_Time; }
-  Int_t GetPosTDC() const { return fPosTDC; }
-  Int_t GetNegTDC() const { return fNegTDC; }
+  Double_t GetTopADC() const { return fTopADC_Ped; }
+  Double_t GetBtmADC() const { return fBtmADC_Ped; }
+  Double_t GetTopADCpeak() const { return fTopADC_Peak; }
+  Double_t GetBtmADCpeak() const { return fBtmADC_Peak; }
+  Double_t GetTopADCtime() const { return fTopADC_Time; }
+  Double_t GetBtmADCtime() const { return fBtmADC_Time; }
+  Int_t GetTopTDC() const { return fTopTDC; }
+  Int_t GetBtmTDC() const { return fBtmTDC; }
   Int_t GetPaddleNumber() const { return fPaddleNumber; }
   Int_t GetPaddleCenter() const { return fPaddleCenter; }
 
   void SetPaddleCenter(Double_t padcenter) { fPaddleCenter = padcenter; }
-  void SetPosADCpeak(Double_t adc) { fPosADC_Peak = adc; }
-  void SetNegADCpeak(Double_t adc) { fNegADC_Peak = adc; }
-  void SetPosADCtime(Double_t ptime) { fPosADC_Time = ptime; }
-  void SetNegADCtime(Double_t ptime) { fNegADC_Time = ptime; }
-  void SetCorrectedTimes(Double_t pos, Double_t neg);
-  void SetCorrectedTimes(Double_t pos, Double_t neg, Double_t postof, Double_t negtof, Double_t timeave);
+  void SetTopADCpeak(Double_t adc) { fTopADC_Peak = adc; }
+  void SetBtmADCpeak(Double_t adc) { fBtmADC_Peak = adc; }
+  void SetTopADCtime(Double_t ptime) { fTopADC_Time = ptime; }
+  void SetBtmADCtime(Double_t ptime) { fBtmADC_Time = ptime; }
+  void SetCorrectedTimes(Double_t top, Double_t btm);
+  void SetCorrectedTimes(Double_t top, Double_t btm, Double_t toptof, Double_t btmtof, Double_t timeave);
 
 protected:
-  Int_t fPosTDC;
-  Int_t fNegTDC;
-  Double_t fPosADC_Ped; // Pedestal subtracted ADC
-  Double_t fNegADC_Ped;
-  Double_t fPosADC_Peak; // ADC peak amplitude
-  Double_t fNegADC_Peak; // ADC peak amplitude
-  Double_t fPosADC_Time;
-  Double_t fNegADC_Time;
+  Int_t fTopTDC;
+  Int_t fBtmTDC;
+  Double_t fTopADC_Ped; // Pedestal subtracted ADC
+  Double_t fBtmADC_Ped;
+  Double_t fTopADC_Peak; // ADC peak amplitude
+  Double_t fBtmADC_Peak; // ADC peak amplitude
+  Double_t fTopADC_Time;
+  Double_t fBtmADC_Time;
 
-  Double_t fPosCorrectedTime;	// Pulse height corrected time
-  Double_t fNegCorrectedTime;	// Pulse height corrected time
+  Double_t fTopCorrectedTime;	// Pulse height corrected time
+  Double_t fBtmCorrectedTime;	// Pulse height corrected time
   Double_t fScinCorrectedTime;  // Time average corrected for position
                                 // based on ADCs.
-  Double_t fPosTOFCorrectedTime; // Times corrected for z position
-  Double_t fNegTOFCorrectedTime; // using nominal beta
+  Double_t fTopTOFCorrectedTime; // Times corrected for z position
+  Double_t fBtmTOFCorrectedTime; // using nominal beta
 
   Int_t fPaddleNumber;
   Double_t fPaddleCenter;

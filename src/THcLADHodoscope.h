@@ -38,27 +38,27 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t  GetTdcMax()                      const { return fScinTdcMax;}
   Double_t  GetTdcToTime()                   const { return fScinTdcToTime; }
 
-  Double_t  GetHodoPosAdcTimeWindowMax(Int_t iii) const { return fHodoPosAdcTimeWindowMax[iii]; }
-  Double_t  GetHodoPosAdcTimeWindowMin(Int_t iii) const { return fHodoPosAdcTimeWindowMin[iii]; }
-  Double_t  GetHodoNegAdcTimeWindowMax(Int_t iii) const { return fHodoNegAdcTimeWindowMax[iii]; } 
-  Double_t  GetHodoNegAdcTimeWindowMin(Int_t iii) const { return fHodoNegAdcTimeWindowMin[iii]; }
+  Double_t  GetHodoTopAdcTimeWindowMax(Int_t iii) const { return fHodoTopAdcTimeWindowMax[iii]; }
+  Double_t  GetHodoTopAdcTimeWindowMin(Int_t iii) const { return fHodoTopAdcTimeWindowMin[iii]; }
+  Double_t  GetHodoBtmAdcTimeWindowMax(Int_t iii) const { return fHodoBtmAdcTimeWindowMax[iii]; } 
+  Double_t  GetHodoBtmAdcTimeWindowMin(Int_t iii) const { return fHodoBtmAdcTimeWindowMin[iii]; }
 
   Double_t GetHodoVelLight(Int_t iii) const {return fHodoVelLight[iii];}
-  Double_t GetHodoPosInvAdcOffset(Int_t iii) const {return fHodoPosInvAdcOffset[iii];}
-  Double_t GetHodoNegInvAdcOffset(Int_t iii) const {return fHodoNegInvAdcOffset[iii];}
-  Double_t GetHodoPosInvAdcLinear(Int_t iii) const {return fHodoPosInvAdcLinear[iii];}
-  Double_t GetHodoNegInvAdcLinear(Int_t iii) const {return fHodoNegInvAdcLinear[iii];}
-  Double_t GetHodoPosInvAdcAdc(Int_t iii) const {return fHodoPosInvAdcAdc[iii];}
-  Double_t GetHodoNegInvAdcAdc(Int_t iii) const {return fHodoNegInvAdcAdc[iii];}
+  Double_t GetHodoTopInvAdcOffset(Int_t iii) const {return fHodoTopInvAdcOffset[iii];}
+  Double_t GetHodoBtmInvAdcOffset(Int_t iii) const {return fHodoBtmInvAdcOffset[iii];}
+  Double_t GetHodoTopInvAdcLinear(Int_t iii) const {return fHodoTopInvAdcLinear[iii];}
+  Double_t GetHodoBtmInvAdcLinear(Int_t iii) const {return fHodoBtmInvAdcLinear[iii];}
+  Double_t GetHodoTopInvAdcAdc(Int_t iii) const {return fHodoTopInvAdcAdc[iii];}
+  Double_t GetHodoBtmInvAdcAdc(Int_t iii) const {return fHodoBtmInvAdcAdc[iii];}
 
   //Time walk
   Double_t GetHodoVelFit(Int_t iii) const {return fHodoVelFit[iii];}
   Double_t GetHodoCableFit(Int_t iii) const {return fHodoCableFit[iii];}
   Double_t GetHodoLCoeff(Int_t iii) const {return fHodo_LCoeff[iii];}
-  Double_t GetHodoPos_c1(Int_t iii) const {return fHodoPos_c1[iii];}
-  Double_t GetHodoNeg_c1(Int_t iii) const {return fHodoNeg_c1[iii];}
-  Double_t GetHodoPos_c2(Int_t iii) const {return fHodoPos_c2[iii];}
-  Double_t GetHodoNeg_c2(Int_t iii) const {return fHodoNeg_c2[iii];}
+  Double_t GetHodoTop_c1(Int_t iii) const {return fHodoTop_c1[iii];}
+  Double_t GetHodoBtm_c1(Int_t iii) const {return fHodoBtm_c1[iii];}
+  Double_t GetHodoTop_c2(Int_t iii) const {return fHodoTop_c2[iii];}
+  Double_t GetHodoBtm_c2(Int_t iii) const {return fHodoBtm_c2[iii];}
 
  protected:
 
@@ -75,29 +75,29 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
 
   Int_t fTofUsingInvAdc;
   Double_t *fHodoVelLight;
-  Double_t *fHodoPosInvAdcOffset;
-  Double_t *fHodoNegInvAdcOffset;
-  Double_t *fHodoPosInvAdcAdc;
-  Double_t *fHodoNegInvAdcAdc;
-  Double_t *fHodoPosInvAdcLinear;
-  Double_t *fHodoNegInvAdcLinear;
+  Double_t *fHodoTopInvAdcOffset;
+  Double_t *fHodoBtmInvAdcOffset;
+  Double_t *fHodoTopInvAdcAdc;
+  Double_t *fHodoBtmInvAdcAdc;
+  Double_t *fHodoTopInvAdcLinear;
+  Double_t *fHodoBtmInvAdcLinear;
 
   //Time walk
   Double_t *fHodoVelFit;
   Double_t *fHodoCableFit;
   Double_t *fHodo_LCoeff;
-  Double_t *fHodoPos_c1;
-  Double_t *fHodoNeg_c1;
-  Double_t *fHodoPos_c2;
-  Double_t *fHodoNeg_c2;
+  Double_t *fHodoTop_c1;
+  Double_t *fHodoBtm_c1;
+  Double_t *fHodoTop_c2;
+  Double_t *fHodoBtm_c2;
 
 
   Int_t     fAnalyzePedestals;
 
-  Double_t *fHodoNegAdcTimeWindowMin;    // per element? per plane?
-  Double_t *fHodoNegAdcTimeWindowMax;
-  Double_t *fHodoPosAdcTimeWindowMin;    
-  Double_t *fHodoPosAdcTimeWindowMax;
+  Double_t *fHodoBtmAdcTimeWindowMin;    // per element? per plane?
+  Double_t *fHodoBtmAdcTimeWindowMax;
+  Double_t *fHodoTopAdcTimeWindowMin;    
+  Double_t *fHodoTopAdcTimeWindowMax;
   
   THcLADHodoPlane** fPlanes;
   char** fPlaneNames;

@@ -35,32 +35,32 @@ THcLADHodoscope::~THcLADHodoscope() {
   delete[] fHodoSlop;
   fHodoSlop = NULL;
 
-  delete[] fHodoNegAdcTimeWindowMin;
-  fHodoNegAdcTimeWindowMin = NULL;
-  delete[] fHodoNegAdcTimeWindowMax;
-  fHodoNegAdcTimeWindowMax = NULL;
-  delete[] fHodoPosAdcTimeWindowMin;
-  fHodoPosAdcTimeWindowMin = NULL;
-  delete[] fHodoPosAdcTimeWindowMax;
-  fHodoPosAdcTimeWindowMax = NULL;
+  delete[] fHodoBtmAdcTimeWindowMin;
+  fHodoBtmAdcTimeWindowMin = NULL;
+  delete[] fHodoBtmAdcTimeWindowMax;
+  fHodoBtmAdcTimeWindowMax = NULL;
+  delete[] fHodoTopAdcTimeWindowMin;
+  fHodoTopAdcTimeWindowMin = NULL;
+  delete[] fHodoTopAdcTimeWindowMax;
+  fHodoTopAdcTimeWindowMax = NULL;
 
   delete[] fPlaneNames;
   fPlaneNames = NULL;
 
   delete[] fHodoVelLight;
   fHodoVelLight = NULL;
-  delete[] fHodoPosInvAdcOffset;
-  fHodoPosInvAdcOffset = NULL;
-  delete[] fHodoNegInvAdcOffset;
-  fHodoNegInvAdcOffset = NULL;
-  delete[] fHodoPosInvAdcLinear;
-  fHodoPosInvAdcLinear = NULL;
-  delete[] fHodoNegInvAdcLinear;
-  fHodoNegInvAdcLinear = NULL;
-  delete[] fHodoPosInvAdcAdc;
-  fHodoPosInvAdcAdc = NULL;
-  delete[] fHodoNegInvAdcAdc;
-  fHodoNegInvAdcAdc = NULL;
+  delete[] fHodoTopInvAdcOffset;
+  fHodoTopInvAdcOffset = NULL;
+  delete[] fHodoBtmInvAdcOffset;
+  fHodoBtmInvAdcOffset = NULL;
+  delete[] fHodoTopInvAdcLinear;
+  fHodoTopInvAdcLinear = NULL;
+  delete[] fHodoBtmInvAdcLinear;
+  fHodoBtmInvAdcLinear = NULL;
+  delete[] fHodoTopInvAdcAdc;
+  fHodoTopInvAdcAdc = NULL;
+  delete[] fHodoBtmInvAdcAdc;
+  fHodoBtmInvAdcAdc = NULL;
 
   // Time walk
   delete[] fHodoVelFit;
@@ -69,14 +69,14 @@ THcLADHodoscope::~THcLADHodoscope() {
   fHodoCableFit = NULL;
   delete[] fHodo_LCoeff;
   fHodo_LCoeff = NULL;
-  delete[] fHodoPos_c1;
-  fHodoPos_c1 = NULL;
-  delete[] fHodoNeg_c1;
-  fHodoNeg_c1 = NULL;
-  delete[] fHodoPos_c2;
-  fHodoPos_c2 = NULL;
-  delete[] fHodoNeg_c2;
-  fHodoNeg_c2 = NULL;
+  delete[] fHodoTop_c1;
+  fHodoTop_c1 = NULL;
+  delete[] fHodoBtm_c1;
+  fHodoBtm_c1 = NULL;
+  delete[] fHodoTop_c2;
+  fHodoTop_c2 = NULL;
+  delete[] fHodoBtm_c2;
+  fHodoBtm_c2 = NULL;
 }
 
 //_________________________________________________________________
@@ -246,42 +246,42 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   // for all elements
   fMaxHodoScin             = fNPaddle[0] * fNPlanes;
-  fHodoPosAdcTimeWindowMin = new Double_t[fMaxHodoScin];
-  fHodoPosAdcTimeWindowMax = new Double_t[fMaxHodoScin];
-  fHodoNegAdcTimeWindowMin = new Double_t[fMaxHodoScin];
-  fHodoNegAdcTimeWindowMax = new Double_t[fMaxHodoScin];
+  fHodoTopAdcTimeWindowMin = new Double_t[fMaxHodoScin];
+  fHodoTopAdcTimeWindowMax = new Double_t[fMaxHodoScin];
+  fHodoBtmAdcTimeWindowMin = new Double_t[fMaxHodoScin];
+  fHodoBtmAdcTimeWindowMax = new Double_t[fMaxHodoScin];
 
   fHodoVelLight        = new Double_t[fMaxHodoScin];
-  fHodoPosInvAdcOffset = new Double_t[fMaxHodoScin];
-  fHodoNegInvAdcOffset = new Double_t[fMaxHodoScin];
-  fHodoPosInvAdcAdc    = new Double_t[fMaxHodoScin];
-  fHodoNegInvAdcAdc    = new Double_t[fMaxHodoScin];
-  fHodoPosInvAdcLinear = new Double_t[fMaxHodoScin];
-  fHodoNegInvAdcLinear = new Double_t[fMaxHodoScin];
+  fHodoTopInvAdcOffset = new Double_t[fMaxHodoScin];
+  fHodoBtmInvAdcOffset = new Double_t[fMaxHodoScin];
+  fHodoTopInvAdcAdc    = new Double_t[fMaxHodoScin];
+  fHodoBtmInvAdcAdc    = new Double_t[fMaxHodoScin];
+  fHodoTopInvAdcLinear = new Double_t[fMaxHodoScin];
+  fHodoBtmInvAdcLinear = new Double_t[fMaxHodoScin];
 
   // Time walk
   fHodoVelFit   = new Double_t[fMaxHodoScin];
   fHodoCableFit = new Double_t[fMaxHodoScin];
   fHodo_LCoeff  = new Double_t[fMaxHodoScin];
-  fHodoPos_c1   = new Double_t[fMaxHodoScin];
-  fHodoNeg_c1   = new Double_t[fMaxHodoScin];
-  fHodoPos_c2   = new Double_t[fMaxHodoScin];
-  fHodoNeg_c2   = new Double_t[fMaxHodoScin];
+  fHodoTop_c1   = new Double_t[fMaxHodoScin];
+  fHodoBtm_c1   = new Double_t[fMaxHodoScin];
+  fHodoTop_c2   = new Double_t[fMaxHodoScin];
+  fHodoBtm_c2   = new Double_t[fMaxHodoScin];
 
   for (int ii = 0; ii < fMaxHodoScin; ii++) {
-    fHodoPosAdcTimeWindowMin[ii] = -1000.;
-    fHodoPosAdcTimeWindowMax[ii] = 1000.;
-    fHodoNegAdcTimeWindowMin[ii] = -1000.;
-    fHodoNegAdcTimeWindowMax[ii] = 1000.;
+    fHodoTopAdcTimeWindowMin[ii] = -1000.;
+    fHodoTopAdcTimeWindowMax[ii] = 1000.;
+    fHodoBtmAdcTimeWindowMin[ii] = -1000.;
+    fHodoBtmAdcTimeWindowMax[ii] = 1000.;
   }
 
   DBRequest list3[] = {{"cosmicflag", &fCosmicFlag, kInt, 0, 1},
                        {"hodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
                        {"hodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
-                       {"hodo_PosAdcTimeWindowMin", fHodoPosAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_PosAdcTimeWindowMax", fHodoPosAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_NegAdcTimeWindowMin", fHodoNegAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_NegAdcTimeWindowMax", fHodoNegAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"hodo_BtmAdcTimeWindowMax", fHodoBtmAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {0}};
 
   fCosmicFlag    = 0;
@@ -294,12 +294,12 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   if (fTofUsingInvAdc) {
     DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                        {"hodo_pos_invadc_offset", &fHodoPosInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_neg_invadc_offset", &fHodoNegInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_pos_invadc_linear", &fHodoPosInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_neg_invadc_linear", &fHodoNegInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_pos_invadc_adc", &fHodoPosInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_neg_invadc_adc", &fHodoNegInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_pos_invadc_offset", &fHodoTopInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_neg_invadc_offset", &fHodoBtmInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_pos_invadc_linear", &fHodoTopInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_neg_invadc_linear", &fHodoBtmInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_pos_invadc_adc", &fHodoTopInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
+                        {"hodo_neg_invadc_adc", &fHodoBtmInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
                         {0}};
     gHcParms->LoadParmValues((DBRequest *)&list, prefix);
   };
@@ -307,10 +307,10 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c1_Pos", &fHodoPos_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c1_Neg", &fHodoNeg_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c2_Pos", &fHodoPos_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c2_Neg", &fHodoNeg_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c1_Pos", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c1_Neg", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c2_Pos", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c2_Neg", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {0}};
 
   // fTdc_Thrs = 1.0;
@@ -318,10 +318,10 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   for (int i = 0; i < fMaxHodoScin; i++) {
 
     // Turn OFF Time-Walk Correction if param file NOT found
-    fHodoPos_c1[i] = 0.0;
-    fHodoPos_c2[i] = 0.0;
-    fHodoNeg_c1[i] = 0.0;
-    fHodoNeg_c2[i] = 0.0;
+    fHodoTop_c1[i] = 0.0;
+    fHodoTop_c2[i] = 0.0;
+    fHodoBtm_c1[i] = 0.0;
+    fHodoBtm_c2[i] = 0.0;
   }
   for (int i = 0; i < fMaxHodoScin; i++) {
     // Set scin Velocity/Cable to default
