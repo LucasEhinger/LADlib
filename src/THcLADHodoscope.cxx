@@ -49,18 +49,6 @@ THcLADHodoscope::~THcLADHodoscope() {
 
   delete[] fHodoVelLight;
   fHodoVelLight = NULL;
-  delete[] fHodoTopInvAdcOffset;
-  fHodoTopInvAdcOffset = NULL;
-  delete[] fHodoBtmInvAdcOffset;
-  fHodoBtmInvAdcOffset = NULL;
-  delete[] fHodoTopInvAdcLinear;
-  fHodoTopInvAdcLinear = NULL;
-  delete[] fHodoBtmInvAdcLinear;
-  fHodoBtmInvAdcLinear = NULL;
-  delete[] fHodoTopInvAdcAdc;
-  fHodoTopInvAdcAdc = NULL;
-  delete[] fHodoBtmInvAdcAdc;
-  fHodoBtmInvAdcAdc = NULL;
 
   // Time walk
   delete[] fHodoVelFit;
@@ -252,12 +240,6 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fHodoBtmAdcTimeWindowMax = new Double_t[fMaxHodoScin];
 
   fHodoVelLight        = new Double_t[fMaxHodoScin];
-  fHodoTopInvAdcOffset = new Double_t[fMaxHodoScin];
-  fHodoBtmInvAdcOffset = new Double_t[fMaxHodoScin];
-  fHodoTopInvAdcAdc    = new Double_t[fMaxHodoScin];
-  fHodoBtmInvAdcAdc    = new Double_t[fMaxHodoScin];
-  fHodoTopInvAdcLinear = new Double_t[fMaxHodoScin];
-  fHodoBtmInvAdcLinear = new Double_t[fMaxHodoScin];
 
   // Time walk
   fHodoVelFit   = new Double_t[fMaxHodoScin];
@@ -292,17 +274,11 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
 
-  if (fTofUsingInvAdc) {
-    DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                        {"hodo_pos_invadc_offset", &fHodoTopInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_neg_invadc_offset", &fHodoBtmInvAdcOffset[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_pos_invadc_linear", &fHodoTopInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_neg_invadc_linear", &fHodoBtmInvAdcLinear[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_pos_invadc_adc", &fHodoTopInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {"hodo_neg_invadc_adc", &fHodoBtmInvAdcAdc[0], kDouble, (UInt_t)fMaxHodoScin},
-                        {0}};
-    gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-  };
+
+  DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                      {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list, prefix);
+  
 
   DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},

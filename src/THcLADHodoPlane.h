@@ -204,14 +204,7 @@ protected:
   Double_t *fHodoBtmAdcTimeWindowMax;
 
   // Hodoscope Calib Parameters
-  Int_t fTofUsingInvAdc;
   Double_t *fHodoVelLight;
-  Double_t *fHodoTopInvAdcOffset;
-  Double_t *fHodoBtmInvAdcOffset;
-  Double_t *fHodoTopInvAdcAdc;
-  Double_t *fHodoBtmInvAdcAdc;
-  Double_t *fHodoTopInvAdcLinear;
-  Double_t *fHodoBtmInvAdcLinear;
 
   // Time-Walk Parameters
   Double_t *fHodoVelFit;

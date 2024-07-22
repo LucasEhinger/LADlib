@@ -44,12 +44,7 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t  GetHodoBtmAdcTimeWindowMin(Int_t iii) const { return fHodoBtmAdcTimeWindowMin[iii]; }
 
   Double_t GetHodoVelLight(Int_t iii) const {return fHodoVelLight[iii];}
-  Double_t GetHodoTopInvAdcOffset(Int_t iii) const {return fHodoTopInvAdcOffset[iii];}
-  Double_t GetHodoBtmInvAdcOffset(Int_t iii) const {return fHodoBtmInvAdcOffset[iii];}
-  Double_t GetHodoTopInvAdcLinear(Int_t iii) const {return fHodoTopInvAdcLinear[iii];}
-  Double_t GetHodoBtmInvAdcLinear(Int_t iii) const {return fHodoBtmInvAdcLinear[iii];}
-  Double_t GetHodoTopInvAdcAdc(Int_t iii) const {return fHodoTopInvAdcAdc[iii];}
-  Double_t GetHodoBtmInvAdcAdc(Int_t iii) const {return fHodoBtmInvAdcAdc[iii];}
+
 
   //Time walk
   Double_t GetHodoVelFit(Int_t iii) const {return fHodoVelFit[iii];}
@@ -73,14 +68,7 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
 
-  Int_t fTofUsingInvAdc;
   Double_t *fHodoVelLight;
-  Double_t *fHodoTopInvAdcOffset;
-  Double_t *fHodoBtmInvAdcOffset;
-  Double_t *fHodoTopInvAdcAdc;
-  Double_t *fHodoBtmInvAdcAdc;
-  Double_t *fHodoTopInvAdcLinear;
-  Double_t *fHodoBtmInvAdcLinear;
 
   //Time walk
   Double_t *fHodoVelFit;
