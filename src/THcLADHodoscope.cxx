@@ -283,10 +283,10 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c1_Pos", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c1_Neg", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c2_Pos", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c2_Neg", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c1_Top", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {0}};
 
   // fTdc_Thrs = 1.0;
