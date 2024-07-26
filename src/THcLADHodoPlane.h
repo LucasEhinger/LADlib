@@ -187,9 +187,7 @@ protected:
   Int_t fOutputSampWaveform;
   Int_t fUseSampWaveform;
 
-  Double_t fDzpos;
-  Double_t fHodoSlop;
-  Double_t fPosBtm;  /* NOTE: "left" = "bottom" for a Y scintillator */
+  Double_t fPosBtm; /* NOTE: "left" = "bottom" for a Y scintillator */
   Double_t fPosTop; /* NOTE: "right" = "top" for a Y scintillator */
   Int_t fTdcOffset;
   Double_t fAdcTdcOffset;
@@ -244,6 +242,8 @@ protected:
   Double_t fSpacing; /* paddle spacing */
   Double_t fSize;    /* paddle size */
   Double_t fZpos;    /* z position */
+  Double_t fDzpos;
+  Double_t fHodoSlop;
 
   virtual Int_t ReadDatabase(const TDatime &date);
   virtual Int_t DefineVariables(EMode mode = kDefine);

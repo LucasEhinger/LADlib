@@ -408,7 +408,15 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   DBRequest list_1[] = {{parname.c_str(), &fNelem, kInt}, {0}};
   gHcParms->LoadParmValues(list_1, prefix);
 
-  DBRequest list[] = {{"hodo_adc_mode", &fADCMode, kInt, 0, 1},
+  DBRequest list[] = {{Form("scin_%s_zpos", GetName()), &fZpos, kDouble},
+                      {Form("scin_%s_dzpos", GetName()), &fDzpos, kDouble},
+                      {Form("scin_%s_size", GetName()), &fSize, kDouble},
+                      {Form("scin_%s_spacing", GetName()), &fSpacing, kDouble},
+                      {Form("scin_%s_%s", GetName(), "btm"), &fPosBtm, kDouble},
+                      {Form("scin_%s_%s", GetName(), "top"), &fPosTop, kDouble},
+                      // {Form("scin_%s_offset",GetName()), &fPosOffset, kDouble},
+                      {Form("scin_%s_center", GetName()), fPosCenter, kDouble, fNelem},
+                      {"hodo_adc_mode", &fADCMode, kInt, 0, 1},
                       {"hodo_adc_diag_cut", &fADCDiagCut, kInt, 0, 1},
                       {"cosmicflag", &fCosmicFlag, kInt, 0, 1},
                       {"hodo_debug_adc", &fDebugAdc, kInt, 0, 1},
@@ -469,7 +477,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoTopTimeOffset = new Double_t[fNelem];
   fHodoBtmTimeOffset = new Double_t[fNelem];
   */
-  fHodoVelLight        = new Double_t[fNelem];
+  fHodoVelLight = new Double_t[fNelem];
 
   // fHodoSigma = new Double_t[fNelem];
 
@@ -495,7 +503,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     // fHodoBtmPhcCoeff[j] = parent->GetHodoBtmPhcCoeff(index);
     // fHodoTopTimeOffset[j] = parent->GetHodoTopTimeOffset(index);
     // fHodoBtmTimeOffset[j] = parent->GetHodoBtmTimeOffset(index);
-    fHodoVelLight[j]        = parent->GetHodoVelLight(index);
+    fHodoVelLight[j] = parent->GetHodoVelLight(index);
 
     // Get Time-Walk correction param
     fHodoVelFit[j]   = parent->GetHodoVelFit(index);
