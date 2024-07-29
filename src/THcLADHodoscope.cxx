@@ -217,7 +217,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   // for each detector -- to be updated
   fNPaddle = new Int_t[fNPlanes];
   for (int ip = 0; ip < fNPlanes; ip++) {
-    DBRequest list2[] = {{Form("hodo_%d_nr", ip), &fNPaddle[ip], kInt}, {0}};
+    string parname = "hodo_"+string(fPlanes[ip]->GetName())+"_nr";
+    DBRequest list2[] = {{parname.c_str(), &fNPaddle[ip], kInt}, {0}};
 
     gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
   }

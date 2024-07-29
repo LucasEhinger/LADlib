@@ -21,6 +21,8 @@ THcLADHodoPlane::THcLADHodoPlane(const char *name, const char *description, cons
   fNGoodHits     = 0;
   fNScinGoodHits = 0;
 
+  fPosCenter = 0;
+
   fHodoHits = new TClonesArray("THcLADHodoHit", 16);
 
   frTopAdcErrorFlag = new TClonesArray("THcSignalHit", 16);
@@ -408,6 +410,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   DBRequest list_1[] = {{parname.c_str(), &fNelem, kInt}, {0}};
   gHcParms->LoadParmValues(list_1, prefix);
 
+  delete [] fPosCenter; fPosCenter = new Double_t[fNelem];
   DBRequest list[] = {{Form("scin_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("scin_%s_dzpos", GetName()), &fDzpos, kDouble},
                       {Form("scin_%s_size", GetName()), &fSize, kDouble},
