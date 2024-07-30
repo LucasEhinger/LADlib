@@ -38,11 +38,22 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t  GetTdcMax()                      const { return fScinTdcMax;}
   Double_t  GetTdcToTime()                   const { return fScinTdcToTime; }
 
-  Double_t  GetHodoPosAdcTimeWindowMax(Int_t iii) const { return fHodoPosAdcTimeWindowMax[iii]; }
-  Double_t  GetHodoPosAdcTimeWindowMin(Int_t iii) const { return fHodoPosAdcTimeWindowMin[iii]; }
-  Double_t  GetHodoNegAdcTimeWindowMax(Int_t iii) const { return fHodoNegAdcTimeWindowMax[iii]; } 
-  Double_t  GetHodoNegAdcTimeWindowMin(Int_t iii) const { return fHodoNegAdcTimeWindowMin[iii]; }
+  Double_t  GetHodoTopAdcTimeWindowMax(Int_t iii) const { return fHodoTopAdcTimeWindowMax[iii]; }
+  Double_t  GetHodoTopAdcTimeWindowMin(Int_t iii) const { return fHodoTopAdcTimeWindowMin[iii]; }
+  Double_t  GetHodoBtmAdcTimeWindowMax(Int_t iii) const { return fHodoBtmAdcTimeWindowMax[iii]; } 
+  Double_t  GetHodoBtmAdcTimeWindowMin(Int_t iii) const { return fHodoBtmAdcTimeWindowMin[iii]; }
 
+  Double_t GetHodoVelLight(Int_t iii) const {return fHodoVelLight[iii];}
+
+
+  //Time walk
+  Double_t GetHodoVelFit(Int_t iii) const {return fHodoVelFit[iii];}
+  Double_t GetHodoCableFit(Int_t iii) const {return fHodoCableFit[iii];}
+  Double_t GetHodoLCoeff(Int_t iii) const {return fHodo_LCoeff[iii];}
+  Double_t GetHodoTop_c1(Int_t iii) const {return fHodoTop_c1[iii];}
+  Double_t GetHodoBtm_c1(Int_t iii) const {return fHodoBtm_c1[iii];}
+  Double_t GetHodoTop_c2(Int_t iii) const {return fHodoTop_c2[iii];}
+  Double_t GetHodoBtm_c2(Int_t iii) const {return fHodoBtm_c2[iii];}
 
  protected:
 
@@ -57,12 +68,24 @@ class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
 
+  Double_t *fHodoVelLight;
+
+  //Time walk
+  Double_t *fHodoVelFit;
+  Double_t *fHodoCableFit;
+  Double_t *fHodo_LCoeff;
+  Double_t *fHodoTop_c1;
+  Double_t *fHodoBtm_c1;
+  Double_t *fHodoTop_c2;
+  Double_t *fHodoBtm_c2;
+
+
   Int_t     fAnalyzePedestals;
 
-  Double_t *fHodoNegAdcTimeWindowMin;    // per element? per plane?
-  Double_t *fHodoNegAdcTimeWindowMax;
-  Double_t *fHodoPosAdcTimeWindowMin;    
-  Double_t *fHodoPosAdcTimeWindowMax;
+  Double_t *fHodoBtmAdcTimeWindowMin;    // per element? per plane?
+  Double_t *fHodoBtmAdcTimeWindowMax;
+  Double_t *fHodoTopAdcTimeWindowMin;    
+  Double_t *fHodoTopAdcTimeWindowMax;
   
   THcLADHodoPlane** fPlanes;
   char** fPlaneNames;
