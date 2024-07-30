@@ -8,6 +8,8 @@
 #include "THcRawTdcHit.h"
 #include "THcSignalHit.h"
 
+//#pragma GCC optimize ("O0") //For debugging purposes
+
 // This is similar to THcScintillatorPlane from hcana
 
 //_______________________________________________________________________________________
@@ -753,7 +755,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
    *
    */
 
-  // Clear() is being called event by event
+  // Clear() is being called event by event   
+  // LHE: Is this true?? I don't think so. Adding Clear() here changes the output (to something that looks reasonable). FixMe
+  Clear();
 
   fTopTdcRefTime     = kBig;
   fTopAdcRefTime     = kBig;

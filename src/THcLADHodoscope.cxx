@@ -217,7 +217,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   // for each detector -- to be updated
   fNPaddle = new Int_t[fNPlanes];
   for (int ip = 0; ip < fNPlanes; ip++) {
-    string parname = "hodo_"+string(fPlanes[ip]->GetName())+"_nr";
+    string parname    = "hodo_" + string(fPlanes[ip]->GetName()) + "_nr";
     DBRequest list2[] = {{parname.c_str(), &fNPaddle[ip], kInt}, {0}};
 
     gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
@@ -240,7 +240,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fHodoBtmAdcTimeWindowMin = new Double_t[fMaxHodoScin];
   fHodoBtmAdcTimeWindowMax = new Double_t[fMaxHodoScin];
 
-  fHodoVelLight        = new Double_t[fMaxHodoScin];
+  fHodoVelLight = new Double_t[fMaxHodoScin];
 
   // Time walk
   fHodoVelFit   = new Double_t[fMaxHodoScin];
@@ -259,6 +259,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   }
 
   DBRequest list3[] = {{"cosmicflag", &fCosmicFlag, kInt, 0, 1},
+                       {"scin_tdc_min", &fScinTdcMin, kDouble},
+                       {"scin_tdc_max", &fScinTdcMax, kDouble},
                        {"hodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
                        {"hodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
                        {"hodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
@@ -274,12 +276,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
-
-
-  DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                      {0}};
+  DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-  
 
   DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
