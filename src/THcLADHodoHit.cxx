@@ -5,7 +5,7 @@
 //___________________________________________________________________
 THcLADHodoHit::THcLADHodoHit(Int_t toptdc, Int_t btmtdc, Double_t topadc, Double_t btmadc, Int_t ipad,
                              THcLADHodoPlane *hp)
-    : fTopTDC(toptdc), fBtmTDC(btmtdc), fTopADC_Ped(topadc), fBtmADC_Ped(btmadc), fPaddleNumber(ipad), fPlane(hp) {}
+    : fTopTDC(toptdc), fBtmTDC(btmtdc), fTopADC_Ped(topadc), fBtmADC_Ped(btmadc), fPaddleNumber(ipad),fTwoGoodTimes(kFALSE), fPlane(hp) {}
 
 //___________________________________________________________________
 THcLADHodoHit::~THcLADHodoHit() {}
