@@ -35,9 +35,19 @@ public:
 
   // Some getter/setter functions here
 
-  Int_t GetNelem() { return fNelem; };         // return number of paddles in this plane
-  Int_t GetNScinHits() { return fNScinHits; }; // Get # hits in plane (that pass min/max TDC cuts)
-  Int_t GetNGoodHits() { return fNGoodHits; }; // Get # hits in plane (used in determining focal plane time)
+  Int_t GetNelem() { return fNelem; };          // return number of paddles in this plane
+  Int_t GetNScinHits() { return fNScinHits; };  // Get # hits in plane (that pass min/max TDC cuts)
+  Int_t GetNGoodHits() { return fNGoodHits; };  // Get # hits in plane (used in determining focal plane time)
+  Double_t GetSpacing() { return fSpacing; };   // spacing of paddles
+  Double_t GetSize() { return fSize; };         // paddle size
+  Double_t GetHodoSlop() { return fHodoSlop; }; // hodo slop
+  Double_t GetZpos() { return fZpos; };         // return the z position
+  Double_t GetDzpos() { return fDzpos; }
+  Double_t GetPosBtm() { return fPosBtm; };
+  Double_t GetPosTop() { return fPosTop; };
+  Double_t GetPosOffset() {return fPosOffset;};
+  Double_t GetPosCenter(Int_t PaddleNo) { return fPosCenter[PaddleNo]; }; // counting from zero!
+
 
   TClonesArray *GetHits() { return fHodoHits; }
 
@@ -187,8 +197,9 @@ protected:
   Int_t fOutputSampWaveform;
   Int_t fUseSampWaveform;
 
-  Double_t fPosBtm; /* NOTE: "left" = "bottom" for a Y scintillator */
-  Double_t fPosTop; /* NOTE: "right" = "top" for a Y scintillator */
+  Double_t fPosBtm;
+  Double_t fPosTop; 
+  Double_t fPosOffset;
   Int_t fTdcOffset;
   Double_t fAdcTdcOffset;
   Double_t fScinTdcMin;
