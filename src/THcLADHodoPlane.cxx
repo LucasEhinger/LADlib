@@ -8,7 +8,7 @@
 #include "THcRawTdcHit.h"
 #include "THcSignalHit.h"
 
-//#pragma GCC optimize ("O0") //For debugging purposes
+// #pragma GCC optimize ("O0") //For debugging purposes
 
 // This is similar to THcScintillatorPlane from hcana
 
@@ -412,14 +412,15 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   DBRequest list_1[] = {{parname.c_str(), &fNelem, kInt}, {0}};
   gHcParms->LoadParmValues(list_1, prefix);
 
-  delete [] fPosCenter; fPosCenter = new Double_t[fNelem];
+  delete[] fPosCenter;
+  fPosCenter       = new Double_t[fNelem];
   DBRequest list[] = {{Form("scin_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("scin_%s_dzpos", GetName()), &fDzpos, kDouble},
                       {Form("scin_%s_size", GetName()), &fSize, kDouble},
                       {Form("scin_%s_spacing", GetName()), &fSpacing, kDouble},
                       {Form("scin_%s_%s", GetName(), "btm"), &fPosBtm, kDouble},
                       {Form("scin_%s_%s", GetName(), "top"), &fPosTop, kDouble},
-                      {Form("scin_%s_offset",GetName()), &fPosOffset, kDouble},
+                      {Form("scin_%s_offset", GetName()), &fPosOffset, kDouble},
                       {Form("scin_%s_center", GetName()), fPosCenter, kDouble, fNelem},
                       {"hodo_adc_mode", &fADCMode, kInt, 0, 1},
                       {"hodo_adc_diag_cut", &fADCDiagCut, kInt, 0, 1},
@@ -728,6 +729,12 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"BtmTdcRefDiffTime", "Reference Diff time of Btm TDC", "fBtmTdcRefDiffTime"},
       {"TopAdcRefDiffTime", "Reference Diff time of Top ADC", "fTopAdcRefDiffTime"},
       {"BtmAdcRefDiffTime", "Reference Diff time of Btm aDC", "fBtmAdcRefDiffTime"},
+
+      {"totNumTopTdcHits", "Total Number of Top TDC Hits", "fTotNumTopTdcHits"},    // Hodo+ raw TDC multiplicity ""
+      {"totNumBtmTdcHits", "Total Number of Bottom TDC Hits", "fTotNumBtmTdcHits"}, // Hodo- raw TDC multiplicity ""
+      {"totNumTdcHits", "Total Number of PMTs Hits (as measured by TDCs)",
+       "fTotNumTdcHits"}, // Hodo raw TDC multiplicity  ""
+
       //{"ngoodhits", "Number of paddle hits (passed tof tolerance and used to determine the focal plane time )",
       //"GetNGoodHits() "},
       {0}};
@@ -755,8 +762,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
    *
    */
 
-  // Clear() is being called event by event   
-  // LHE: Is this true?? I don't think so. Adding Clear() here changes the output (to something that looks reasonable). FixMe
+  // Clear() is being called event by event
+  // LHE: Is this true?? I don't think so. Adding Clear() here changes the output (to something that looks reasonable).
+  // FixMe
   Clear();
 
   fTopTdcRefTime     = kBig;
