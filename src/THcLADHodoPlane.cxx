@@ -8,8 +8,6 @@
 #include "THcRawTdcHit.h"
 #include "THcSignalHit.h"
 
-// #pragma GCC optimize ("O0") //For debugging purposes
-
 // This is similar to THcScintillatorPlane from hcana
 
 //_______________________________________________________________________________________
@@ -344,6 +342,15 @@ void THcLADHodoPlane::Clear(Option_t *opt) {
   for (UInt_t ielem = 0; ielem < fNumGoodBtmTdcHits.size(); ielem++)
     fNumGoodBtmTdcHits.at(ielem) = 0;
 
+  for (UInt_t ielem = 0; ielem < fNumTopAdcHits.size(); ielem++)
+    fNumTopAdcHits.at(ielem) = 0;
+  for (UInt_t ielem = 0; ielem < fNumBtmAdcHits.size(); ielem++)
+    fNumBtmAdcHits.at(ielem) = 0;
+  for (UInt_t ielem = 0; ielem < fNumTopTdcHits.size(); ielem++)
+    fNumTopTdcHits.at(ielem) = 0;
+  for (UInt_t ielem = 0; ielem < fNumBtmTdcHits.size(); ielem++)
+    fNumBtmTdcHits.at(ielem) = 0;
+
   // Clear Ped/Amps/Int/Time
   for (UInt_t ielem = 0; ielem < fGoodTopAdcPed.size(); ielem++) {
     fGoodTopAdcPed.at(ielem)         = 0.0;
@@ -531,6 +538,11 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
 
   // Initialize
 
+  fNumTopAdcHits = vector<Int_t>(fNelem, 0.0);
+  fNumBtmAdcHits = vector<Int_t>(fNelem, 0.0);
+  fNumTopTdcHits = vector<Int_t>(fNelem, 0.0);
+  fNumBtmTdcHits = vector<Int_t>(fNelem, 0.0);
+
   fNumGoodTopAdcHits = vector<Int_t>(fNelem, 0.0);
   fNumGoodBtmAdcHits = vector<Int_t>(fNelem, 0.0);
   fNumGoodTopTdcHits = vector<Int_t>(fNelem, 0.0);
@@ -628,6 +640,14 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
         {"BtmAdcSampPulseAmp", "Bottom Samp ADC pulse amplitudes", "frBtmAdcSampPulseAmp.THcSignalHit.GetData()"},
         {"BtmAdcSampPulseTime", "Bottom Samp ADC pulse times", "frBtmAdcSampPulseTime.THcSignalHit.GetData()"},
 
+        {"numTopAdcHits", "Number of Top ADC Hits Per PMT", "fNumTopAdcHits"}, // Hodo+ ADC occupancy - vector<Int_t>
+        {"numBtmAdcHits", "Number of Bottom ADC Hits Per PMT",
+         "fNumBtmAdcHits"}, // Hodo- ADC occupancy - vector <Int_t>
+
+        {"numTopTdcHits", "Number of Top TDC Hits Per PMT", "fNumTopTdcHits"}, // Hodo+ TDC occupancy - vector<Int_t>
+        {"numBtmTdcHits", "Number of Bottom TDC Hits Per PMT",
+         "fNumBtmTdcHits"}, // Hodo- TDC occupancy - vector <Int_t>
+
         {"totNumTopAdcHits", "Total Number of Top ADC Hits", "fTotNumTopAdcHits"}, // Hodo+ raw ADC multiplicity Int_t
         {"totNumBtmAdcHits", "Total Number of Bottom ADC Hits", "fTotNumBtmAdcHits"}, // Hodo- raw ADC multiplicity ""
         {"totNumAdcHits", "Total Number of PMTs Hit (as measured by ADCs)",
@@ -699,6 +719,8 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
 
       {"GoodTopAdcPulseInt", "List of top ADC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopAdcPulseInt"},
+      {"GoodBtmAdcPulseInt", "List of Bottom ADC values (passed TDC && ADC Min and Max cuts for either end)",
+        "fGoodBtmAdcPulseInt"},
       {"GoodTopAdcPulseAmp", "List of top ADC peak amp (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopAdcPulseAmp"},
       {"GoodBtmAdcPulseAmp", "List of Bottom ADC peak amp (passed TDC && ADC Min and Max cuts for either end)",
@@ -711,6 +733,25 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
        "fGoodTopAdcTdcDiffTime"},
       {"GoodBtmAdcTdcDiffTime", "List of Bottom TDC - ADC time (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodBtmAdcTdcDiffTime"},
+
+      {"GoodTopTdcTimeUnCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeUnCorr"},
+      {"GoodBtmTdcTimeUnCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeUnCorr"},
+      {"GoodTopTdcTimeCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeCorr"},
+      {"GoodBtmTdcTimeCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeCorr"},
+      {"GoodTopTdcTimeTOFCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeTOFCorr"},
+      {"GoodBtmTdcTimeTOFCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeTOFCorr"},
+      {"GoodTopTdcTimeWalkCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeWalkCorr"},
+      {"GoodBtmTdcTimeWalkCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeWalkCorr"},
+      {"GoodDiffDistTrack", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodDiffDistTrack"},
 
       /*
       // cluster variables
@@ -785,9 +826,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
   UInt_t nrTopADCHits     = 0; // Don't really use this. Not sure how it's different from nrTopAdcHits
   UInt_t nrBtmADCHits     = 0; // Don't really use this. Not sure how it's different from nrBtmAdcHits
 
-  // Added 07/03/2024
-
-  // End added 07/03/2024
 
   Int_t nrawhits = rawhits->GetLast() + 1;
   Int_t ihit     = nexthit;
@@ -837,6 +875,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       nrTopTdcHits++; // FIXME: just use thit? or is it used somewhere else too?
       fTotNumTdcHits++;
       fTotNumTopTdcHits++;
+      fNumTopTdcHits.at(padnum - 1) = padnum;
     }
 
     // Now, repeat for the Btm end
@@ -860,6 +899,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       nrBtmTdcHits++; // FIXME: just use thit? or is it used somewhere else too?
       fTotNumTdcHits++;
       fTotNumBtmTdcHits++;
+      fNumBtmTdcHits.at(padnum - 1) = padnum;
     } // thit loop
 
     // Top ADC hits
@@ -908,6 +948,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         nrTopAdcHits++;
         fTotNumAdcHits++;
         fTotNumTopAdcHits++;
+        fNumTopAdcHits.at(padnum - 1) = padnum;
       }
     }
 
@@ -1024,6 +1065,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         nrBtmAdcHits++;
         fTotNumAdcHits++;
         fTotNumBtmAdcHits++;
+        fNumBtmAdcHits.at(padnum - 1) = padnum;
       }
     }
 

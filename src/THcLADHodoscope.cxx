@@ -316,6 +316,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"tof_tolerance", &fTofTolerance, kDouble, 0, 1},
                        {"hodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
                        {"hodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
+                       {"hodo_tdc_to_time", &fScinTdcToTime, kDouble},
                        {"hodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},

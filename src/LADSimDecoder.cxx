@@ -514,15 +514,21 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
 
       if (ntdc) {
         std::vector<UInt_t> *myev = &(map[sldat]);
-        myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, ntdc));
 
+        // Only save leading tdc here.
+        // myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, ntdc));
+
+        // if (simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
+        //   myev->push_back(simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j));
+        // if (simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) > -1000000) {
+        //   uint tdc = simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) | (1 << 31);
+        //   //   // cout << tdc << endl;
+        //   myev->push_back(tdc);
+        // }
+
+        myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, 1));
         if (simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
           myev->push_back(simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j));
-        if (simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) > -1000000) {
-          uint tdc = simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) | (1 << 31);
-          //   // cout << tdc << endl;
-          myev->push_back(tdc);
-        }
 
         ChanToROC(detname, lchan, crate, slot, chan); //+91 ??? that might be the trick
         if (crate >= 0 || slot >= 0) {
@@ -925,17 +931,7 @@ Int_t LADSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
         }
       } else {
         int chan_offset = 1;
-        if (detname.find("sh") != std::string::npos)
-          chan_offset = 0;
         if (detname.find("hod") != std::string::npos)
-          chan_offset = 0;
-        if (detname.find("grinch") != std::string::npos)
-          chan_offset = 0;
-        if (detname.find("ps") != std::string::npos)
-          chan_offset = 0;
-        if (detname.find("active_ana") != std::string::npos)
-          chan_offset = 0;
-        if (detname.find("prpolscint_farside") != std::string::npos)
           chan_offset = 0;
         for (int i = ch_lo; i <= ch_hi; i++, ch_map++) {
           if (ch_count > (int)nlogchan) {

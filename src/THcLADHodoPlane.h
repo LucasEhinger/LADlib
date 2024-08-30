@@ -78,6 +78,11 @@ protected:
   Int_t fTotNumTopAdcHits;
   Int_t fTotNumBtmAdcHits;
 
+  vector<Int_t> fNumTopAdcHits;
+  vector<Int_t> fNumBtmAdcHits;
+  vector<Int_t> fNumTopTdcHits;
+  vector<Int_t> fNumBtmTdcHits;
+
   Int_t fTotNumGoodTopAdcHits;
   Int_t fTotNumGoodBtmAdcHits;
   Int_t fTotNumGoodAdcHits;
