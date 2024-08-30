@@ -1,10 +1,10 @@
-#ifndef SBSSimADC_
-#define SBSSimADC_
+#ifndef LADSimADC_
+#define LADSimADC_
 
 /////////////////////////////////////////////////////////////////////
 //
-//   SBSSimADC
-//   G4SBS Simplified Simulated ADC Module
+//   LADSimADC
+//   G4LAD Simplified Simulated ADC Module
 //
 //   Right now, all it supports is an ADC sum and individual ADC samples
 //
@@ -13,17 +13,17 @@
 #include "PipeliningModule.h"
 #include "stdint.h"
 #include <vector>
-#include "SBSSimDataDecoder.h"
+#include "LADSimDataDecoder.h"
 
 namespace Decoder {
 
-  class SBSSimADC : public PipeliningModule {   // Inheritance
+  class LADSimADC : public PipeliningModule {   // Inheritance
 
   public:
 
-    SBSSimADC();                         // Default constructor
-    SBSSimADC(Int_t crate, Int_t slot);  // Constructor
-    virtual ~SBSSimADC();                // Virtual constructor
+    LADSimADC();                         // Default constructor
+    LADSimADC(Int_t crate, Int_t slot);  // Constructor
+    virtual ~LADSimADC();                // Virtual constructor
 
     // Use parent class functions
     using PipeliningModule::Init;
@@ -61,9 +61,9 @@ namespace Decoder {
     //static std::vector<TypeIter_t> fgTypeVec;//Let's try something...
     std::vector<SimEncoder::sadc_data> sadc_data;
 
-    ClassDef(SBSSimADC,0)  //  Generic SimADC module
+    ClassDef(LADSimADC,0)  //  Generic SimADC module
 
-  };  // SBSSimADC class
+  };  // LADSimADC class
 
 }  // Decoder namespace
 

@@ -1,24 +1,24 @@
-#include "SBSSimEvent.h"
+#include "LADSimEvent.h"
 #include "TTree.h"
 #include <iostream>
 
 // -----------------------------------------------
-// class SBSSimEvent: encapsulation of g4sbs_tree
+// class LADSimEvent: encapsulation of g4LAD_tree
 //
 /*
 //_____________________________________________________________________________
-SBSSimEvent::SBSSimEvent() : g4sbs_tree()
+LADSimEvent::LADSimEvent() : g4LAD_tree()
 {
-  std::cout << "Initializing SBSSimEvent" << std::endl;
+  std::cout << "Initializing LADSimEvent" << std::endl;
   RunID = EvtID = 0;
   //Weight = 1;
   Clear();
 }
 */
 //_____________________________________________________________________________
-// SBSSimEvent::SBSSimEvent(TTree* tree, TString experiment) {
-SBSSimEvent::SBSSimEvent(TTree *tree, Exp_t experiment) {
-  std::cout << "Initializing SBSSimEvent" << std::endl;
+// LADSimEvent::LADSimEvent(TTree* tree, TString experiment) {
+LADSimEvent::LADSimEvent(TTree *tree, Exp_t experiment) {
+  std::cout << "Initializing LADSimEvent" << std::endl;
   RunID = EvtID = 0;
 
   fExperiment = experiment;
@@ -36,9 +36,9 @@ SBSSimEvent::SBSSimEvent(TTree *tree, Exp_t experiment) {
 }
 /*
 //_____________________________________________________________________________
-SBSSimEvent::SBSSimEvent(TTree* tree, std::vector<TString> det_list) : g4sbs_tree(tree, det_list)
+LADSimEvent::LADSimEvent(TTree* tree, std::vector<TString> det_list) : g4LAD_tree(tree, det_list)
 {
-  std::cout << "Initializing SBSSimEvent" << std::endl;
+  std::cout << "Initializing LADSimEvent" << std::endl;
   cout << det_list.size() << endl;
   RunID = EvtID = 0;
   //Weight = 1;
@@ -46,17 +46,17 @@ SBSSimEvent::SBSSimEvent(TTree* tree, std::vector<TString> det_list) : g4sbs_tre
 }
 */
 //_____________________________________________________________________________
-void SBSSimEvent::Clear(const Option_t *opt) {
+void LADSimEvent::Clear(const Option_t *opt) {
   // do nothing...
 }
 
 //_____________________________________________________________________________
-void SBSSimEvent::Print(const Option_t *opt) const {
+void LADSimEvent::Print(const Option_t *opt) const {
   // std::cout << RunID << " " << EvtID << " " << ev_sigma*ev_solang << std::endl;
 }
 
 //_____________________________________________________________________________
-Int_t SBSSimEvent::GetEntry(Long64_t entry) {
+Int_t LADSimEvent::GetEntry(Long64_t entry) {
   EvtID = entry;
 
   return Tgmn->GetEntry(entry);
@@ -64,4 +64,4 @@ Int_t SBSSimEvent::GetEntry(Long64_t entry) {
 }
 
 //-----------------------------------------------------------------------------
-ClassImp(SBSSimEvent)
+ClassImp(LADSimEvent)

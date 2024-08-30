@@ -1,8 +1,8 @@
-#ifndef __SBSSimEvent_h
-#define __SBSSimEvent_h
+#ifndef __LADSimEvent_h
+#define __LADSimEvent_h
 
 //#include "gmn_dig_tree.h"
-//#include "g4sbs_tree.h"
+//#include "g4LAD_tree.h"
 
 #include "gmn_tree_digitized.h"
 #include "gep_tree_digitized.h"
@@ -13,14 +13,14 @@ enum Exp_t    { kGEp, kGEnRP, kGMN, kSIDIS};
 
 class TTree;
 
-class SBSSimEvent {
+class LADSimEvent {
  public:
-  //SBSSimEvent(){};                 // Default constructor, for ROOT I/O
+  //LADSimEvent(){};                 // Default constructor, for ROOT I/O
   //Now we want to initialize the ROOT tree the same way 
-  //SBSSimEvent(TTree* tree, TString experiment="gmn");//, std::vector<TString> det_list);
-  SBSSimEvent(TTree* tree, Exp_t experiment=kGMN);//, std::vector<TString> det_list);
+  //LADSimEvent(TTree* tree, TString experiment="gmn");//, std::vector<TString> det_list);
+  LADSimEvent(TTree* tree, Exp_t experiment=kGMN);//, std::vector<TString> det_list);
   
-  virtual ~SBSSimEvent(){};
+  virtual ~LADSimEvent(){};
   
   virtual Int_t    GetEntry(Long64_t entry);
   virtual void Clear( const Option_t* opt="" );
@@ -44,8 +44,8 @@ class SBSSimEvent {
   
   //Auto-generated ROOT Tree classes for each experiment ROOT tree; generated using TTree::MakeClass()
   
-  //Later on, any time we want to analyze a g4sbs root file whose format has changed, we can just run TTree::MakeClass on that root file with the appropriate
-  //class name, and copy the source and header files into SBS-offline,
+  //Later on, any time we want to analyze a g4LAD root file whose format has changed, we can just run TTree::MakeClass on that root file with the appropriate
+  //class name, and copy the source and header files into LAD-offline,
   //recompile, and voila: compatibility guaranteed:
   lad_tree_digitized *Tlad;
   lad_tree_digitized *Tgmn;//Delete this later, but leave for now to make sure we don't break anything.
@@ -57,7 +57,7 @@ class SBSSimEvent {
 
   
   
-  ClassDef(SBSSimEvent, 1) // Simulated data for one event
+  ClassDef(LADSimEvent, 1) // Simulated data for one event
 };
 
 #endif

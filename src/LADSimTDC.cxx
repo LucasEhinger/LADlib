@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////
 //
-//   SBSSimTDC
+//   LADSimTDC
 
-#include "SBSSimTDC.h"
-#include "SBSSimDataDecoder.h"
+#include "LADSimTDC.h"
+#include "LADSimDataDecoder.h"
 #include "THaEvData.h"
 #include "THaSlotData.h"
 #include "TMath.h"
@@ -28,25 +28,25 @@ using namespace std;
 
 namespace Decoder {
 
-  Module::TypeIter_t SBSSimTDC::fgThisType =
-    //DoRegister( ModuleType( "Decoder::SBSSimTDC" , 53204 ));
-    DoRegister( ModuleType( "Decoder::SBSSimTDC" , -3204 ));
+  Module::TypeIter_t LADSimTDC::fgThisType =
+    //DoRegister( ModuleType( "Decoder::LADSimTDC" , 53204 ));
+    DoRegister( ModuleType( "Decoder::LADSimTDC" , -3204 ));
   
-  Module::TypeIter_t SBSSimTDC::fgType0 =
-    DoRegister( ModuleType( "Decoder::SBSSimTDC" , -6401 ));
-  Module::TypeIter_t SBSSimTDC::fgType1 =
-    DoRegister( ModuleType( "Decoder::SBSSimTDC" , -1877 ));
-  Module::TypeIter_t SBSSimTDC::fgType2 =
-    DoRegister( ModuleType( "Decoder::SBSSimTDC" , -1190 ));
-  Module::TypeIter_t SBSSimTDC::fgType3 =
-    DoRegister( ModuleType( "Decoder::SBSSimTDC" , -3201 ));
+  Module::TypeIter_t LADSimTDC::fgType0 =
+    DoRegister( ModuleType( "Decoder::LADSimTDC" , -6401 ));
+  Module::TypeIter_t LADSimTDC::fgType1 =
+    DoRegister( ModuleType( "Decoder::LADSimTDC" , -1877 ));
+  Module::TypeIter_t LADSimTDC::fgType2 =
+    DoRegister( ModuleType( "Decoder::LADSimTDC" , -1190 ));
+  Module::TypeIter_t LADSimTDC::fgType3 =
+    DoRegister( ModuleType( "Decoder::LADSimTDC" , -3201 ));
 
-  SBSSimTDC::SBSSimTDC()
+  LADSimTDC::LADSimTDC()
   {
     tdc_data.resize(NTDCCHAN);
   }
 
-  SBSSimTDC::SBSSimTDC(Int_t crate, Int_t slot)
+  LADSimTDC::LADSimTDC(Int_t crate, Int_t slot)
     : PipeliningModule(crate, slot)//EPAF: I think we need that don't we ?
   {
     tdc_data.resize(NTDCCHAN);
@@ -54,20 +54,20 @@ namespace Decoder {
     Init();
   }
 
-  SBSSimTDC::~SBSSimTDC() {
+  LADSimTDC::~LADSimTDC() {
 #if defined DEBUG && defined WITH_DEBUG
     // delete fDebugFile; fDebugFile = 0;
 #endif
   }
 
   /*
-  Bool_t SBSSimTDC::HasCapability(Decoder::EModuleType type) {
+  Bool_t LADSimTDC::HasCapability(Decoder::EModuleType type) {
     return ( type == kSampleADC || type == kPulseIntegral || type == kPulseTime
         || type == kPulsePeak || type == kPulsePedestal || type == kCoarseTime || type == kFineTime);
   } */
 
   // Clear all data vectors
-  void SBSSimTDC::ClearDataVectors() {
+  void LADSimTDC::ClearDataVectors() {
     // Clear all data objects
     assert(tdc_data.size() == NTDCCHAN);  // Initialization error in constructor
     for (uint32_t i = 0; i < NTDCCHAN; i++) {
@@ -76,35 +76,35 @@ namespace Decoder {
     }
   }
 
-  void SBSSimTDC::Clear( const Option_t* opt) {
+  void LADSimTDC::Clear( const Option_t* opt) {
     // Clear event-by-event data
     ClearDataVectors();
   }
 
-  void SBSSimTDC::Init() {
+  void LADSimTDC::Init() {
     Clear();
     IsInit = kTRUE;
-    fName = "SBSSimTDC Generic TDC Module";
+    fName = "LADSimTDC Generic TDC Module";
   }
 
-  void SBSSimTDC::CheckDecoderStatus() const {
-    std::cout << "SBSSimTDC has been called" << std::endl;
+  void LADSimTDC::CheckDecoderStatus() const {
+    std::cout << "LADSimTDC has been called" << std::endl;
   }
 
-  UInt_t SBSSimTDC::LoadSlot(THaSlotData *sldat, const UInt_t *evbuffer,
+  UInt_t LADSimTDC::LoadSlot(THaSlotData *sldat, const UInt_t *evbuffer,
       const UInt_t *pstop) {
     Clear();
     unsigned int nwords = 0;
     unsigned short chan = 0, type = 0;
     UInt_t raw_buff;
     SimEncoder::tdc_data tmp_tdc_data;
-    //std::cout << "SBSSimTDC load crate/slot: " << sldat->getCrate() << "/" << sldat->getSlot() << std::endl;
+    //std::cout << "LADSimTDC load crate/slot: " << sldat->getCrate() << "/" << sldat->getSlot() << std::endl;
     while(evbuffer < pstop) {
       // First, decode the header
       chan = type = nwords = 0;
-      SBSSimDataDecoder::DecodeHeader(*evbuffer++,type,chan,nwords);
+      LADSimDataDecoder::DecodeHeader(*evbuffer++,type,chan,nwords);
       //std::cout << " nwords " << nwords << " chan " << chan << " type " << type << std::endl; 
-      SBSSimDataDecoder *enc = SBSSimDataDecoder::GetEncoder(type);
+      LADSimDataDecoder *enc = LADSimDataDecoder::GetEncoder(type);
       if(!enc) {
         std::cerr << "Could not find TDC decoder of type: " << type
           << std::endl;
@@ -137,12 +137,12 @@ namespace Decoder {
    return 0;
   }
 
-  UInt_t SBSSimTDC::LoadSlot( THaSlotData *sldat, const UInt_t *evbuffer,
+  UInt_t LADSimTDC::LoadSlot( THaSlotData *sldat, const UInt_t *evbuffer,
                               UInt_t pos, UInt_t len) {
     return LoadSlot(sldat,evbuffer+pos,evbuffer+pos+len);
-    //return SBSSimTDC::LoadSlot(sldat,evbuffer,len);
+    //return LADSimTDC::LoadSlot(sldat,evbuffer,len);
   }
   
 }
 
-ClassImp(Decoder::SBSSimTDC)
+ClassImp(Decoder::LADSimTDC)

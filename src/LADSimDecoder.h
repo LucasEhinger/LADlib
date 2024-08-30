@@ -1,18 +1,16 @@
-#ifndef __SBSSimDecoder_h
-#define __SBSSimDecoder_h
+#ifndef __LADSimDecoder_h
+#define __LADSimDecoder_h
 
 /////////////////////////////////////////////////////////////////////
 //
-//   SBSSimDecoder
+//   LADSimDecoder
 //
 /////////////////////////////////////////////////////////////////////
 
 #include "SimDecoder.h"
-//#include "TSBSSimEvent.h"
 #include "ha_compiledata.h"
-#include "SBSSimFile.h"//needed for SBSSimEvent
+#include "LADSimFile.h"//needed for LADSimEvent
 #include "TH1D.h"
-//#include "digsim_tree.h"
 #include "THaApparatus.h"
 
 #include <cassert>
@@ -20,18 +18,18 @@
 #include <stdint.h>
 
 class THaDetMap;
-class SBSSimSADCEncoder; // For decoding simulation GEMs
+class LADSimSADCEncoder; // For decoding simulation GEMs
 //class TDetInfo;
 
 //-----------------------------------------------------------------------------
-// SBS digitized simulation decoder class
-class SBSSimDecoder : public Podd::SimDecoder {
+// LAD digitized simulation decoder class
+class LADSimDecoder : public Podd::SimDecoder {
  public:
   //constructor may be inputed a data file to input some of the paramaters used by SimDecoder
   //NB: if the second file path does not select a valid file, default parameters will be used.
   // MANDATORY
-  SBSSimDecoder();
-  virtual ~SBSSimDecoder();
+  LADSimDecoder();
+  virtual ~LADSimDecoder();
   
 #if ANALYZER_VERSION_CODE >= 67072 // ANALYZER_VERSION(1,6,0)
   virtual Int_t LoadEvent( const UInt_t* evbuffer );
@@ -113,12 +111,12 @@ protected:
   Int_t ReadDetectorDB(std::string detname, TDatime date);
   Int_t LoadDetector( std::map<Decoder::THaSlotData*, std::vector<UInt_t> > &map,
 		      const std::string& detname,
-		      const SBSSimEvent* simev); 
+		      const LADSimEvent* simev); 
   
   void CheckForEnabledDetectors();
   //void CheckForDetector(const char *detname, short id);
 
-  SBSSimSADCEncoder *fDecoderMPD;//FIXME: a bit of a kludge... 
+  LADSimSADCEncoder *fDecoderMPD;//FIXME: a bit of a kludge... 
   
   bool fCheckedForEnabledDetectors;
   std::vector<std::string> fDetectors;
@@ -177,7 +175,7 @@ protected:
   Double_t fVz_simc;
   Double_t fVeE_simc;
   Double_t fVetheta_simc;
-  // g4sbs variables
+  // g4LAD variables
   Double_t fSigma;
   Double_t fOmega;
   Double_t fEPx;
@@ -276,7 +274,7 @@ protected:
   //		    Int_t& crate, Int_t& slot, Int_t& chan ) const;
   // Int_t MakeROCKey( Int_t crate, Int_t slot, Int_t chan ) const;
   */
-  ClassDef(SBSSimDecoder,1) // Decoder for simulated SoLID spectrometer data
+  ClassDef(LADSimDecoder,1) // Decoder for simulated SoLID spectrometer data
 };
 
 

@@ -1,17 +1,17 @@
-#ifndef SBSSIMDATADECODER_H
-#define SBSSIMDATADECODER_H
+#ifndef LADSIMDATADECODER_H
+#define LADSIMDATADECODER_H
 
 #include <vector>
 #include <string>
 
-#define SBS_MAX_ENCODER_WORDS 1024 // Max number of words the encoder can encode
-#define SBS_NWORDS_MASK       0x3FFF
-#define SBS_CHANNEL_MASK      0x3FFF // 0x1FF // 
-#define SBS_TYPE_MASK         0xF // 0x1FF // 
-#define SBS_CHANNEL_FIRST_BIT 14
-#define SBS_TYPE_FIRST_BIT    28 // 23 // 
-#define SBS_APV25_NCH 128 // Number of channels per APV25
-#define SBS_MPD_NAPV25 15 // Number of AVP25's per MPD
+#define LAD_MAX_ENCODER_WORDS 1024 // Max number of words the encoder can encode
+#define LAD_NWORDS_MASK       0x3FFF
+#define LAD_CHANNEL_MASK      0x3FFF // 0x1FF // 
+#define LAD_TYPE_MASK         0xF // 0x1FF // 
+#define LAD_CHANNEL_FIRST_BIT 14
+#define LAD_TYPE_FIRST_BIT    28 // 23 // 
+#define LAD_APV25_NCH 128 // Number of channels per APV25
+#define LAD_MPD_NAPV25 15 // Number of AVP25's per MPD
 
 //TODO: simplify this... I'm not convinced such a complexity is required anymore...
 
@@ -59,10 +59,10 @@ namespace SimEncoder {
   };
 };
 
-class SBSSimDataDecoder {
+class LADSimDataDecoder {
 public:
-  SBSSimDataDecoder(const char *enc_name, unsigned short enc_id);
-  virtual ~SBSSimDataDecoder() {};
+  LADSimDataDecoder(const char *enc_name, unsigned short enc_id);
+  virtual ~LADSimDataDecoder() {};
   
   /*
   // Encoders
@@ -108,8 +108,8 @@ public:
   unsigned short GetId() { return fEncId; }
   std::string GetName() { return fName; }
 
-  static SBSSimDataDecoder* GetEncoderByName(const char *enc_name);
-  static SBSSimDataDecoder* GetEncoder(unsigned short id);
+  static LADSimDataDecoder* GetEncoderByName(const char *enc_name);
+  static LADSimDataDecoder* GetEncoder(unsigned short id);
   static unsigned int MakeBitMask(unsigned short bits);
 
   static unsigned int EncodeHeader(unsigned short type, unsigned short mult,
@@ -125,15 +125,15 @@ protected:
   unsigned short fEncId;
 
 private:
-  static std::vector<SBSSimDataDecoder*> fEncoders;
+  static std::vector<LADSimDataDecoder*> fEncoders;
 };
 
 // Generic TDC encoder
-class SBSSimTDCEncoder : public SBSSimDataDecoder {
+class LADSimTDCEncoder : public LADSimDataDecoder {
 public:
-  SBSSimTDCEncoder(const char *enc_name, unsigned short enc_id,
+  LADSimTDCEncoder(const char *enc_name, unsigned short enc_id,
       unsigned short bits, unsigned short edge_bit);
-  virtual ~SBSSimTDCEncoder() {};
+  virtual ~LADSimTDCEncoder() {};
 
   // Overloaded functions
   //virtual bool EncodeTDC(SimEncoder::tdc_data data, unsigned int *enc_data,
@@ -149,11 +149,11 @@ protected:
 };
 
 // Generic ADC encoder
-class SBSSimADCEncoder : public SBSSimDataDecoder {
+class LADSimADCEncoder : public LADSimDataDecoder {
 public:
-  SBSSimADCEncoder(const char *enc_name, unsigned short enc_id,
+  LADSimADCEncoder(const char *enc_name, unsigned short enc_id,
       unsigned short bits);
-  virtual ~SBSSimADCEncoder() {};
+  virtual ~LADSimADCEncoder() {};
 
   //virtual bool EncodeADC(SimEncoder::adc_data data, unsigned int *enc_data,
   //  unsigned short &nwords);
@@ -167,10 +167,10 @@ protected:
 };
 
 //generic sample ADC encoder, meant to replace FADC250 and MPD
-class SBSSimSADCEncoder : public SBSSimADCEncoder {
+class LADSimSADCEncoder : public LADSimADCEncoder {
 public:
-  SBSSimSADCEncoder(const char *enc_name, unsigned short enc_id);
-  virtual ~SBSSimSADCEncoder() {};
+  LADSimSADCEncoder(const char *enc_name, unsigned short enc_id);
+  virtual ~LADSimSADCEncoder() {};
 
   virtual bool DecodeSADC(SimEncoder::sadc_data &data,
       const unsigned int *enc_data,unsigned short nwords);
@@ -179,10 +179,10 @@ public:
 
 /*
 // JLab FADC 250 in multi sample ADC mode
-class SBSSimFADC250Encoder : public SBSSimADCEncoder {
+class LADSimFADC250Encoder : public LADSimADCEncoder {
 public:
-  SBSSimFADC250Encoder(const char *enc_name, unsigned short enc_id);
-  virtual ~SBSSimFADC250Encoder() {};
+  LADSimFADC250Encoder(const char *enc_name, unsigned short enc_id);
+  virtual ~LADSimFADC250Encoder() {};
 
   //virtual bool EncodeFADC(SimEncoder::fadc_data data, unsigned int *enc_data,
   //  unsigned short &nwords);
@@ -199,10 +199,10 @@ public:
 */
 
 // MPD
-class SBSSimMPDEncoder : public SBSSimDataDecoder {
+class LADSimMPDEncoder : public LADSimDataDecoder {
 public:
-  SBSSimMPDEncoder(const char *enc_name, unsigned short enc_id);
-  virtual ~SBSSimMPDEncoder() {};
+  LADSimMPDEncoder(const char *enc_name, unsigned short enc_id);
+  virtual ~LADSimMPDEncoder() {};
 
   //virtual bool EncodeMPD(SimEncoder::mpd_data data, unsigned int *enc_data,
   //  unsigned short &nwords);
@@ -229,4 +229,4 @@ protected:
 };
 /**/
 
-#endif // SBSSIMDATAENCODER_H
+#endif // LADSIMDATAENCODER_H

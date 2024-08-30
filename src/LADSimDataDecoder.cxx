@@ -1,53 +1,53 @@
-#include "SBSSimDataDecoder.h"
+#include "LADSimDataDecoder.h"
 #include <TString.h>
 #include <iostream>
 
-#define SBS_MPD_NSAMPLES_BIT  27
-#define SBS_MPD_NSTRIPS_BIT   15
-#define SBS_MPD_POS_BIT       7
-#define SBS_MPD_INV_BIT       6
-#define SBS_MPD_I2C_BIT       0
+#define LAD_MPD_NSAMPLES_BIT  27
+#define LAD_MPD_NSTRIPS_BIT   15
+#define LAD_MPD_POS_BIT       7
+#define LAD_MPD_INV_BIT       6
+#define LAD_MPD_I2C_BIT       0
 
-#define SBS_MPD_ADC_ID_BIT    20
-#define SBS_MPD_MPD_ID_BIT    10
-#define SBS_MPD_GEM_ID_BIT    0
+#define LAD_MPD_ADC_ID_BIT    20
+#define LAD_MPD_MPD_ID_BIT    10
+#define LAD_MPD_GEM_ID_BIT    0
 
 // Word 1
-#define SBS_MPD_NSAMPLES_MASK 0xF8000000
-#define SBS_MPD_NSTRIPS_MASK  0x07FF8000
-#define SBS_MPD_POS_MASK      0x00007F80
-#define SBS_MPD_INV_MASK      0x10000040
-#define SBS_MPD_I2C_MASK      0x0000003F
+#define LAD_MPD_NSAMPLES_MASK 0xF8000000
+#define LAD_MPD_NSTRIPS_MASK  0x07FF8000
+#define LAD_MPD_POS_MASK      0x00007F80
+#define LAD_MPD_INV_MASK      0x10000040
+#define LAD_MPD_I2C_MASK      0x0000003F
 // Word 2
-#define SBS_MPD_ADC_ID_MASK   0x3FF00000
-#define SBS_MPD_MPD_ID_MASK   0x000FFC00
-#define SBS_MPD_GEM_ID_MASK   0x000003FF
+#define LAD_MPD_ADC_ID_MASK   0x3FF00000
+#define LAD_MPD_MPD_ID_MASK   0x000FFC00
+#define LAD_MPD_GEM_ID_MASK   0x000003FF
 
 // This one is static, so define it again here
-std::vector<SBSSimDataDecoder*> SBSSimDataDecoder::fEncoders;
+std::vector<LADSimDataDecoder*> LADSimDataDecoder::fEncoders;
 
-SBSSimDataDecoder* SBSSimDataDecoder::GetEncoderByName(
+LADSimDataDecoder* LADSimDataDecoder::GetEncoderByName(
     const char *enc_name)
 {
   if(fEncoders.empty()) { // First generate the list of known encoders!!
     unsigned short ids = 1;
     // TDCs
-    fEncoders.push_back(new SBSSimTDCEncoder("caen1190",ids++,19,26));
-    fEncoders.push_back(new SBSSimTDCEncoder("lecroy1877",ids++,16,16));
-    fEncoders.push_back(new SBSSimTDCEncoder("vetroc",ids++,16,26));
-    fEncoders.push_back(new SBSSimTDCEncoder("f1tdc",ids++,16,31));
+    fEncoders.push_back(new LADSimTDCEncoder("caen1190",ids++,19,26));
+    fEncoders.push_back(new LADSimTDCEncoder("lecroy1877",ids++,16,16));
+    fEncoders.push_back(new LADSimTDCEncoder("vetroc",ids++,16,26));
+    fEncoders.push_back(new LADSimTDCEncoder("f1tdc",ids++,16,31));
     // ADCs
-    //fEncoders.push_back(new SBSSimFADC250Encoder("fadc250",ids++));
-    fEncoders.push_back(new SBSSimSADCEncoder("fadc250",ids++));
-    fEncoders.push_back(new SBSSimADCEncoder("adc",ids++,12));
-    fEncoders.push_back(new SBSSimADCEncoder("lecroy1881",ids++,14));
-    fEncoders.push_back(new SBSSimADCEncoder("caen792",ids++,12));
-    //fEncoders.push_back(new SBSSimSADCEncoder("mpd",ids++));
-    fEncoders.push_back(new SBSSimMPDEncoder("mpd",ids++));
+    //fEncoders.push_back(new LADSimFADC250Encoder("fadc250",ids++));
+    fEncoders.push_back(new LADSimSADCEncoder("fadc250",ids++));
+    fEncoders.push_back(new LADSimADCEncoder("adc",ids++,12));
+    fEncoders.push_back(new LADSimADCEncoder("lecroy1881",ids++,14));
+    fEncoders.push_back(new LADSimADCEncoder("caen792",ids++,12));
+    //fEncoders.push_back(new LADSimSADCEncoder("mpd",ids++));
+    fEncoders.push_back(new LADSimMPDEncoder("mpd",ids++));
   }
 
   TString name(enc_name);
-  for(std::vector<SBSSimDataDecoder*>::iterator it = fEncoders.begin();
+  for(std::vector<LADSimDataDecoder*>::iterator it = fEncoders.begin();
       it != fEncoders.end(); it++) {
     if(name.CompareTo((*it)->GetName(),TString::kIgnoreCase)==0)
       return *it;
@@ -56,9 +56,9 @@ SBSSimDataDecoder* SBSSimDataDecoder::GetEncoderByName(
   return 0;
 }
 
-SBSSimDataDecoder* SBSSimDataDecoder::GetEncoder(unsigned short id)
+LADSimDataDecoder* LADSimDataDecoder::GetEncoder(unsigned short id)
 {
-  for(std::vector<SBSSimDataDecoder*>::iterator it = fEncoders.begin();
+  for(std::vector<LADSimDataDecoder*>::iterator it = fEncoders.begin();
       it != fEncoders.end(); it++) {
     if((*it)->GetId() == id)
       return *it;
@@ -66,38 +66,38 @@ SBSSimDataDecoder* SBSSimDataDecoder::GetEncoder(unsigned short id)
   return 0;
 }
 
-SBSSimDataDecoder::SBSSimDataDecoder(const char *enc_name,
+LADSimDataDecoder::LADSimDataDecoder(const char *enc_name,
     unsigned short enc_id) : fName(enc_name), fEncId(enc_id)
 {
 }
 
-SBSSimTDCEncoder::SBSSimTDCEncoder(const char *enc_name,
+LADSimTDCEncoder::LADSimTDCEncoder(const char *enc_name,
     unsigned short enc_id, unsigned short bits, unsigned short edge_bit)
-  : SBSSimDataDecoder(enc_name,enc_id), fBits(bits), fEdgeBit(edge_bit)
+  : LADSimDataDecoder(enc_name,enc_id), fBits(bits), fEdgeBit(edge_bit)
 {
   fBitMask = MakeBitMask(fBits);
 }
 
-SBSSimADCEncoder::SBSSimADCEncoder(const char *enc_name,
+LADSimADCEncoder::LADSimADCEncoder(const char *enc_name,
     unsigned short enc_id, unsigned short bits)
-  : SBSSimDataDecoder(enc_name,enc_id), fBits(bits)
+  : LADSimDataDecoder(enc_name,enc_id), fBits(bits)
 {
   fBitMask = MakeBitMask(fBits);
 }
 
-SBSSimSADCEncoder::SBSSimSADCEncoder(const char *enc_name,
-    unsigned short enc_id) : SBSSimADCEncoder(enc_name,enc_id,12)
+LADSimSADCEncoder::LADSimSADCEncoder(const char *enc_name,
+    unsigned short enc_id) : LADSimADCEncoder(enc_name,enc_id,12)
 {
 }
 
 /*
-SBSSimFADC250Encoder::SBSSimFADC250Encoder(const char *enc_name,
-    unsigned short enc_id) : SBSSimADCEncoder(enc_name,enc_id,12)
+LADSimFADC250Encoder::LADSimFADC250Encoder(const char *enc_name,
+    unsigned short enc_id) : LADSimADCEncoder(enc_name,enc_id,12)
 {
 }
 */
 
-unsigned int SBSSimDataDecoder::MakeBitMask(unsigned short bits)
+unsigned int LADSimDataDecoder::MakeBitMask(unsigned short bits)
 {
   unsigned int mask = 0;
   for(unsigned short b = 0; b < bits; b++) {
@@ -107,7 +107,7 @@ unsigned int SBSSimDataDecoder::MakeBitMask(unsigned short bits)
 }
 
 /*
-bool SBSSimADCEncoder::EncodeADC(SimEncoder::adc_data data,
+bool LADSimADCEncoder::EncodeADC(SimEncoder::adc_data data,
     unsigned int *enc_data,unsigned short &nwords)
 {
   nwords = 0;
@@ -116,7 +116,7 @@ bool SBSSimADCEncoder::EncodeADC(SimEncoder::adc_data data,
 }
 */
 /*
-bool SBSSimTDCEncoder::EncodeTDC(SimEncoder::tdc_data data,
+bool LADSimTDCEncoder::EncodeTDC(SimEncoder::tdc_data data,
     unsigned int *enc_data,unsigned short &nwords)
 {
   // Generic TDC encoder where the lowest n-bits are the time
@@ -131,7 +131,7 @@ bool SBSSimTDCEncoder::EncodeTDC(SimEncoder::tdc_data data,
 }
 */
 /*
-bool SBSSimFADC250Encoder::EncodeFADC(SimEncoder::fadc_data data,
+bool LADSimFADC250Encoder::EncodeFADC(SimEncoder::fadc_data data,
     unsigned int *enc_data, unsigned short &nwords)
 {
   // Word 1:
@@ -168,7 +168,7 @@ bool SBSSimFADC250Encoder::EncodeFADC(SimEncoder::fadc_data data,
 }
 */
 
-bool SBSSimADCEncoder::DecodeADC(SimEncoder::adc_data &data,
+bool LADSimADCEncoder::DecodeADC(SimEncoder::adc_data &data,
       const unsigned int *enc_data,unsigned short nwords)
 {
   if(nwords>1)
@@ -179,7 +179,7 @@ bool SBSSimADCEncoder::DecodeADC(SimEncoder::adc_data &data,
   return nread==nwords;
 }
 
-bool SBSSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data,
+bool LADSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data,
 				 const unsigned int *enc_data,
 				 unsigned short nwords)
 {
@@ -194,7 +194,7 @@ bool SBSSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data,
   return !data.time.empty();
 }
 
-bool SBSSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data,
+bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data,
     const unsigned int *enc_data,unsigned short nwords)
 {
   data.integral = 0;
@@ -210,7 +210,7 @@ bool SBSSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data,
 }
 
 /*
-bool SBSSimFADC250Encoder::DecodeFADC(//SimEncoder::fadc_data &data,
+bool LADSimFADC250Encoder::DecodeFADC(//SimEncoder::fadc_data &data,
 				      SimEncoder::sadc_data &data,
     const unsigned int *enc_data,unsigned short nwords)
 {
@@ -250,7 +250,7 @@ bool SBSSimFADC250Encoder::DecodeFADC(//SimEncoder::fadc_data &data,
 }
 */
 /*
-unsigned int SBSSimFADC250Encoder::EncodeSingleSample(unsigned int dat)
+unsigned int LADSimFADC250Encoder::EncodeSingleSample(unsigned int dat)
 {
   if(dat&0xFFFFF000) { // Data too large, turn on overflow
     dat = 0x1FFF;
@@ -259,7 +259,7 @@ unsigned int SBSSimFADC250Encoder::EncodeSingleSample(unsigned int dat)
 }
 */
 /*
-void SBSSimFADC250Encoder::UnpackSamples(unsigned int enc_data,
+void LADSimFADC250Encoder::UnpackSamples(unsigned int enc_data,
     unsigned int *buff, bool *overflow, bool *valid)
 {
   unsigned int tmp;
@@ -272,19 +272,19 @@ void SBSSimFADC250Encoder::UnpackSamples(unsigned int enc_data,
 }
 */
 
-unsigned int SBSSimDataDecoder::EncodeHeader(unsigned short type,
+unsigned int LADSimDataDecoder::EncodeHeader(unsigned short type,
     unsigned short mult, unsigned int nwords)
 {
   // First word bits
   // 31-26: encoder type
   // 25-14: channel multiplier (to be converted to local channel by SimDecoder)
   // 13-0 : number of words that follow
-  return ((type&SBS_TYPE_MASK)<<SBS_TYPE_FIRST_BIT) |
-    ((mult&SBS_CHANNEL_MASK)<<SBS_CHANNEL_FIRST_BIT) |
-    (nwords&SBS_NWORDS_MASK);
+  return ((type&LAD_TYPE_MASK)<<LAD_TYPE_FIRST_BIT) |
+    ((mult&LAD_CHANNEL_MASK)<<LAD_CHANNEL_FIRST_BIT) |
+    (nwords&LAD_NWORDS_MASK);
 }
 
-void SBSSimDataDecoder::DecodeHeader(unsigned int hdr, unsigned short &type, unsigned short &ch,
+void LADSimDataDecoder::DecodeHeader(unsigned int hdr, unsigned short &type, unsigned short &ch,
     unsigned int &nwords)
 {
   type = DecodeType(hdr);
@@ -292,20 +292,20 @@ void SBSSimDataDecoder::DecodeHeader(unsigned int hdr, unsigned short &type, uns
   nwords = DecodeNwords(hdr);
 }
 
-unsigned short SBSSimDataDecoder::DecodeChannel(unsigned int hdr) {
-  return (hdr>>SBS_CHANNEL_FIRST_BIT)&SBS_CHANNEL_MASK;
+unsigned short LADSimDataDecoder::DecodeChannel(unsigned int hdr) {
+  return (hdr>>LAD_CHANNEL_FIRST_BIT)&LAD_CHANNEL_MASK;
 }
 
-unsigned short SBSSimDataDecoder::DecodeType(unsigned int hdr) {
-  return (hdr>>SBS_TYPE_FIRST_BIT)&SBS_TYPE_MASK;
+unsigned short LADSimDataDecoder::DecodeType(unsigned int hdr) {
+  return (hdr>>LAD_TYPE_FIRST_BIT)&LAD_TYPE_MASK;
 }
 
-unsigned short SBSSimDataDecoder::DecodeNwords(unsigned int hdr) {
-  return hdr&SBS_NWORDS_MASK;
+unsigned short LADSimDataDecoder::DecodeNwords(unsigned int hdr) {
+  return hdr&LAD_NWORDS_MASK;
 }
 
-SBSSimMPDEncoder::SBSSimMPDEncoder(const char *enc_name,
-    unsigned short enc_id) : SBSSimDataDecoder(enc_name,enc_id)
+LADSimMPDEncoder::LADSimMPDEncoder(const char *enc_name,
+    unsigned short enc_id) : LADSimDataDecoder(enc_name,enc_id)
 {
 /*
   fChannelBitMask  = MakeBitMask(8);
@@ -316,7 +316,7 @@ SBSSimMPDEncoder::SBSSimMPDEncoder(const char *enc_name,
 */
 }
 /*
-bool SBSSimMPDEncoder::EncodeMPD(SimEncoder::mpd_data data,
+bool LADSimMPDEncoder::EncodeMPD(SimEncoder::mpd_data data,
     unsigned int *enc_data, unsigned short &nwords)
 {
   // Word 1:
@@ -358,7 +358,7 @@ bool SBSSimMPDEncoder::EncodeMPD(SimEncoder::mpd_data data,
 }
 */
 /*
-unsigned int SBSSimMPDEncoder::EncodeSingleSample(unsigned int dat)
+unsigned int LADSimMPDEncoder::EncodeSingleSample(unsigned int dat)
 {
   if(dat>fDataBitMask) { // Data too large, turn on overflow
     dat |= fOverflowBitMask;
@@ -367,7 +367,7 @@ unsigned int SBSSimMPDEncoder::EncodeSingleSample(unsigned int dat)
 }
 */
 /*
-void SBSSimMPDEncoder::UnpackSamples(unsigned int enc_data,
+void LADSimMPDEncoder::UnpackSamples(unsigned int enc_data,
     unsigned int *buff, bool *overflow, bool *valid)
 {
   unsigned int tmp;
@@ -380,38 +380,38 @@ void SBSSimMPDEncoder::UnpackSamples(unsigned int enc_data,
 }
 */
 /*
-void SBSSimMPDEncoder::EncodeMPDHeader(SimEncoder::mpd_data data,
+void LADSimMPDEncoder::EncodeMPDHeader(SimEncoder::mpd_data data,
     unsigned int *enc_data, unsigned short &nwords)
 {
   enc_data[nwords++] =
-    ((data.nsamples<<SBS_MPD_NSAMPLES_BIT)&SBS_MPD_NSAMPLES_MASK) |
-    ((data.nstrips<<SBS_MPD_NSTRIPS_BIT)&SBS_MPD_NSTRIPS_MASK) |
-    ((data.pos<<SBS_MPD_POS_BIT)&SBS_MPD_POS_MASK) |
-    ((data.invert<<SBS_MPD_INV_BIT)&SBS_MPD_INV_MASK) |
-    (data.i2c&SBS_MPD_I2C_MASK);
+    ((data.nsamples<<LAD_MPD_NSAMPLES_BIT)&LAD_MPD_NSAMPLES_MASK) |
+    ((data.nstrips<<LAD_MPD_NSTRIPS_BIT)&LAD_MPD_NSTRIPS_MASK) |
+    ((data.pos<<LAD_MPD_POS_BIT)&LAD_MPD_POS_MASK) |
+    ((data.invert<<LAD_MPD_INV_BIT)&LAD_MPD_INV_MASK) |
+    (data.i2c&LAD_MPD_I2C_MASK);
   enc_data[nwords++] =
-    ((data.adc_id<<SBS_MPD_ADC_ID_BIT)&SBS_MPD_ADC_ID_MASK) |
-    ((data.mpd_id<<SBS_MPD_MPD_ID_BIT)&SBS_MPD_MPD_ID_MASK) |
-    (data.gem_id&SBS_MPD_GEM_ID_BIT);
+    ((data.adc_id<<LAD_MPD_ADC_ID_BIT)&LAD_MPD_ADC_ID_MASK) |
+    ((data.mpd_id<<LAD_MPD_MPD_ID_BIT)&LAD_MPD_MPD_ID_MASK) |
+    (data.gem_id&LAD_MPD_GEM_ID_BIT);
 }
 */
 /*
-void SBSSimMPDEncoder::DecodeMPDHeader(const unsigned int *hdr,
+void LADSimMPDEncoder::DecodeMPDHeader(const unsigned int *hdr,
     SimEncoder::mpd_data &data)
 {
   // Word 1
-  data.nsamples = (*hdr&SBS_MPD_NSAMPLES_MASK)>>SBS_MPD_NSAMPLES_BIT;
-  data.nstrips  = (*hdr&SBS_MPD_NSTRIPS_MASK)>>SBS_MPD_NSTRIPS_BIT;
-  data.pos      = (*hdr&SBS_MPD_POS_MASK)>>SBS_MPD_POS_BIT;
-  data.invert   = (*hdr&SBS_MPD_INV_MASK)>>SBS_MPD_INV_BIT;
-  data.i2c      = (*hdr++&SBS_MPD_I2C_MASK);
+  data.nsamples = (*hdr&LAD_MPD_NSAMPLES_MASK)>>LAD_MPD_NSAMPLES_BIT;
+  data.nstrips  = (*hdr&LAD_MPD_NSTRIPS_MASK)>>LAD_MPD_NSTRIPS_BIT;
+  data.pos      = (*hdr&LAD_MPD_POS_MASK)>>LAD_MPD_POS_BIT;
+  data.invert   = (*hdr&LAD_MPD_INV_MASK)>>LAD_MPD_INV_BIT;
+  data.i2c      = (*hdr++&LAD_MPD_I2C_MASK);
   // Word 2
-  data.adc_id   = (*hdr&SBS_MPD_ADC_ID_MASK)>>SBS_MPD_ADC_ID_BIT;
-  data.mpd_id   = (*hdr&SBS_MPD_MPD_ID_MASK)>>SBS_MPD_MPD_ID_BIT;
-  data.gem_id   = (*hdr&SBS_MPD_GEM_ID_MASK)>>SBS_MPD_GEM_ID_BIT;
+  data.adc_id   = (*hdr&LAD_MPD_ADC_ID_MASK)>>LAD_MPD_ADC_ID_BIT;
+  data.mpd_id   = (*hdr&LAD_MPD_MPD_ID_MASK)>>LAD_MPD_MPD_ID_BIT;
+  data.gem_id   = (*hdr&LAD_MPD_GEM_ID_MASK)>>LAD_MPD_GEM_ID_BIT;
 }
 */
-bool SBSSimMPDEncoder::DecodeMPD(SimEncoder::mpd_data &data,
+bool LADSimMPDEncoder::DecodeMPD(SimEncoder::mpd_data &data,
 				 const unsigned int *enc_data,unsigned short nwords)
 {
   data.samples.clear(); // Clear out any samples already in the data

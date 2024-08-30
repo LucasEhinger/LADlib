@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////
 //
-//   SBSSimFile
+//   LADSimFile
 //
 //   Interface to an input file with simulated SoLID data
 //
@@ -8,12 +8,12 @@
 //
 /////////////////////////////////////////////////////////////////////
 
-#ifndef __SBSSimFile_h
-#define __SBSSimFile_h
+#ifndef __LADSimFile_h
+#define __LADSimFile_h
 
 #include "THaRunBase.h"
 #include "TString.h"
-#include "SBSSimEvent.h"
+#include "LADSimEvent.h"
 #include "ha_compiledata.h"
 
 #include <set>
@@ -21,19 +21,19 @@
 class TFile;
 class TTree;
 class TBranch;
-class SBSSimEvent;
+class LADSimEvent;
  
 //const char* treeName = "T";
 #define treeName "T"
-class SBSSimFile : public THaRunBase {
+class LADSimFile : public THaRunBase {
  public:
-  SBSSimFile(const char* filename, const char *experiment="gmn", const char* description = "");
-  //SBSSimFile(const char* filename, const char* description, std::vector<TString> det_list);
-  SBSSimFile(const SBSSimFile &run);
-  virtual ~SBSSimFile();
-  virtual SBSSimFile &operator=(const THaRunBase &rhs);
+  LADSimFile(const char* filename, const char *experiment="gmn", const char* description = "");
+  //LADSimFile(const char* filename, const char* description, std::vector<TString> det_list);
+  LADSimFile(const LADSimFile &run);
+  virtual ~LADSimFile();
+  virtual LADSimFile &operator=(const THaRunBase &rhs);
   // for ROOT RTTI
-  SBSSimFile() : fROOTFile(0), fTree(0), fEvent(0), fEntry(0) {}
+  LADSimFile() : fROOTFile(0), fTree(0), fEvent(0), fEntry(0) {}
 
   virtual void  Print( Option_t* opt="" ) const;
 
@@ -59,7 +59,7 @@ class SBSSimFile : public THaRunBase {
   TString fROOTFileName;  //  Name of input file
   TFile* fROOTFile;       //! Input ROOT file
   TTree* fTree;           //! Input Tree with simulation data
-  SBSSimEvent* fEvent;   //! Current event
+  LADSimEvent* fEvent;   //! Current event
 
   //std::vector<TString> fDetList;
   
@@ -74,7 +74,7 @@ class SBSSimFile : public THaRunBase {
   std::set<Exp_t> fValidExperiments;
   Exp_t fExperiment;
   
-  ClassDef(SBSSimFile,1) // Interface to input file with simulated SoLID data
+  ClassDef(LADSimFile,1) // Interface to input file with simulated SoLID data
 };
 
 #endif

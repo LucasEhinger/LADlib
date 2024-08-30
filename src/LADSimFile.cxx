@@ -2,22 +2,22 @@
 
 /////////////////////////////////////////////////////////////////////
 //
-//   SBSSimFile
+//   LADSimFile
 //
 //   Interface to an input file with simulated SoLID spectrometer data
 //
 //   Takes raw digitized simulation data from ROOT input file and
-//   uses them to fill a SBSSimEvent object. A pointer to the event
+//   uses them to fill a LADSimEvent object. A pointer to the event
 //   object is available via GetEvBuffer() for use by the decoder.
 //
 /////////////////////////////////////////////////////////////////////
 
 #include "THaGlobals.h"
 #include "THaApparatus.h"
-#include "SBSSimFile.h"
-#include "SBSSimEvent.h"
-// #include "SBSBBShower.h"
-// #include "SBSBBTotalShower.h"
+#include "LADSimFile.h"
+#include "LADSimEvent.h"
+// #include "LADBBShower.h"
+// #include "LADBBTotalShower.h"
 //#include "evio.h"     // for S_SUCCESS
 // We really only need S_SUCCESS from evio.h, so why not just define
 // it ourselves so we don't have to pull the whole header file.
@@ -41,7 +41,7 @@
 using namespace std;
 
 //-----------------------------------------------------------------------------
-SBSSimFile::SBSSimFile(const char* filename, const char *experiment, const char* description) :
+LADSimFile::LADSimFile(const char* filename, const char *experiment, const char* description) :
   THaRunBase(description), fROOTFileName(filename), //fExperiment(experiment), 
   fROOTFile(0), fTree(0), 
   fEvent(0), fNEntries(0), fEntry(0), fVerbose(0)
@@ -63,8 +63,8 @@ SBSSimFile::SBSSimFile(const char* filename, const char *experiment, const char*
     TObject* det = 0;
     while( (det=(TObject*)diter()) ){
       fDetList.push_back(det->GetName() );
-      if(strcmp(app->GetDetector(det->GetName())->GetClassName(),"SBSBBTotalShower")==0){
-	SBSBBTotalShower* TS = (SBSBBTotalShower*)app->GetDetector(det->GetName());
+      if(strcmp(app->GetDetector(det->GetName())->GetClassName(),"LADBBTotalShower")==0){
+	LADBBTotalShower* TS = (LADBBTotalShower*)app->GetDetector(det->GetName());
 	fDetList.push_back(TS->GetShower()->GetName());
 	fDetList.push_back(TS->GetPreShower()->GetName());
 	
@@ -86,7 +86,7 @@ SBSSimFile::SBSSimFile(const char* filename, const char *experiment, const char*
 
   if( fValidExperiments.find( fExperiment ) == fValidExperiments.end() ){ //This is not a valid experiment. Default to gmn and print a warning:
     TString fWarn;
-    fWarn.Form( "SBSSimFile(%s, %s, %s)", filename, experiment, description );
+    fWarn.Form( "LADSimFile(%s, %s, %s)", filename, experiment, description );
     
     Warning(Here(fWarn.Data()), "Invalid simulated experiment choice... defaulting to gmn");
 
@@ -97,7 +97,7 @@ SBSSimFile::SBSSimFile(const char* filename, const char *experiment, const char*
 
 /*
 //-----------------------------------------------------------------------------
-SBSSimFile::SBSSimFile(const char* filename, const char* description, std::vector<TString> det_list) :
+LADSimFile::LADSimFile(const char* filename, const char* description, std::vector<TString> det_list) :
   THaRunBase(description), fROOTFileName(filename), fROOTFile(0), fTree(0), 
   fEvent(0), fNEntries(0), fEntry(0), fVerbose(0)
 {
@@ -112,19 +112,19 @@ SBSSimFile::SBSSimFile(const char* filename, const char* description, std::vecto
 }
 */
 //-----------------------------------------------------------------------------
-SBSSimFile::SBSSimFile(const SBSSimFile &run)
+LADSimFile::LADSimFile(const LADSimFile &run)
   : THaRunBase(run), fROOTFileName(run.fROOTFileName), 
     fROOTFile(0), fTree(0), fEvent(0), fNEntries(0), fEntry(0), fVerbose(0)
 {
 }
 
 //-----------------------------------------------------------------------------
-SBSSimFile& SBSSimFile::operator=(const THaRunBase& rhs)
+LADSimFile& LADSimFile::operator=(const THaRunBase& rhs)
 {
   if (this != &rhs) {
     THaRunBase::operator=(rhs);
-    if( rhs.InheritsFrom("SBSSimFile") )
-      fROOTFileName = static_cast<const SBSSimFile&>(rhs).fROOTFileName;
+    if( rhs.InheritsFrom("LADSimFile") )
+      fROOTFileName = static_cast<const LADSimFile&>(rhs).fROOTFileName;
     fROOTFile = 0;
     fTree = 0;
     fEvent = 0;
@@ -134,9 +134,9 @@ SBSSimFile& SBSSimFile::operator=(const THaRunBase& rhs)
 }
 
 //_____________________________________________________________________________
-Int_t SBSSimFile::Compare( const TObject* obj ) const
+Int_t LADSimFile::Compare( const TObject* obj ) const
 {
-  // Compare two SBSSimFiles. They are different if either their number
+  // Compare two LADSimFiles. They are different if either their number
   // or their input file name differs.
 
   if (this == obj) return 0;
@@ -145,7 +145,7 @@ Int_t SBSSimFile::Compare( const TObject* obj ) const
   // operator< compares fNumber
   if( *this < *rhs )       return -1;
   else if( *rhs < *this )  return  1;
-  const SBSSimFile* rhsr = dynamic_cast<const SBSSimFile*>(rhs);
+  const LADSimFile* rhsr = dynamic_cast<const LADSimFile*>(rhs);
   if( !rhsr ) return 0;
   if( fROOTFileName < rhsr->fROOTFileName ) return -1;
   else if( rhsr->fROOTFileName < fROOTFileName ) return 1;
@@ -153,7 +153,7 @@ Int_t SBSSimFile::Compare( const TObject* obj ) const
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimFile::Init()
+Int_t LADSimFile::Init()
 {
   // Initialize the run. Sets run date, reads run database etc.
 
@@ -173,13 +173,13 @@ Int_t SBSSimFile::Init()
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimFile::ReadDatabase()
+Int_t LADSimFile::ReadDatabase()
 {
   //static const char* const here = "ReadDatabase";
   
   THaRunBase::ReadDatabase();
   
-  FILE* f = Podd::OpenDBFile("run", fDate, "SBSSimFile::ReadDatabase", "r", 1);
+  FILE* f = Podd::OpenDBFile("run", fDate, "LADSimFile::ReadDatabase", "r", 1);
   if( !f )  return -1;
   TString expt;
   DBRequest request[] = {
@@ -206,7 +206,7 @@ Int_t SBSSimFile::ReadDatabase()
 }
 
 //-----------------------------------------------------------------------------
-void SBSSimFile::GetExperiment(const char *experiment)
+void LADSimFile::GetExperiment(const char *experiment)
 {
   if(fVerbose>1)cout << "using experiment configuration: " << experiment << endl;
   
@@ -230,13 +230,13 @@ void SBSSimFile::GetExperiment(const char *experiment)
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimFile::Open()
+Int_t LADSimFile::Open()
 {
   ReadDatabase();
   // Open ROOT input file
-  if(fVerbose>0)std::cout << "SBSSimFile::Open(): initialize file with experiment: " << fExperiment << std::endl;
+  if(fVerbose>0)std::cout << "LADSimFile::Open(): initialize file with experiment: " << fExperiment << std::endl;
   
-  fROOTFile = new TFile(fROOTFileName, "READ", "SBS MC data");
+  fROOTFile = new TFile(fROOTFileName, "READ", "LAD MC data");
   if( !fROOTFile || fROOTFile->IsZombie() ) {
     Error( __FUNCTION__, "Cannot open input file %s", fROOTFileName.Data() );
     Close();
@@ -281,19 +281,19 @@ Int_t SBSSimFile::Open()
   //fEvent is actually the tree!!!
   // and if it works it turns out to make the thing actually much simpler.
   delete fEvent; fEvent = 0;// really needed anymore ?
-  fEvent = new SBSSimEvent(fTree, fExperiment);
+  fEvent = new LADSimEvent(fTree, fExperiment);
   //cout << fDetList.size() << endl;
   //fTree->Print();
-  //fEvent = new SBSSimEvent(fTree, fDetList);
+  //fEvent = new LADSimEvent(fTree, fDetList);
   
   fOpened = kTRUE;
   return 0;
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimFile::Close()
+Int_t LADSimFile::Close()
 {
-  if(fVerbose>0)std::cout << " SBSSimFile::Close(): closing file and destroy previously configured SBSSimEvent " << std::endl;
+  if(fVerbose>0)std::cout << " LADSimFile::Close(): closing file and destroy previously configured LADSimEvent " << std::endl;
   
   delete fTree; fTree = 0;
   if (fROOTFile) {
@@ -306,7 +306,7 @@ Int_t SBSSimFile::Close()
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimFile::ReadEvent()
+Int_t LADSimFile::ReadEvent()
 {
   Int_t ret;
   if( !IsOpen() ) {
@@ -317,7 +317,7 @@ Int_t SBSSimFile::ReadEvent()
   
   // Read next event from ROOT file
   if(fVerbose>1 || fEntry%1000==0 )
-    std::cout << " SBSSimFile::ReadEvent() -> fEntry = " 
+    std::cout << " LADSimFile::ReadEvent() -> fEntry = " 
 	      << fEntry << " / " << fNEntries
 	      << std::endl;
   if( fEntry >= fNEntries )
@@ -338,9 +338,9 @@ Int_t SBSSimFile::ReadEvent()
 
 //-----------------------------------------------------------------------------
 #if ANALYZER_VERSION_CODE >= ANALYZER_VERSION(1,6,0)
-const UInt_t *SBSSimFile::GetEvBuffer() const
+const UInt_t *LADSimFile::GetEvBuffer() const
 #else
-const  Int_t *SBSSimFile::GetEvBuffer() const
+const  Int_t *LADSimFile::GetEvBuffer() const
 #endif
 {
   if( !IsOpen() ) return 0;
@@ -354,14 +354,14 @@ const  Int_t *SBSSimFile::GetEvBuffer() const
 }
 
 //-----------------------------------------------------------------------------
-SBSSimFile::~SBSSimFile()
+LADSimFile::~LADSimFile()
 {
   if( IsOpen() )
     Close();
 }
 
 //_____________________________________________________________________________
-void SBSSimFile::Print( Option_t* opt ) const
+void LADSimFile::Print( Option_t* opt ) const
 {
   // Print run info and status
 
@@ -382,4 +382,4 @@ void SBSSimFile::Print( Option_t* opt ) const
 }
 
 //-----------------------------------------------------------------------------
-ClassImp(SBSSimFile)
+ClassImp(LADSimFile)

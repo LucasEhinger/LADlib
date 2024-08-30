@@ -16,19 +16,16 @@ set(src
   THcLADHodoHit.cxx
   THcLADGEM.cxx
   THcLADGEMPlane.cxx
-  SBSSimADC.cxx
-  SBSSimDataDecoder.cxx
-  SBSSimDecoder.cxx
-  SBSSimEvent.cxx
-  SBSSimFile.cxx
-  SBSSimTDC.cxx
+  LADSimADC.cxx
+  LADSimDataDecoder.cxx
+  LADSimDecoder.cxx
+  LADSimEvent.cxx
+  LADSimFile.cxx
+  LADSimTDC.cxx
   lad_tree_digitized.cxx
   genrp_tree_digitized.cxx
   gep_tree_digitized.cxx
   gmn_tree_digitized.cxx
-  # SBSBBTotalShower.cxx
-  # SBSBBShower.cxx
-  # SBSCalorimeter.cxx
   )
 
 # Headers

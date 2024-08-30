@@ -1,26 +1,25 @@
 //*-- Author :    Ole Hansen (ole@jlab.org)    9-Dec-2011
+//*-- Edited by Lucas Ehinger (ehingerl@jlab.org) for LAD experiment in Hall C. Aug-2024
 
 /////////////////////////////////////////////////////////////////////
 //
-//   SBSSimDecoder
+//   LADSimDecoder
 //
-//   Decoder for SoLID simulation data
+//   Decoder for LAD simulation data
 //
-//   Interprets event buffer from input as SBSSimEvent objects
+//   Interprets event buffer from input as LADSimEvent objects
 //   (containing digitized simulation data) and unpacks them into
 //   crateslot arrays for low-level decoding by detectors.
 //
 /////////////////////////////////////////////////////////////////////
 
-#include "SBSSimDecoder.h"
-#include "SBSSimDataDecoder.h"
+#include "LADSimDecoder.h"
+#include "LADSimDataDecoder.h"
 #include "THaBenchmark.h"
 #include "THaCrateMap.h"
 #include "THaSlotData.h"
 #include "VarDef.h"
 
-// #include "SBSBBShower.h"
-// #include "SBSBBTotalShower.h"
 #include "TDatabasePDG.h"
 #include "TError.h"
 #include "THaCrateMap.h"
@@ -31,9 +30,7 @@
 #include "TRandom.h"
 #include "TSystem.h"
 #include "Textvars.h"
-// #include "THaAnalysisObject.h"
 
-// #include <SBSSimFadc250Module.h>// we need not to need this
 #include "TList.h"
 #include "TObject.h"
 
@@ -49,39 +46,26 @@ using namespace Podd;
 
 class THaAnalysisObject;
 
-ClassImp(SBSSimDecoder) // Implements SBSSimDecoder
-
-    // static const Int_t kPrimaryType = 1, kPrimarySource = 0;
-    //  Projection types must match the definitions in SBS-offline
-    // enum EProjType { kUPlane = 0, kVPlane =1, kXPlane = 2, kYPlane = 3};
-    // typedef vector<int>::size_type vsiz_t;
+ClassImp(LADSimDecoder) // Implements LADSimDecoder
 
     //-----------------------------------------------------------------------------
-    SBSSimDecoder::SBSSimDecoder() // : fCheckedForEnabledDetectors(false), fTreeIsSet(false)
+    LADSimDecoder::LADSimDecoder() // : fCheckedForEnabledDetectors(false), fTreeIsSet(false)
 {
   // Constructor
   DefineVariables();
   fDetectors.clear();
-  // fTree = 0;
-  //  Load detectors: rely on gHaApps (please tell me it works!!!)
-  // cout << " Calling SBSSimDecoder! "<< endl;
-  // cout << " Make sure you have already declared your apparatuses and detectors, and added these to gHaApps" << endl;
-  // SetDetectors();
-
-  // h1_sizeHCal = new TH1D("h1_sizeHCal", "", 500, 0, 5000);
-  // h1_sizeGEMs = new TH1D("h1_sizeGEMs", "", 500, 0, 5000);
 
   gSystem->Load("libEG.so"); // for TDatabasePDG
   // Get MPD encoder for GEMs
   // FIXME: a bit of a kludge...
   // we shouldn't have to do that to initialize all encoders... shall we?
-  fDecoderMPD = dynamic_cast<SBSSimSADCEncoder *>(SBSSimDataDecoder::GetEncoderByName("mpd"));
+  fDecoderMPD = dynamic_cast<LADSimSADCEncoder *>(LADSimDataDecoder::GetEncoderByName("mpd"));
 
   fIsInit = false;
 }
 
 //-----------------------------------------------------------------------------
-SBSSimDecoder::~SBSSimDecoder() {
+LADSimDecoder::~LADSimDecoder() {
   // h1_sizeHCal->Write();
   // h1_sizeGEMs->Write();
   // DefineVariables( THaAnalysisObject::kDelete );
@@ -89,7 +73,7 @@ SBSSimDecoder::~SBSSimDecoder() {
   // h1_sizeGEMs->Delete();
 }
 
-Int_t SBSSimDecoder::Init() {
+Int_t LADSimDecoder::Init() {
 
   Int_t status = THaEvData::Init();
 
@@ -104,18 +88,18 @@ Int_t SBSSimDecoder::Init() {
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimDecoder::DefineVariables(THaAnalysisObject::EMode mode) {
+Int_t LADSimDecoder::DefineVariables(THaAnalysisObject::EMode mode) {
   // Define global variables for the MC quantities. Extends the base
   // class method.
 
-  const char *const here = "SBSSimDecoder::DefineVariables";
+  const char *const here = "LADSimDecoder::DefineVariables";
 
   if (mode == THaAnalysisObject::kDefine && fIsSetup)
     return THaAnalysisObject::kOK;
 
   SimDecoder::DefineVariables(mode);
 
-  cout << "Read SBSSimDecoder variables " << endl;
+  cout << "Read LADSimDecoder variables " << endl;
 
   RVarDef vars[] = {// simc variables
                     // {"simc_sigma", "MC cross section from SIMC gen.", "fSigma_simc"},
@@ -235,7 +219,7 @@ Int_t SBSSimDecoder::DefineVariables(THaAnalysisObject::EMode mode) {
 }
 
 //-----------------------------------------------------------------------------
-void SBSSimDecoder::Clear(Option_t *opt) {
+void LADSimDecoder::Clear(Option_t *opt) {
   // Clear track and plane data
 
   SimDecoder::Clear(opt); // clears fMCCherHits, fMCCherClus
@@ -245,9 +229,9 @@ void SBSSimDecoder::Clear(Option_t *opt) {
 
 //-----------------------------------------------------------------------------
 #if ANALYZER_VERSION_CODE >= ANALYZER_VERSION(1, 6, 0)
-int SBSSimDecoder::LoadEvent(const UInt_t *evbuffer)
+int LADSimDecoder::LoadEvent(const UInt_t *evbuffer)
 #else
-int SBSSimDecoder::LoadEvent(const Int_t *evbuffer)
+int LADSimDecoder::LoadEvent(const Int_t *evbuffer)
 #endif
 {
   // Wrapper around DoLoadEvent so we can conveniently stop the benchmark
@@ -269,22 +253,13 @@ int SBSSimDecoder::LoadEvent(const Int_t *evbuffer)
 
 //-----------------------------------------------------------------------------
 #if ANALYZER_VERSION_CODE >= ANALYZER_VERSION(1, 6, 0)
-Int_t SBSSimDecoder::DoLoadEvent(const UInt_t *evbuffer)
+Int_t LADSimDecoder::DoLoadEvent(const UInt_t *evbuffer)
 #else
-Int_t SBSSimDecoder::DoLoadEvent(const Int_t *evbuffer)
+Int_t LADSimDecoder::DoLoadEvent(const Int_t *evbuffer)
 #endif
 {
-  // Uncommenting the three lines below,
-  // SBS-offline processes 5000 simulated GMn events with no background within ~60s
-  // instead of the ~85s it takes without.
-  // commenting "event type = 1;", those 5000 events take ~3s
-  /*
-  event_type = 1;
-  event_num++;
-  return HED_OK;
-  */
   // Fill crateslot structures with Monte Carlo event data in 'evbuffer'
-  static const char *const here = "SBSSimDecoder::LoadEvent";
+  static const char *const here = "LADSimDecoder::LoadEvent";
 
 #if ANALYZER_VERSION_CODE < ANALYZER_VERSION(1, 6, 0)
   Bool_t fNeedInit = fgNeedInit;
@@ -294,179 +269,84 @@ Int_t SBSSimDecoder::DoLoadEvent(const Int_t *evbuffer)
   // Local copy of evbuffer pointer, used in GetMCHitInfo
   buffer = evbuffer;
 
-  // if(!fTreeIsSet){
-  //   std::cerr << "SBSSimDecoder Tree not initialized correctly - exiting" << std::endl;
-  //   return HED_FATAL;
-  // }
-  // fTree->GetEntry(GetEvNum());
-  // Cast the evbuffer pointer back to exactly the event type that is present
-  // in the input file (in SBSSimFile). The pointer-to-unsigned integer is
-  // needed compatibility with the standard decoder.
   if (fDebug > 2)
     std::cout << "Processing " << here << std::endl;
 
-  const SBSSimEvent *simEvent = reinterpret_cast<const SBSSimEvent *>(buffer);
+  const LADSimEvent *simEvent = reinterpret_cast<const LADSimEvent *>(buffer);
   // add a check here!!!
 
   // simc variables
-  if (simEvent->GetExperiment() == kGEp) {
-    // fSigma_simc = simEvent->Tgep->simc_sigma;
-    // fWeight_simc = simEvent->Tgep->simc_Weight;
-    // fQ2_simc = simEvent->Tgep->simc_Q2;
-    // fXbj_simc = simEvent->Tgep->simc_xbj;
-    // fNu_simc = simEvent->Tgep->simc_nu;
-    // fW_simc = simEvent->Tgep->simc_W;
-    // fEpsilon_simc = simEvent->Tgep->simc_epsilon;
-    // fEbeam_simc = simEvent->Tgep->simc_Ebeam;
-    // fEp_simc = simEvent->Tgep->simc_p_e;
-    // fEtheta_simc = simEvent->Tgep->simc_theta_e;
-    // fEphi_simc = simEvent->Tgep->simc_phi_e;
-    // fEPx_simc = simEvent->Tgep->simc_px_e;
-    // fEPy_simc = simEvent->Tgep->simc_py_e;
-    // fEPz_simc = simEvent->Tgep->simc_pz_e;
-    // fFnucl_simc = simEvent->Tgep->simc_fnucl;
-    // fNp_simc = simEvent->Tgep->simc_p_n;
-    // fNtheta_simc = simEvent->Tgep->simc_theta_n;
-    // fNphi_simc = simEvent->Tgep->simc_phi_n;
-    // fNPx_simc = simEvent->Tgep->simc_px_n;
-    // fNPy_simc = simEvent->Tgep->simc_py_n;
-    // fNPz_simc = simEvent->Tgep->simc_pz_n;
-    // fVx_simc = simEvent->Tgep->simc_vx;
-    // fVy_simc = simEvent->Tgep->simc_vy;
-    // fVz_simc = simEvent->Tgep->simc_vz;
-    // fVeE_simc = simEvent->Tgep->simc_veE;
-    // fVetheta_simc = simEvent->Tgep->simc_vetheta;
-    // g4sbs variables
-    fSigma = simEvent->Tgep->ev_sigma;
-    fOmega = simEvent->Tgep->ev_solang;
-    fEPx   = simEvent->Tgep->ev_epx;
-    fEPy   = simEvent->Tgep->ev_epy;
-    fEPz   = simEvent->Tgep->ev_epz;
-    fNPx   = simEvent->Tgep->ev_npx;
-    fNPy   = simEvent->Tgep->ev_npy;
-    fNPz   = simEvent->Tgep->ev_npz;
-    fVx    = simEvent->Tgep->ev_vx;
-    fVy    = simEvent->Tgep->ev_vy;
-    fVz    = simEvent->Tgep->ev_vz;
-    fEp    = simEvent->Tgep->ev_ep;
-    fNp    = simEvent->Tgep->ev_np;
-    fNucl  = simEvent->Tgep->ev_nucl;
-    fFnucl = simEvent->Tgep->ev_fnucl;
-  } else {
-    // fSigma_simc   = simEvent->->simc_sigma;
-    // fWeight_simc  = simEvent->Tgmn->simc_Weight;
-    // fQ2_simc      = simEvent->Tgmn->simc_Q2;
-    // fXbj_simc     = simEvent->Tgmn->simc_xbj;
-    // fNu_simc      = simEvent->Tgmn->simc_nu;
-    // fW_simc       = simEvent->Tgmn->simc_W;
-    // fEpsilon_simc = simEvent->Tgmn->simc_epsilon;
-    // fEbeam_simc   = simEvent->Tgmn->simc_Ebeam;
-    // fEp_simc      = simEvent->Tgmn->simc_p_e;
-    // fEtheta_simc  = simEvent->Tgmn->simc_theta_e;
-    // fEphi_simc    = simEvent->Tgmn->simc_phi_e;
-    // fEPx_simc     = simEvent->Tgmn->simc_px_e;
-    // fEPy_simc     = simEvent->Tgmn->simc_py_e;
-    // fEPz_simc     = simEvent->Tgmn->simc_pz_e;
-    // fFnucl_simc   = simEvent->Tgmn->simc_fnucl;
-    // fNp_simc      = simEvent->Tgmn->simc_p_n;
-    // fNtheta_simc  = simEvent->Tgmn->simc_theta_n;
-    // fNphi_simc    = simEvent->Tgmn->simc_phi_n;
-    // fNPx_simc     = simEvent->Tgmn->simc_px_n;
-    // fNPy_simc     = simEvent->Tgmn->simc_py_n;
-    // fNPz_simc     = simEvent->Tgmn->simc_pz_n;
-    // fVx_simc      = simEvent->Tgmn->simc_vx;
-    // fVy_simc      = simEvent->Tgmn->simc_vy;
-    // fVz_simc      = simEvent->Tgmn->simc_vz;
-    // fVeE_simc     = simEvent->Tgmn->simc_veE;
-    // fVetheta_simc = simEvent->Tgmn->simc_vetheta;
-    // g4sbs variables
 
-    // TODO: fixme. Actually load the events we need. Currently commenting out everything except for hodo
-    //   fSigma          = simEvent->Tgmn->ev_sigma;
-    //   fOmega          = simEvent->Tgmn->ev_solang;
-    //   fEPx            = simEvent->Tgmn->ev_epx;
-    //   fEPy            = simEvent->Tgmn->ev_epy;
-    //   fEPz            = simEvent->Tgmn->ev_epz;
-    //   fNPx            = simEvent->Tgmn->ev_npx;
-    //   fNPy            = simEvent->Tgmn->ev_npy;
-    //   fNPz            = simEvent->Tgmn->ev_npz;
-    //   fVx             = simEvent->Tgmn->ev_vx;
-    //   fVy             = simEvent->Tgmn->ev_vy;
-    //   fVz             = simEvent->Tgmn->ev_vz;
-    //   fEp             = simEvent->Tgmn->ev_ep;
-    //   fNp             = simEvent->Tgmn->ev_np;
-    //   fNucl           = simEvent->Tgmn->ev_nucl;
-    //   fFnucl          = simEvent->Tgmn->ev_fnucl;
-    //   fNBBtracks      = simEvent->Tgmn->Earm_BBGEM_Track_ntracks;
-    //   fBBtrack_Nhits  = *(simEvent->Tgmn->Earm_BBGEM_Track_NumHits);
-    //   fBBtrack_TID    = *(simEvent->Tgmn->Earm_BBGEM_Track_TID);
-    //   fBBtrack_PID    = *(simEvent->Tgmn->Earm_BBGEM_Track_PID);
-    //   fBBtrack_MID    = *(simEvent->Tgmn->Earm_BBGEM_Track_MID);
-    //   fBBtrack_P      = *(simEvent->Tgmn->Earm_BBGEM_Track_P);
-    //   fBBtrack_X      = *(simEvent->Tgmn->Earm_BBGEM_Track_X);
-    //   fBBtrack_Y      = *(simEvent->Tgmn->Earm_BBGEM_Track_Y);
-    //   fBBtrack_dX     = *(simEvent->Tgmn->Earm_BBGEM_Track_Xp);
-    //   fBBtrack_dY     = *(simEvent->Tgmn->Earm_BBGEM_Track_Yp);
-    //   fNBBGEMhits     = simEvent->Tgmn->Earm_BBGEM_hit_nhits;
-    //   fBBGEMhit_plane = *(simEvent->Tgmn->Earm_BBGEM_hit_plane);
-    //   fBBGEMhit_TID   = *(simEvent->Tgmn->Earm_BBGEM_hit_trid);
-    //   fBBGEMhit_PID   = *(simEvent->Tgmn->Earm_BBGEM_hit_pid);
-    //   fBBGEMhit_MID   = *(simEvent->Tgmn->Earm_BBGEM_hit_mid);
-    //   fBBGEMhit_edep  = *(simEvent->Tgmn->Earm_BBGEM_hit_edep);
-    //   fBBGEMhit_x     = *(simEvent->Tgmn->Earm_BBGEM_hit_tx);
-    //   fBBGEMhit_y     = *(simEvent->Tgmn->Earm_BBGEM_hit_ty);
-    //   // fBBPS_esum          = simEvent->Tgmn->Earm_BBPSTF1_det_esum;
-    //   // fBBSH_esum          = simEvent->Tgmn->Earm_BBSHTF1_det_esum;
-    //   fBBGEMhit_ptridx    = *(simEvent->Tgmn->Earm_BBGEM_hit_ptridx);
-    //   fBBGEMhit_sdtridx   = *(simEvent->Tgmn->Earm_BBGEM_hit_sdtridx);
-    //   fBBGEMtrack_ptridx  = *(simEvent->Tgmn->Earm_BBGEM_Track_ptridx);
-    //   fBBGEMtrack_sdtridx = *(simEvent->Tgmn->Earm_BBGEM_Track_sdtridx);
-    //   fBBHODOhit_ptridx   = *(simEvent->Tgmn->Earm_BBHodoScint_hit_ptridx);
-    //   fBBHODOhit_sdtridx  = *(simEvent->Tgmn->Earm_BBHodoScint_hit_sdtridx);
-    //   // fBBPSTF1hit_ptridx  = *(simEvent->Tgmn->Earm_BBPSTF1_hit_ptridx);
-    //   // fBBPSTF1hit_sdtridx = *(simEvent->Tgmn->Earm_BBPSTF1_hit_sdtridx);
-    //   // fBBSHTF1hit_ptridx  = *(simEvent->Tgmn->Earm_BBSHTF1_hit_ptridx);
-    //   // fBBSHTF1hit_sdtridx = *(simEvent->Tgmn->Earm_BBSHTF1_hit_sdtridx);
-    //   // fHCALhit_ptridx     = *(simEvent->Tgmn->Harm_HCalScint_hit_ptridx);
-    //   // fHCALhit_sdtridx    = *(simEvent->Tgmn->Harm_HCalScint_hit_sdtridx);
-    //   fPTrack_ntracks  = simEvent->Tgmn->PTrack_ntracks;
-    //   fPTrack_TID      = *(simEvent->Tgmn->PTrack_TID);
-    //   fPTrack_PID      = *(simEvent->Tgmn->PTrack_PID);
-    //   fPTrack_posx     = *(simEvent->Tgmn->PTrack_posx);
-    //   fPTrack_posy     = *(simEvent->Tgmn->PTrack_posy);
-    //   fPTrack_posz     = *(simEvent->Tgmn->PTrack_posz);
-    //   fPTrack_momx     = *(simEvent->Tgmn->PTrack_momx);
-    //   fPTrack_momy     = *(simEvent->Tgmn->PTrack_momy);
-    //   fPTrack_momz     = *(simEvent->Tgmn->PTrack_momz);
-    //   fPTrack_polx     = *(simEvent->Tgmn->PTrack_polx);
-    //   fPTrack_poly     = *(simEvent->Tgmn->PTrack_poly);
-    //   fPTrack_polz     = *(simEvent->Tgmn->PTrack_polz);
-    //   fPTrack_Etot     = *(simEvent->Tgmn->PTrack_Etot);
-    //   fPTrack_T        = *(simEvent->Tgmn->PTrack_T);
-    //   fSDTrack_ntracks = simEvent->Tgmn->SDTrack_ntracks;
-    //   fSDTrack_TID     = *(simEvent->Tgmn->SDTrack_TID);
-    //   fSDTrack_MID     = *(simEvent->Tgmn->SDTrack_MID);
-    //   fSDTrack_PID     = *(simEvent->Tgmn->SDTrack_PID);
-    //   fSDTrack_posx    = *(simEvent->Tgmn->SDTrack_posx);
-    //   fSDTrack_posy    = *(simEvent->Tgmn->SDTrack_posy);
-    //   fSDTrack_posz    = *(simEvent->Tgmn->SDTrack_posz);
-    //   fSDTrack_momx    = *(simEvent->Tgmn->SDTrack_momx);
-    //   fSDTrack_momy    = *(simEvent->Tgmn->SDTrack_momy);
-    //   fSDTrack_momz    = *(simEvent->Tgmn->SDTrack_momz);
-    //   fSDTrack_polx    = *(simEvent->Tgmn->SDTrack_polx);
-    //   fSDTrack_poly    = *(simEvent->Tgmn->SDTrack_poly);
-    //   fSDTrack_polz    = *(simEvent->Tgmn->SDTrack_polz);
-    //   fSDTrack_Etot    = *(simEvent->Tgmn->SDTrack_Etot);
-    //   fSDTrack_T       = *(simEvent->Tgmn->SDTrack_T);
-    //   fSDTrack_vx      = *(simEvent->Tgmn->SDTrack_vx);
-    //   fSDTrack_vy      = *(simEvent->Tgmn->SDTrack_vy);
-    //   fSDTrack_vz      = *(simEvent->Tgmn->SDTrack_vz);
-    //   fSDTrack_vnx     = *(simEvent->Tgmn->SDTrack_vnx);
-    //   fSDTrack_vny     = *(simEvent->Tgmn->SDTrack_vny);
-    //   fSDTrack_vnz     = *(simEvent->Tgmn->SDTrack_vnz);
-    //   fSDTrack_vEkin   = *(simEvent->Tgmn->SDTrack_vEkin);
-    //
-  }
+  // fSigma_simc   = simEvent->->simc_sigma;
+  // fWeight_simc  = simEvent->Tgmn->simc_Weight;
+  // fQ2_simc      = simEvent->Tgmn->simc_Q2;
+  // fXbj_simc     = simEvent->Tgmn->simc_xbj;
+  // fNu_simc      = simEvent->Tgmn->simc_nu;
+  // fW_simc       = simEvent->Tgmn->simc_W;
+  // fEpsilon_simc = simEvent->Tgmn->simc_epsilon;
+  // fEbeam_simc   = simEvent->Tgmn->simc_Ebeam;
+  // fEp_simc      = simEvent->Tgmn->simc_p_e;
+  // fEtheta_simc  = simEvent->Tgmn->simc_theta_e;
+  // fEphi_simc    = simEvent->Tgmn->simc_phi_e;
+  // fEPx_simc     = simEvent->Tgmn->simc_px_e;
+  // fEPy_simc     = simEvent->Tgmn->simc_py_e;
+  // fEPz_simc     = simEvent->Tgmn->simc_pz_e;
+  // fFnucl_simc   = simEvent->Tgmn->simc_fnucl;
+  // fNp_simc      = simEvent->Tgmn->simc_p_n;
+  // fNtheta_simc  = simEvent->Tgmn->simc_theta_n;
+  // fNphi_simc    = simEvent->Tgmn->simc_phi_n;
+  // fNPx_simc     = simEvent->Tgmn->simc_px_n;
+  // fNPy_simc     = simEvent->Tgmn->simc_py_n;
+  // fNPz_simc     = simEvent->Tgmn->simc_pz_n;
+  // fVx_simc      = simEvent->Tgmn->simc_vx;
+  // fVy_simc      = simEvent->Tgmn->simc_vy;
+  // fVz_simc      = simEvent->Tgmn->simc_vz;
+  // fVeE_simc     = simEvent->Tgmn->simc_veE;
+  // fVetheta_simc = simEvent->Tgmn->simc_vetheta;
+  // g4LAD variables
+
+  // TODO: fixme. Actually load the events we need. Currently commenting out everything except for hodo
+  //   fSigma          = simEvent->Tgmn->ev_sigma;
+  //   fOmega          = simEvent->Tgmn->ev_solang;
+  //   fEPx            = simEvent->Tgmn->ev_epx;
+  //   fEPy            = simEvent->Tgmn->ev_epy;
+  //   fEPz            = simEvent->Tgmn->ev_epz;
+  //   fNPx            = simEvent->Tgmn->ev_npx;
+  //   fNPy            = simEvent->Tgmn->ev_npy;
+  //   fNPz            = simEvent->Tgmn->ev_npz;
+  //   fVx             = simEvent->Tgmn->ev_vx;
+  //   fVy             = simEvent->Tgmn->ev_vy;
+  //   fVz             = simEvent->Tgmn->ev_vz;
+  //   fEp             = simEvent->Tgmn->ev_ep;
+  //   fNp             = simEvent->Tgmn->ev_np;
+  //   fNucl           = simEvent->Tgmn->ev_nucl;
+  //   fFnucl          = simEvent->Tgmn->ev_fnucl;
+  //   fNBBtracks      = simEvent->Tgmn->Earm_BBGEM_Track_ntracks;
+  //   fBBtrack_Nhits  = *(simEvent->Tgmn->Earm_BBGEM_Track_NumHits);
+  //   fBBtrack_TID    = *(simEvent->Tgmn->Earm_BBGEM_Track_TID);
+  //   fBBtrack_PID    = *(simEvent->Tgmn->Earm_BBGEM_Track_PID);
+  //   fBBtrack_MID    = *(simEvent->Tgmn->Earm_BBGEM_Track_MID);
+  //   fBBtrack_P      = *(simEvent->Tgmn->Earm_BBGEM_Track_P);
+  //   fBBtrack_X      = *(simEvent->Tgmn->Earm_BBGEM_Track_X);
+  //   fBBtrack_Y      = *(simEvent->Tgmn->Earm_BBGEM_Track_Y);
+  //   fBBtrack_dX     = *(simEvent->Tgmn->Earm_BBGEM_Track_Xp);
+  //   fBBtrack_dY     = *(simEvent->Tgmn->Earm_BBGEM_Track_Yp);
+  //   fNBBGEMhits     = simEvent->Tgmn->Earm_BBGEM_hit_nhits;
+  //   fBBGEMhit_plane = *(simEvent->Tgmn->Earm_BBGEM_hit_plane);
+  //   fBBGEMhit_TID   = *(simEvent->Tgmn->Earm_BBGEM_hit_trid);
+  //   fBBGEMhit_PID   = *(simEvent->Tgmn->Earm_BBGEM_hit_pid);
+  //   fBBGEMhit_MID   = *(simEvent->Tgmn->Earm_BBGEM_hit_mid);
+  //   fBBGEMhit_edep  = *(simEvent->Tgmn->Earm_BBGEM_hit_edep);
+  //   fBBGEMhit_x     = *(simEvent->Tgmn->Earm_BBGEM_hit_tx);
+  //   fBBGEMhit_y     = *(simEvent->Tgmn->Earm_BBGEM_hit_ty);
+  //   // fBBPS_esum          = simEvent->Tgmn->Earm_BBPSTF1_det_esum;
+  //   // fBBSH_esum          = simEvent->Tgmn->Earm_BBSHTF1_det_esum;
+  //   fBBGEMhit_ptridx    = *(simEvent->Tgmn->Earm_BBGEM_hit_ptridx);
+  //   fBBGEMhit_sdtridx   = *(simEvent->Tgmn->Earm_BBGEM_hit_sdtridx);
+  //   fBBGEMtrack_ptridx  = *(simEvent->Tgmn->Earm_BBGEM_Track_ptridx);
+  //   fBBGEMtrack_sdtridx = *(simEvent->Tgmn->Earm_BBGEM_Track_sdtridx);
+  //   fBBHODOhit_ptridx   = *(simEvent->Tgmn->Earm_BBHodoScint_hit_ptridx);
+  //   fBBHODOhit_sdtridx  = *(simEvent->Tgmn->Earm_BBHodoScint_hit_sdtridx);
 
   Int_t ret = HED_OK;
   if (first_decode || fNeedInit) {
@@ -501,7 +381,8 @@ Int_t SBSSimDecoder::DoLoadEvent(const Int_t *evbuffer)
   // int recent_event = event_num; // no longer used
 
   // Event weight
-  fWeight = simEvent->Tgmn->ev_sigma * simEvent->Tgmn->ev_solang;
+  // fWeight = simEvent->Tgmn->ev_sigma * simEvent->Tgmn->ev_solang; //TODO: Actually use the real event weight
+  fWeight = 1.0;
 
   //
   if (fDoBench)
@@ -516,7 +397,6 @@ Int_t SBSSimDecoder::DoLoadEvent(const Int_t *evbuffer)
   for (size_t d = 0; d < fDetectors.size(); d++) {
     if (fDebug > 2)
       cout << fDetectors[d] << endl;
-    // SBSDigSim::UHitData_t* HitData_Det = simEvent->HitDataDet.at(fDetectors[d]);
     LoadDetector(detmaps[d], fDetectors[d], simEvent);
   }
 
@@ -545,7 +425,6 @@ Int_t SBSSimDecoder::DoLoadEvent(const Int_t *evbuffer)
       // cout << fDetectors[d].c_str() << " " << it->first->getCrate() << " " << it->first->getSlot() << " " <<
       // it->second.size() << endl; size_det+=it->second.size();
     }
-    // if(strcmp(fDetectors[d].c_str(), "sbs.hcal")==0)h1_sizeHCal->Fill(size_det);
     // if(strcmp(fDetectors[d].c_str(), "bb.gem")==0)h1_sizeGEMs->Fill(size_det);
   }
 
@@ -554,7 +433,7 @@ Int_t SBSSimDecoder::DoLoadEvent(const Int_t *evbuffer)
 
 // Utilities
 /*
-Int_t SBSSimDecoder::RetrieveDetMapParam(const char* detname,
+Int_t LADSimDecoder::RetrieveDetMapParam(const char* detname,
                                           int& chanperslot, int& slotpercrate,
                                           int& firstcrate, int& firstslot)
 {
@@ -570,10 +449,10 @@ Int_t SBSSimDecoder::RetrieveDetMapParam(const char* detname,
 }
 */
 
-Int_t SBSSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<UInt_t>> &map,
-                                  const std::string &detname, const SBSSimEvent *simev) {
+Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<UInt_t>> &map,
+                                  const std::string &detname, const LADSimEvent *simev) {
   if (fDebug > 1)
-    std::cout << "SBSSimDecoder::LoadDectector(" << detname << ")" << std::endl;
+    std::cout << "LADSimDecoder::LoadDectector(" << detname << ")" << std::endl;
   // int detid = detinfo.DetUniqueId();
   Int_t crate, slot;
   // unsigned int nwords = 0;
@@ -612,7 +491,7 @@ Int_t SBSSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
       sldat = crateslot[idx(crate,slot)].get();
     }
     std::vector<UInt_t> *myev = &(map[sldat]);
-    myev->push_back(SBSSimDataDecoder::EncodeHeader(1, chan, 2));
+    myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, 2));
     myev->push_back(0);
     */
     int ntdc = 0;
@@ -635,23 +514,23 @@ Int_t SBSSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
 
       if (ntdc) {
         std::vector<UInt_t> *myev = &(map[sldat]);
-        myev->push_back(SBSSimDataDecoder::EncodeHeader(1, chan, ntdc));
+        myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, ntdc));
 
         if (simev->Tgmn->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
           myev->push_back(simev->Tgmn->LAD_Hodo_dighit_tdc_l->at(j));
         if (simev->Tgmn->LAD_Hodo_dighit_tdc_t->at(j) > -1000000) {
           uint tdc = simev->Tgmn->LAD_Hodo_dighit_tdc_t->at(j) | (1 << 31);
-        //   // cout << tdc << endl;
+          //   // cout << tdc << endl;
           myev->push_back(tdc);
         }
 
         ChanToROC(detname, lchan, crate, slot, chan); //+91 ??? that might be the trick
         if (crate >= 0 || slot >= 0) {
-          sldat = crateslot[idx(crate, slot+2)].get();
+          sldat = crateslot[idx(crate, slot + 2)].get();
         }
         myev = &(map[sldat]);
 
-        myev->push_back(SBSSimDataDecoder::EncodeHeader(8, chan, 1));
+        myev->push_back(LADSimDataDecoder::EncodeHeader(8, chan, 1));
         // if (simev->Tgmn->Earm_BBHodo_dighit_adc->at(j) > -1000000) {
         myev->push_back(simev->Tgmn->LAD_Hodo_dighit_adc->at(j));
         // }
@@ -705,9 +584,9 @@ Int_t SBSSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
         std::vector<UInt_t> *myev = &(map[sldat]);
 
         if (!samps.empty()) {
-          // myev->push_back(SBSSimDataDecoder::EncodeHeader(5, apvnum, samps.size()));
+          // myev->push_back(LADSimDataDecoder::EncodeHeader(5, apvnum, samps.size()));
           // I think I'm onto something here, but I also need to transmit strip num
-          myev->push_back(SBSSimDataDecoder::EncodeHeader(9, apvnum, samps.size()));
+          myev->push_back(LADSimDataDecoder::EncodeHeader(9, apvnum, samps.size()));
           for (int k = 0; k < (int)samps.size(); k++) {
             // cout << " " << samps[k];
             myev->push_back(strips[k] * 8192 + samps[k]); // strips[k]<< 13 | samps[k]);
@@ -727,7 +606,7 @@ Int_t SBSSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
 }
 
 /*
-void SBSSimDecoder::SetDetMapParam(const std::string detname, int cps, int spc, int fs, int fc)
+void LADSimDecoder::SetDetMapParam(const std::string detname, int cps, int spc, int fs, int fc)
 {
   fChansPerSlotDetMap[detname] = cps;
   fSlotsPerCrateDetMap[detname] = spc;
@@ -736,7 +615,7 @@ void SBSSimDecoder::SetDetMapParam(const std::string detname, int cps, int spc, 
 }
 */
 
-void SBSSimDecoder::CheckForEnabledDetectors() {
+void LADSimDecoder::CheckForEnabledDetectors() {
   // fDetectors = fManager->GetAllDetInfo();
   if (fDebug > 0) {
     for (size_t i = 0; i < fDetectors.size(); i++) {
@@ -748,7 +627,7 @@ void SBSSimDecoder::CheckForEnabledDetectors() {
 }
 
 /*
-void SBSSimDecoder::SetTree(TTree *t)
+void LADSimDecoder::SetTree(TTree *t)
 {
   if(t==0)return;
   fTree = new digsim_tree(t);
@@ -757,8 +636,8 @@ void SBSSimDecoder::SetTree(TTree *t)
 }
 */
 
-void SBSSimDecoder::SetDetectors() {
-  // std::cout << "[SBSSimDecoder::SetDetectors()]: rundate = ";
+void LADSimDecoder::SetDetectors() {
+  // std::cout << "[LADSimDecoder::SetDetectors()]: rundate = ";
 
   // TDatime rundate = gHaRun->GetDate(); //will this work? answer appears to be NO
 
@@ -776,36 +655,26 @@ void SBSSimDecoder::SetDetectors() {
     TIter diter(listdet);
     TObject *det = 0;
     while ((det = (TObject *)diter())) {
-      cout << "Setting det " << app->GetName() << "." << det->GetName() << " into SBSSimDecoder" << endl;
-      // if (strcmp(app->GetDetector(det->GetName())->GetClassName(), "SBSBBTotalShower") == 0) {
-      // SBSBBTotalShower *TS = (SBSBBTotalShower *)app->GetDetector(det->GetName());
-      // // AddDetector(Form("%s.%s",app->GetName(), TS->GetShower()->GetName()),
-      // // 	    (app->GetDetector(det->GetName()))->GetInitDate());
-      // // AddDetector(Form("%s.%s",app->GetName(), TS->GetPreShower()->GetName()),
-      // // 	    (app->GetDetector(det->GetName()))->GetInitDate());
-
-      // AddDetector(Form("%s.%s", app->GetName(), TS->GetShower()->GetName()), rundate);
-      // AddDetector(Form("%s.%s", app->GetName(), TS->GetPreShower()->GetName()), rundate);
-      // } else {
+      cout << "Setting det " << app->GetName() << "." << det->GetName() << " into LADSimDecoder" << endl;
+      
       // AddDetector(Form("%s.%s",app->GetName(), det->GetName()),
       // 	    (app->GetDetector(det->GetName()))->GetInitDate());
 
       // AddDetector(Form("%s.%s", app->GetName(), det->GetName()), rundate);
-      string tmp = "L.hod";
+      string tmp = "L.hod"; //TODO: FIXME. This is hard coded
       AddDetector(tmp, rundate); // FIXME: this is a hack, but it should work for now
-      // }
     }
   }
 }
 
-Int_t SBSSimDecoder::AddDetector(string detname, TDatime date) {
+Int_t LADSimDecoder::AddDetector(string detname, TDatime date) {
   fDetectors.push_back(detname);
   return ReadDetectorDB(detname, date);
 }
 
-Int_t SBSSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
+Int_t LADSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
   // EPAF: in here the det name is the "full" det name i.e. including the spectro name
-  // std::string path = std::string(std::getenv("SBS")) + "/DB/";//TODO: FIXME
+  // std::string path = std::string(std::getenv("LAD")) + "/DB/";//TODO: FIXME
   // if (std::getenv("DB_DIR")) {
   //   path = std::string(std::getenv("DB_DIR")) + "/";
   // }
@@ -822,7 +691,7 @@ Int_t SBSSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
   std::cout << "Calling ReadDetectorDB for detector " << detname << ", Date = ";
   date.Print();
 
-  // FILE *file = Podd::OpenDBFile( detname.c_str(), date, "SBSSimDecoder::ReadDetectorDB()",
+  // FILE *file = Podd::OpenDBFile( detname.c_str(), date, "LADSimDecoder::ReadDetectorDB()",
   // 				 "r", 2 );
 
   FILE *file = Podd::OpenDBFile(fileName.c_str(), date);
@@ -1106,7 +975,7 @@ Int_t SBSSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
 
 //-----------------------------------------------------------------------------
 // static inline
-void SBSSimDecoder::ChanToROC(const std::string &detname, Int_t h_chan, Int_t &crate, Int_t &slot,
+void LADSimDecoder::ChanToROC(const std::string &detname, Int_t h_chan, Int_t &crate, Int_t &slot,
                               UShort_t &chan) const {
   // Convert location parameters (row, col, chan) of the given Channel
   // to hardware channel (crate,slot,chan)
@@ -1148,7 +1017,7 @@ void SBSSimDecoder::ChanToROC(const std::string &detname, Int_t h_chan, Int_t &c
   // chan  = h_chan % 16;
 }
 
-int SBSSimDecoder::APVnum(const std::string &detname, Int_t mod, Int_t h_chan, Int_t &crate, Int_t &slot,
+int LADSimDecoder::APVnum(const std::string &detname, Int_t mod, Int_t h_chan, Int_t &crate, Int_t &slot,
                           UShort_t &chan) const {
   chan  = h_chan % 128;
   int n = (h_chan - chan) / 128;
@@ -1186,7 +1055,7 @@ Int_t MakeROCKey( Int_t crate, Int_t slot, Int_t chan )
 }
 
 //-----------------------------------------------------------------------------
-Int_t SBSSimDecoder::ChanFromROC( Int_t crate, Int_t slot, Int_t chan ) const
+Int_t LADSimDecoder::ChanFromROC( Int_t crate, Int_t slot, Int_t chan ) const
 {
   // Return index of digitized strip correspomding to hardware channel
   // (crate,slot,chan)
