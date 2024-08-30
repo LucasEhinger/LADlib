@@ -278,75 +278,75 @@ Int_t LADSimDecoder::DoLoadEvent(const Int_t *evbuffer)
   // simc variables
 
   // fSigma_simc   = simEvent->->simc_sigma;
-  // fWeight_simc  = simEvent->Tgmn->simc_Weight;
-  // fQ2_simc      = simEvent->Tgmn->simc_Q2;
-  // fXbj_simc     = simEvent->Tgmn->simc_xbj;
-  // fNu_simc      = simEvent->Tgmn->simc_nu;
-  // fW_simc       = simEvent->Tgmn->simc_W;
-  // fEpsilon_simc = simEvent->Tgmn->simc_epsilon;
-  // fEbeam_simc   = simEvent->Tgmn->simc_Ebeam;
-  // fEp_simc      = simEvent->Tgmn->simc_p_e;
-  // fEtheta_simc  = simEvent->Tgmn->simc_theta_e;
-  // fEphi_simc    = simEvent->Tgmn->simc_phi_e;
-  // fEPx_simc     = simEvent->Tgmn->simc_px_e;
-  // fEPy_simc     = simEvent->Tgmn->simc_py_e;
-  // fEPz_simc     = simEvent->Tgmn->simc_pz_e;
-  // fFnucl_simc   = simEvent->Tgmn->simc_fnucl;
-  // fNp_simc      = simEvent->Tgmn->simc_p_n;
-  // fNtheta_simc  = simEvent->Tgmn->simc_theta_n;
-  // fNphi_simc    = simEvent->Tgmn->simc_phi_n;
-  // fNPx_simc     = simEvent->Tgmn->simc_px_n;
-  // fNPy_simc     = simEvent->Tgmn->simc_py_n;
-  // fNPz_simc     = simEvent->Tgmn->simc_pz_n;
-  // fVx_simc      = simEvent->Tgmn->simc_vx;
-  // fVy_simc      = simEvent->Tgmn->simc_vy;
-  // fVz_simc      = simEvent->Tgmn->simc_vz;
-  // fVeE_simc     = simEvent->Tgmn->simc_veE;
-  // fVetheta_simc = simEvent->Tgmn->simc_vetheta;
+  // fWeight_simc  = simEvent->Tlad->simc_Weight;
+  // fQ2_simc      = simEvent->Tlad->simc_Q2;
+  // fXbj_simc     = simEvent->Tlad->simc_xbj;
+  // fNu_simc      = simEvent->Tlad->simc_nu;
+  // fW_simc       = simEvent->Tlad->simc_W;
+  // fEpsilon_simc = simEvent->Tlad->simc_epsilon;
+  // fEbeam_simc   = simEvent->Tlad->simc_Ebeam;
+  // fEp_simc      = simEvent->Tlad->simc_p_e;
+  // fEtheta_simc  = simEvent->Tlad->simc_theta_e;
+  // fEphi_simc    = simEvent->Tlad->simc_phi_e;
+  // fEPx_simc     = simEvent->Tlad->simc_px_e;
+  // fEPy_simc     = simEvent->Tlad->simc_py_e;
+  // fEPz_simc     = simEvent->Tlad->simc_pz_e;
+  // fFnucl_simc   = simEvent->Tlad->simc_fnucl;
+  // fNp_simc      = simEvent->Tlad->simc_p_n;
+  // fNtheta_simc  = simEvent->Tlad->simc_theta_n;
+  // fNphi_simc    = simEvent->Tlad->simc_phi_n;
+  // fNPx_simc     = simEvent->Tlad->simc_px_n;
+  // fNPy_simc     = simEvent->Tlad->simc_py_n;
+  // fNPz_simc     = simEvent->Tlad->simc_pz_n;
+  // fVx_simc      = simEvent->Tlad->simc_vx;
+  // fVy_simc      = simEvent->Tlad->simc_vy;
+  // fVz_simc      = simEvent->Tlad->simc_vz;
+  // fVeE_simc     = simEvent->Tlad->simc_veE;
+  // fVetheta_simc = simEvent->Tlad->simc_vetheta;
   // g4LAD variables
 
   // TODO: fixme. Actually load the events we need. Currently commenting out everything except for hodo
-  //   fSigma          = simEvent->Tgmn->ev_sigma;
-  //   fOmega          = simEvent->Tgmn->ev_solang;
-  //   fEPx            = simEvent->Tgmn->ev_epx;
-  //   fEPy            = simEvent->Tgmn->ev_epy;
-  //   fEPz            = simEvent->Tgmn->ev_epz;
-  //   fNPx            = simEvent->Tgmn->ev_npx;
-  //   fNPy            = simEvent->Tgmn->ev_npy;
-  //   fNPz            = simEvent->Tgmn->ev_npz;
-  //   fVx             = simEvent->Tgmn->ev_vx;
-  //   fVy             = simEvent->Tgmn->ev_vy;
-  //   fVz             = simEvent->Tgmn->ev_vz;
-  //   fEp             = simEvent->Tgmn->ev_ep;
-  //   fNp             = simEvent->Tgmn->ev_np;
-  //   fNucl           = simEvent->Tgmn->ev_nucl;
-  //   fFnucl          = simEvent->Tgmn->ev_fnucl;
-  //   fNBBtracks      = simEvent->Tgmn->Earm_BBGEM_Track_ntracks;
-  //   fBBtrack_Nhits  = *(simEvent->Tgmn->Earm_BBGEM_Track_NumHits);
-  //   fBBtrack_TID    = *(simEvent->Tgmn->Earm_BBGEM_Track_TID);
-  //   fBBtrack_PID    = *(simEvent->Tgmn->Earm_BBGEM_Track_PID);
-  //   fBBtrack_MID    = *(simEvent->Tgmn->Earm_BBGEM_Track_MID);
-  //   fBBtrack_P      = *(simEvent->Tgmn->Earm_BBGEM_Track_P);
-  //   fBBtrack_X      = *(simEvent->Tgmn->Earm_BBGEM_Track_X);
-  //   fBBtrack_Y      = *(simEvent->Tgmn->Earm_BBGEM_Track_Y);
-  //   fBBtrack_dX     = *(simEvent->Tgmn->Earm_BBGEM_Track_Xp);
-  //   fBBtrack_dY     = *(simEvent->Tgmn->Earm_BBGEM_Track_Yp);
-  //   fNBBGEMhits     = simEvent->Tgmn->Earm_BBGEM_hit_nhits;
-  //   fBBGEMhit_plane = *(simEvent->Tgmn->Earm_BBGEM_hit_plane);
-  //   fBBGEMhit_TID   = *(simEvent->Tgmn->Earm_BBGEM_hit_trid);
-  //   fBBGEMhit_PID   = *(simEvent->Tgmn->Earm_BBGEM_hit_pid);
-  //   fBBGEMhit_MID   = *(simEvent->Tgmn->Earm_BBGEM_hit_mid);
-  //   fBBGEMhit_edep  = *(simEvent->Tgmn->Earm_BBGEM_hit_edep);
-  //   fBBGEMhit_x     = *(simEvent->Tgmn->Earm_BBGEM_hit_tx);
-  //   fBBGEMhit_y     = *(simEvent->Tgmn->Earm_BBGEM_hit_ty);
-  //   // fBBPS_esum          = simEvent->Tgmn->Earm_BBPSTF1_det_esum;
-  //   // fBBSH_esum          = simEvent->Tgmn->Earm_BBSHTF1_det_esum;
-  //   fBBGEMhit_ptridx    = *(simEvent->Tgmn->Earm_BBGEM_hit_ptridx);
-  //   fBBGEMhit_sdtridx   = *(simEvent->Tgmn->Earm_BBGEM_hit_sdtridx);
-  //   fBBGEMtrack_ptridx  = *(simEvent->Tgmn->Earm_BBGEM_Track_ptridx);
-  //   fBBGEMtrack_sdtridx = *(simEvent->Tgmn->Earm_BBGEM_Track_sdtridx);
-  //   fBBHODOhit_ptridx   = *(simEvent->Tgmn->Earm_BBHodoScint_hit_ptridx);
-  //   fBBHODOhit_sdtridx  = *(simEvent->Tgmn->Earm_BBHodoScint_hit_sdtridx);
+  //   fSigma          = simEvent->Tlad->ev_sigma;
+  //   fOmega          = simEvent->Tlad->ev_solang;
+  //   fEPx            = simEvent->Tlad->ev_epx;
+  //   fEPy            = simEvent->Tlad->ev_epy;
+  //   fEPz            = simEvent->Tlad->ev_epz;
+  //   fNPx            = simEvent->Tlad->ev_npx;
+  //   fNPy            = simEvent->Tlad->ev_npy;
+  //   fNPz            = simEvent->Tlad->ev_npz;
+  //   fVx             = simEvent->Tlad->ev_vx;
+  //   fVy             = simEvent->Tlad->ev_vy;
+  //   fVz             = simEvent->Tlad->ev_vz;
+  //   fEp             = simEvent->Tlad->ev_ep;
+  //   fNp             = simEvent->Tlad->ev_np;
+  //   fNucl           = simEvent->Tlad->ev_nucl;
+  //   fFnucl          = simEvent->Tlad->ev_fnucl;
+  //   fNBBtracks      = simEvent->Tlad->Earm_BBGEM_Track_ntracks;
+  //   fBBtrack_Nhits  = *(simEvent->Tlad->Earm_BBGEM_Track_NumHits);
+  //   fBBtrack_TID    = *(simEvent->Tlad->Earm_BBGEM_Track_TID);
+  //   fBBtrack_PID    = *(simEvent->Tlad->Earm_BBGEM_Track_PID);
+  //   fBBtrack_MID    = *(simEvent->Tlad->Earm_BBGEM_Track_MID);
+  //   fBBtrack_P      = *(simEvent->Tlad->Earm_BBGEM_Track_P);
+  //   fBBtrack_X      = *(simEvent->Tlad->Earm_BBGEM_Track_X);
+  //   fBBtrack_Y      = *(simEvent->Tlad->Earm_BBGEM_Track_Y);
+  //   fBBtrack_dX     = *(simEvent->Tlad->Earm_BBGEM_Track_Xp);
+  //   fBBtrack_dY     = *(simEvent->Tlad->Earm_BBGEM_Track_Yp);
+  //   fNBBGEMhits     = simEvent->Tlad->Earm_BBGEM_hit_nhits;
+  //   fBBGEMhit_plane = *(simEvent->Tlad->Earm_BBGEM_hit_plane);
+  //   fBBGEMhit_TID   = *(simEvent->Tlad->Earm_BBGEM_hit_trid);
+  //   fBBGEMhit_PID   = *(simEvent->Tlad->Earm_BBGEM_hit_pid);
+  //   fBBGEMhit_MID   = *(simEvent->Tlad->Earm_BBGEM_hit_mid);
+  //   fBBGEMhit_edep  = *(simEvent->Tlad->Earm_BBGEM_hit_edep);
+  //   fBBGEMhit_x     = *(simEvent->Tlad->Earm_BBGEM_hit_tx);
+  //   fBBGEMhit_y     = *(simEvent->Tlad->Earm_BBGEM_hit_ty);
+  //   // fBBPS_esum          = simEvent->Tlad->Earm_BBPSTF1_det_esum;
+  //   // fBBSH_esum          = simEvent->Tlad->Earm_BBSHTF1_det_esum;
+  //   fBBGEMhit_ptridx    = *(simEvent->Tlad->Earm_BBGEM_hit_ptridx);
+  //   fBBGEMhit_sdtridx   = *(simEvent->Tlad->Earm_BBGEM_hit_sdtridx);
+  //   fBBGEMtrack_ptridx  = *(simEvent->Tlad->Earm_BBGEM_Track_ptridx);
+  //   fBBGEMtrack_sdtridx = *(simEvent->Tlad->Earm_BBGEM_Track_sdtridx);
+  //   fBBHODOhit_ptridx   = *(simEvent->Tlad->Earm_BBHodoScint_hit_ptridx);
+  //   fBBHODOhit_sdtridx  = *(simEvent->Tlad->Earm_BBHodoScint_hit_sdtridx);
 
   Int_t ret = HED_OK;
   if (first_decode || fNeedInit) {
@@ -381,7 +381,7 @@ Int_t LADSimDecoder::DoLoadEvent(const Int_t *evbuffer)
   // int recent_event = event_num; // no longer used
 
   // Event weight
-  // fWeight = simEvent->Tgmn->ev_sigma * simEvent->Tgmn->ev_solang; //TODO: Actually use the real event weight
+  // fWeight = simEvent->Tlad->ev_sigma * simEvent->Tlad->ev_solang; //TODO: Actually use the real event weight
   fWeight = 1.0;
 
   //
@@ -478,12 +478,12 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
   int row, col;
 
   if (strcmp(detname.c_str(), "L.hod") == 0) {
-    // cout << " ouh " << detname.c_str() << " " << simev->Tgmn->Earm_BBHodoScint_hit_nhits << " " <<
-    // simev->Tgmn->Earm_BBHodo_dighit_nchan << endl;
-    //  cout << simev->Tgmn->Earm_BBHodo_dighit_chan->size() << " "
-    //  	 << simev->Tgmn->Earm_BBHodo_dighit_adc->size() << " "
-    //  	 << simev->Tgmn->Earm_BBHodo_dighit_tdc_l->size() << " "
-    //  	 << simev->Tgmn->Earm_BBHodo_dighit_tdc_t->size() << endl;
+    // cout << " ouh " << detname.c_str() << " " << simev->Tlad->Earm_BBHodoScint_hit_nhits << " " <<
+    // simev->Tlad->Earm_BBHodo_dighit_nchan << endl;
+    //  cout << simev->Tlad->Earm_BBHodo_dighit_chan->size() << " "
+    //  	 << simev->Tlad->Earm_BBHodo_dighit_adc->size() << " "
+    //  	 << simev->Tlad->Earm_BBHodo_dighit_tdc_l->size() << " "
+    //  	 << simev->Tlad->Earm_BBHodo_dighit_tdc_t->size() << endl;
     /*
     ChanToROC(detname, 180, crate, slot, chan);
     cout << crate << " " << slot << " " << chan << endl;
@@ -495,10 +495,10 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
     myev->push_back(0);
     */
     int ntdc = 0;
-    assert(simev->Tgmn->b_LAD_Hodo_dighit_nchan);
-    for (int j = 0; j < simev->Tgmn->LAD_Hodo_dighit_nchan; j++) {
+    assert(simev->Tlad->b_LAD_Hodo_dighit_nchan);
+    for (int j = 0; j < simev->Tlad->LAD_Hodo_dighit_nchan; j++) {
       ntdc  = 0;
-      lchan = simev->Tgmn->LAD_Hodo_dighit_chan->at(j); // TODO: fixe me: out of range error occuring. LHE: now fixed
+      lchan = simev->Tlad->LAD_Hodo_dighit_chan->at(j); // TODO: fixe me: out of range error occuring. LHE: now fixed
       // col   = lchan % 2;
       // row   = (lchan - col) / 2;
       // lchan = col * 90 + row;
@@ -507,19 +507,19 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
       if (crate >= 0 || slot >= 0) {
         sldat = crateslot[idx(crate, slot)].get();
       }
-      if (simev->Tgmn->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
+      if (simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
         ntdc++;
-      if (simev->Tgmn->LAD_Hodo_dighit_tdc_t->at(j) > -1000000)
+      if (simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) > -1000000)
         ntdc++;
 
       if (ntdc) {
         std::vector<UInt_t> *myev = &(map[sldat]);
         myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, ntdc));
 
-        if (simev->Tgmn->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
-          myev->push_back(simev->Tgmn->LAD_Hodo_dighit_tdc_l->at(j));
-        if (simev->Tgmn->LAD_Hodo_dighit_tdc_t->at(j) > -1000000) {
-          uint tdc = simev->Tgmn->LAD_Hodo_dighit_tdc_t->at(j) | (1 << 31);
+        if (simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
+          myev->push_back(simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j));
+        if (simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) > -1000000) {
+          uint tdc = simev->Tlad->LAD_Hodo_dighit_tdc_t->at(j) | (1 << 31);
           //   // cout << tdc << endl;
           myev->push_back(tdc);
         }
@@ -531,8 +531,8 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
         myev = &(map[sldat]);
 
         myev->push_back(LADSimDataDecoder::EncodeHeader(8, chan, 1));
-        // if (simev->Tgmn->Earm_BBHodo_dighit_adc->at(j) > -1000000) {
-        myev->push_back(simev->Tgmn->LAD_Hodo_dighit_adc->at(j));
+        // if (simev->Tlad->Earm_BBHodo_dighit_adc->at(j) > -1000000) {
+        myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc->at(j));
         // }
 
         if (fDebug > 2) {
@@ -549,31 +549,31 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
     // cout << fPx << " " << fPy << " " << fPz << "   " << fVz << endl;
     samps.clear();
     strips.clear();
-    // cout << " ouh " << detname.c_str() << " " << simev->Tgmn->Earm_BBGEM_dighit_nstrips << endl;
-    assert(simev->Tgmn->b_Earm_BBGEM_dighit_nstrips);
-    for (int j = 0; j < simev->Tgmn->Earm_BBGEM_dighit_nstrips; j++) {
+    // cout << " ouh " << detname.c_str() << " " << simev->Tlad->Earm_BBGEM_dighit_nstrips << endl;
+    assert(simev->Tlad->b_Earm_BBGEM_dighit_nstrips);
+    for (int j = 0; j < simev->Tlad->Earm_BBGEM_dighit_nstrips; j++) {
       loadevt = false;
-      mod     = simev->Tgmn->Earm_BBGEM_dighit_module->at(j);
-      lchan   = simev->Tgmn->Earm_BBGEM_dighit_strip->at(j);
+      mod     = simev->Tlad->Earm_BBGEM_dighit_module->at(j);
+      lchan   = simev->Tlad->Earm_BBGEM_dighit_strip->at(j);
       apvnum  = APVnum(detname, mod, lchan, crate, slot, chan);
 
-      if (simev->Tgmn->Earm_BBGEM_dighit_samp->at(j) >= 0) {
+      if (simev->Tlad->Earm_BBGEM_dighit_samp->at(j) >= 0) {
         strips.push_back(chan);
-        samps.push_back(simev->Tgmn->Earm_BBGEM_dighit_adc->at(j));
+        samps.push_back(simev->Tlad->Earm_BBGEM_dighit_adc->at(j));
       }
 
       if (fDebug > 3)
         cout << " mod " << mod << " lchan " << lchan << " crate " << crate << " slot " << slot << " apvnum " << apvnum
-             << " chan " << chan << " samp " << simev->Tgmn->Earm_BBGEM_dighit_samp->at(j) << " adc "
-             << simev->Tgmn->Earm_BBGEM_dighit_adc->at(j) << endl;
-      // if(mod>=26 && simev->Tgmn->Earm_BBGEM_dighit_samp->at(j)==5)cout << mod << " " << lchan << " " << apvnum <<
+             << " chan " << chan << " samp " << simev->Tlad->Earm_BBGEM_dighit_samp->at(j) << " adc "
+             << simev->Tlad->Earm_BBGEM_dighit_adc->at(j) << endl;
+      // if(mod>=26 && simev->Tlad->Earm_BBGEM_dighit_samp->at(j)==5)cout << mod << " " << lchan << " " << apvnum <<
       // endl;
 
-      if (j == simev->Tgmn->Earm_BBGEM_dighit_nstrips - 1) {
+      if (j == simev->Tlad->Earm_BBGEM_dighit_nstrips - 1) {
         loadevt = true;
-      } else if (mod != simev->Tgmn->Earm_BBGEM_dighit_module->at(j + 1) ||
-                 // fabs(lchan-simev->Tgmn->Earm_BBGEM_dighit_strip->at(j+1))>=128
-                 floor(simev->Tgmn->Earm_BBGEM_dighit_strip->at(j + 1) / 128) != floor(lchan / 128)) {
+      } else if (mod != simev->Tlad->Earm_BBGEM_dighit_module->at(j + 1) ||
+                 // fabs(lchan-simev->Tlad->Earm_BBGEM_dighit_strip->at(j+1))>=128
+                 floor(simev->Tlad->Earm_BBGEM_dighit_strip->at(j + 1) / 128) != floor(lchan / 128)) {
         loadevt = true;
       }
 

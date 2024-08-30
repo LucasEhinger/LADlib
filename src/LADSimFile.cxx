@@ -74,23 +74,15 @@ LADSimFile::LADSimFile(const char* filename, const char *experiment, const char*
   */
   GetExperiment(experiment);
   
-  // fValidExperiments.insert("gmn");
-  // fValidExperiments.insert("genrp");
-  // fValidExperiments.insert("gep");
-  // fValidExperiments.insert("sidis");
-  
-  fValidExperiments.insert(kGMN);
-  fValidExperiments.insert(kGEnRP);
-  fValidExperiments.insert(kGEp);
-  fValidExperiments.insert(kSIDIS);
+  fValidExperiments.insert(kLAD);
 
-  if( fValidExperiments.find( fExperiment ) == fValidExperiments.end() ){ //This is not a valid experiment. Default to gmn and print a warning:
+  if( fValidExperiments.find( fExperiment ) == fValidExperiments.end() ){ //This is not a valid experiment. Default to LAD and print a warning:
     TString fWarn;
     fWarn.Form( "LADSimFile(%s, %s, %s)", filename, experiment, description );
     
     Warning(Here(fWarn.Data()), "Invalid simulated experiment choice... defaulting to gmn");
 
-    fExperiment = kGMN;//"gmn";
+    fExperiment = kLAD;//"LAD";
   }
   
 }
@@ -192,10 +184,10 @@ Int_t LADSimFile::ReadDatabase()
   fclose(f);
   if( err ){
     std::cout << "Warning: can't read experiment flag in MC run database! " << std::endl 
-	      << "Defaulting to GMN - if you're not running GMN simulation, it will likely cause issues." << std::endl 
+	      << "Defaulting to LAD - if you're not running LAD simulation, it will likely cause issues." << std::endl 
 	      << "Fix database in this case. " << std::endl;
     //default!!!
-    fExperiment = kGMN;
+    fExperiment = kLAD;
   }else{
     GetExperiment(expt.Data());
   }
@@ -210,21 +202,8 @@ void LADSimFile::GetExperiment(const char *experiment)
 {
   if(fVerbose>1)cout << "using experiment configuration: " << experiment << endl;
   
-  if(strcmp(experiment,"gmn")==0 || strcmp(experiment,"gen")==0){
-    //(experiment=="gmn" || experiment=="gen")//{
-    fExperiment = kGMN;
-  }
-  if(strcmp(experiment,"genrp")==0){
-    //(experiment=="genrp")//{
-    fExperiment = kGEnRP;
-  }
-  if(strcmp(experiment,"gep")==0){
-    //(experiment=="gep")//{
-    fExperiment = kGEp;
-  }
-  if(strcmp(experiment,"sidis")==0){
-    //(experiment=="sidis")//{
-    fExperiment = kSIDIS;
+  if(strcmp(experiment,"lad")==0){
+    fExperiment = kLAD;
   }
   
 }

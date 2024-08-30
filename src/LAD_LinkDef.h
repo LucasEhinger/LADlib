@@ -16,9 +16,6 @@
 #pragma link C++ class LADSimDecoder+;
 #pragma link C++ class LADSimEvent+;
 #pragma link C++ class LADSimFile+;
-#pragma link C++ class genrp_tree_digitized+;
-#pragma link C++ class gep_tree_digitized+;
-#pragma link C++ class gmn_tree_digitized+;
 #pragma link C++ class lad_tree_digitized+;
 
 #endif

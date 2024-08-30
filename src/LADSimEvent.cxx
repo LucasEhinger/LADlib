@@ -27,7 +27,7 @@ LADSimEvent::LADSimEvent(TTree *tree, Exp_t experiment) {
   // We should probably use an enum or something simple to make this less clunky than doing a string comparison each
   // time we open the file or load the event:
   // Tlad = new lad_tree_digitized(tree);
-  Tgmn = new lad_tree_digitized(tree);
+  Tlad = new lad_tree_digitized(tree);
   // Tgep = new lad_tree_digitized(tree);
   // Tgenrp = new lad_tree_digitized(tree);
 
@@ -59,7 +59,7 @@ void LADSimEvent::Print(const Option_t *opt) const {
 Int_t LADSimEvent::GetEntry(Long64_t entry) {
   EvtID = entry;
 
-  return Tgmn->GetEntry(entry);
+  return Tlad->GetEntry(entry);
   // return Tlad->GetEntry(entry);
 }
 

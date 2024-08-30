@@ -4,12 +4,9 @@
 //#include "gmn_dig_tree.h"
 //#include "g4LAD_tree.h"
 
-#include "gmn_tree_digitized.h"
-#include "gep_tree_digitized.h"
-#include "genrp_tree_digitized.h"
 #include "lad_tree_digitized.h"
 
-enum Exp_t    { kGEp, kGEnRP, kGMN, kSIDIS};
+enum Exp_t    { kLAD}; //Functionality to change experiment type (and thus the type of tree used.)
 
 class TTree;
 
@@ -17,8 +14,7 @@ class LADSimEvent {
  public:
   //LADSimEvent(){};                 // Default constructor, for ROOT I/O
   //Now we want to initialize the ROOT tree the same way 
-  //LADSimEvent(TTree* tree, TString experiment="gmn");//, std::vector<TString> det_list);
-  LADSimEvent(TTree* tree, Exp_t experiment=kGMN);//, std::vector<TString> det_list);
+  LADSimEvent(TTree* tree, Exp_t experiment=kLAD);//, std::vector<TString> det_list);
   
   virtual ~LADSimEvent(){};
   
@@ -48,13 +44,6 @@ class LADSimEvent {
   //class name, and copy the source and header files into LAD-offline,
   //recompile, and voila: compatibility guaranteed:
   lad_tree_digitized *Tlad;
-  lad_tree_digitized *Tgmn;//Delete this later, but leave for now to make sure we don't break anything.
-  lad_tree_digitized *Tgep;
-  lad_tree_digitized *Tgenrp;
-
-  //sidis_tree_digitized *Tsidis;
-  //  gen_tree_digitized *Tgen; //This actually seems like it wouldn't require anything different from gmn.
-
   
   
   ClassDef(LADSimEvent, 1) // Simulated data for one event
