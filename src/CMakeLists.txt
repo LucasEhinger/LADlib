@@ -22,6 +22,7 @@ set(src
   SBSSimEvent.cxx
   SBSSimFile.cxx
   SBSSimTDC.cxx
+  lad_tree_digitized.cxx
   genrp_tree_digitized.cxx
   gep_tree_digitized.cxx
   gmn_tree_digitized.cxx

@@ -7,6 +7,7 @@
 #include "gmn_tree_digitized.h"
 #include "gep_tree_digitized.h"
 #include "genrp_tree_digitized.h"
+#include "lad_tree_digitized.h"
 
 enum Exp_t    { kGEp, kGEnRP, kGMN, kSIDIS};
 
@@ -46,10 +47,10 @@ class SBSSimEvent {
   //Later on, any time we want to analyze a g4sbs root file whose format has changed, we can just run TTree::MakeClass on that root file with the appropriate
   //class name, and copy the source and header files into SBS-offline,
   //recompile, and voila: compatibility guaranteed:
-  gmn_tree_digitized *Tgmn;
-  gep_tree_digitized *Tgep;
-  genrp_tree_digitized *Tgenrp;//EPAF: for now, genrp tree is thought as a complement of the GMN tree. 
-  // we might keep it this way unless it induces crashes or significant slowdown!
+  lad_tree_digitized *Tlad;
+  lad_tree_digitized *Tgmn;//Delete this later, but leave for now to make sure we don't break anything.
+  lad_tree_digitized *Tgep;
+  lad_tree_digitized *Tgenrp;
 
   //sidis_tree_digitized *Tsidis;
   //  gen_tree_digitized *Tgen; //This actually seems like it wouldn't require anything different from gmn.

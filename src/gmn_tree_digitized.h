@@ -14,7 +14,6 @@
 
 // Header file for the classes stored in the TTree if any.
 #include "vector"
-#include "vector"
 
 class gmn_tree_digitized {
 public :
