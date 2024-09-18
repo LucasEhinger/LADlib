@@ -22,11 +22,13 @@ namespace SimEncoder {
 
   struct adc_data : data {
     unsigned int integral;
+    unsigned int peak_amp; // LHE: Added 9/17/24 to add pulse amp compatability
   };
   
   //standard sample ADC structure
   struct sadc_data : adc_data {
     unsigned int integral;
+    unsigned int peak_amp; // LHE: Added 9/17/24 to add pulse amp compatability
     std::vector<unsigned int> samples;
   };
 

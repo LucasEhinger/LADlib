@@ -536,7 +536,7 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
         }
         myev = &(map[sldat]);
 
-        myev->push_back(LADSimDataDecoder::EncodeHeader(8, chan, 1));
+        myev->push_back(LADSimDataDecoder::EncodeHeader(5, chan, 1));
         // if (simev->Tlad->Earm_BBHodo_dighit_adc->at(j) > -1000000) {
         myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc->at(j));
         // }

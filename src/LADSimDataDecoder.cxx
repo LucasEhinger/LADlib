@@ -2,93 +2,80 @@
 #include <TString.h>
 #include <iostream>
 
-#define LAD_MPD_NSAMPLES_BIT  27
-#define LAD_MPD_NSTRIPS_BIT   15
-#define LAD_MPD_POS_BIT       7
-#define LAD_MPD_INV_BIT       6
-#define LAD_MPD_I2C_BIT       0
+#define LAD_MPD_NSAMPLES_BIT 27
+#define LAD_MPD_NSTRIPS_BIT 15
+#define LAD_MPD_POS_BIT 7
+#define LAD_MPD_INV_BIT 6
+#define LAD_MPD_I2C_BIT 0
 
-#define LAD_MPD_ADC_ID_BIT    20
-#define LAD_MPD_MPD_ID_BIT    10
-#define LAD_MPD_GEM_ID_BIT    0
+#define LAD_MPD_ADC_ID_BIT 20
+#define LAD_MPD_MPD_ID_BIT 10
+#define LAD_MPD_GEM_ID_BIT 0
 
 // Word 1
 #define LAD_MPD_NSAMPLES_MASK 0xF8000000
-#define LAD_MPD_NSTRIPS_MASK  0x07FF8000
-#define LAD_MPD_POS_MASK      0x00007F80
-#define LAD_MPD_INV_MASK      0x10000040
-#define LAD_MPD_I2C_MASK      0x0000003F
+#define LAD_MPD_NSTRIPS_MASK 0x07FF8000
+#define LAD_MPD_POS_MASK 0x00007F80
+#define LAD_MPD_INV_MASK 0x10000040
+#define LAD_MPD_I2C_MASK 0x0000003F
 // Word 2
-#define LAD_MPD_ADC_ID_MASK   0x3FF00000
-#define LAD_MPD_MPD_ID_MASK   0x000FFC00
-#define LAD_MPD_GEM_ID_MASK   0x000003FF
+#define LAD_MPD_ADC_ID_MASK 0x3FF00000
+#define LAD_MPD_MPD_ID_MASK 0x000FFC00
+#define LAD_MPD_GEM_ID_MASK 0x000003FF
 
 // This one is static, so define it again here
-std::vector<LADSimDataDecoder*> LADSimDataDecoder::fEncoders;
+std::vector<LADSimDataDecoder *> LADSimDataDecoder::fEncoders;
 
-LADSimDataDecoder* LADSimDataDecoder::GetEncoderByName(
-    const char *enc_name)
-{
-  if(fEncoders.empty()) { // First generate the list of known encoders!!
+LADSimDataDecoder *LADSimDataDecoder::GetEncoderByName(const char *enc_name) {
+  if (fEncoders.empty()) { // First generate the list of known encoders!!
     unsigned short ids = 1;
     // TDCs
-    fEncoders.push_back(new LADSimTDCEncoder("caen1190",ids++,19,26));
-    fEncoders.push_back(new LADSimTDCEncoder("lecroy1877",ids++,16,16));
-    fEncoders.push_back(new LADSimTDCEncoder("vetroc",ids++,16,26));
-    fEncoders.push_back(new LADSimTDCEncoder("f1tdc",ids++,16,31));
+    fEncoders.push_back(new LADSimTDCEncoder("caen1190", ids++, 19, 26));
+    fEncoders.push_back(new LADSimTDCEncoder("lecroy1877", ids++, 16, 16));
+    fEncoders.push_back(new LADSimTDCEncoder("vetroc", ids++, 16, 26));
+    fEncoders.push_back(new LADSimTDCEncoder("f1tdc", ids++, 16, 31));
     // ADCs
-    //fEncoders.push_back(new LADSimFADC250Encoder("fadc250",ids++));
-    fEncoders.push_back(new LADSimSADCEncoder("fadc250",ids++));
-    fEncoders.push_back(new LADSimADCEncoder("adc",ids++,12));
-    fEncoders.push_back(new LADSimADCEncoder("lecroy1881",ids++,14));
-    fEncoders.push_back(new LADSimADCEncoder("caen792",ids++,12));
-    //fEncoders.push_back(new LADSimSADCEncoder("mpd",ids++));
-    fEncoders.push_back(new LADSimMPDEncoder("mpd",ids++));
+    // fEncoders.push_back(new LADSimFADC250Encoder("fadc250",ids++));
+    fEncoders.push_back(new LADSimSADCEncoder("fadc250", ids++));
+    fEncoders.push_back(new LADSimADCEncoder("adc", ids++, 12));
+    fEncoders.push_back(new LADSimADCEncoder("lecroy1881", ids++, 14));
+    fEncoders.push_back(new LADSimADCEncoder("caen792", ids++, 12));
+    // fEncoders.push_back(new LADSimSADCEncoder("mpd",ids++));
+    fEncoders.push_back(new LADSimMPDEncoder("mpd", ids++));
   }
 
   TString name(enc_name);
-  for(std::vector<LADSimDataDecoder*>::iterator it = fEncoders.begin();
-      it != fEncoders.end(); it++) {
-    if(name.CompareTo((*it)->GetName(),TString::kIgnoreCase)==0)
+  for (std::vector<LADSimDataDecoder *>::iterator it = fEncoders.begin(); it != fEncoders.end(); it++) {
+    if (name.CompareTo((*it)->GetName(), TString::kIgnoreCase) == 0)
       return *it;
   }
 
   return 0;
 }
 
-LADSimDataDecoder* LADSimDataDecoder::GetEncoder(unsigned short id)
-{
-  for(std::vector<LADSimDataDecoder*>::iterator it = fEncoders.begin();
-      it != fEncoders.end(); it++) {
-    if((*it)->GetId() == id)
+LADSimDataDecoder *LADSimDataDecoder::GetEncoder(unsigned short id) {
+  for (std::vector<LADSimDataDecoder *>::iterator it = fEncoders.begin(); it != fEncoders.end(); it++) {
+    if ((*it)->GetId() == id)
       return *it;
   }
   return 0;
 }
 
-LADSimDataDecoder::LADSimDataDecoder(const char *enc_name,
-    unsigned short enc_id) : fName(enc_name), fEncId(enc_id)
-{
-}
+LADSimDataDecoder::LADSimDataDecoder(const char *enc_name, unsigned short enc_id) : fName(enc_name), fEncId(enc_id) {}
 
-LADSimTDCEncoder::LADSimTDCEncoder(const char *enc_name,
-    unsigned short enc_id, unsigned short bits, unsigned short edge_bit)
-  : LADSimDataDecoder(enc_name,enc_id), fBits(bits), fEdgeBit(edge_bit)
-{
+LADSimTDCEncoder::LADSimTDCEncoder(const char *enc_name, unsigned short enc_id, unsigned short bits,
+                                   unsigned short edge_bit)
+    : LADSimDataDecoder(enc_name, enc_id), fBits(bits), fEdgeBit(edge_bit) {
   fBitMask = MakeBitMask(fBits);
 }
 
-LADSimADCEncoder::LADSimADCEncoder(const char *enc_name,
-    unsigned short enc_id, unsigned short bits)
-  : LADSimDataDecoder(enc_name,enc_id), fBits(bits)
-{
+LADSimADCEncoder::LADSimADCEncoder(const char *enc_name, unsigned short enc_id, unsigned short bits)
+    : LADSimDataDecoder(enc_name, enc_id), fBits(bits) {
   fBitMask = MakeBitMask(fBits);
 }
 
-LADSimSADCEncoder::LADSimSADCEncoder(const char *enc_name,
-    unsigned short enc_id) : LADSimADCEncoder(enc_name,enc_id,12)
-{
-}
+LADSimSADCEncoder::LADSimSADCEncoder(const char *enc_name, unsigned short enc_id)
+    : LADSimADCEncoder(enc_name, enc_id, 12) {}
 
 /*
 LADSimFADC250Encoder::LADSimFADC250Encoder(const char *enc_name,
@@ -97,11 +84,10 @@ LADSimFADC250Encoder::LADSimFADC250Encoder(const char *enc_name,
 }
 */
 
-unsigned int LADSimDataDecoder::MakeBitMask(unsigned short bits)
-{
+unsigned int LADSimDataDecoder::MakeBitMask(unsigned short bits) {
   unsigned int mask = 0;
-  for(unsigned short b = 0; b < bits; b++) {
-    mask |= 1<<b;
+  for (unsigned short b = 0; b < bits; b++) {
+    mask |= 1 << b;
   }
   return mask;
 }
@@ -168,56 +154,62 @@ bool LADSimFADC250Encoder::EncodeFADC(SimEncoder::fadc_data data,
 }
 */
 
-bool LADSimADCEncoder::DecodeADC(SimEncoder::adc_data &data,
-      const unsigned int *enc_data,unsigned short nwords)
-{
-  if(nwords>1)
+bool LADSimADCEncoder::DecodeADC(SimEncoder::adc_data &data, const unsigned int *enc_data, unsigned short nwords) {
+  if (nwords > 1) // LHE: Added 9/17/24 to add pulse amp compatability
     return false;
   unsigned short nread = 0;
-  data.integral = enc_data[nread++]&fBitMask;
-  //std::cout << enc_data[0] << " " << data.integral << std::endl; 
-  return nread==nwords;
+  data.integral        = enc_data[nread++] & fBitMask;
+  // if(nwords>1) // LHE: Added 9/17/24 to add pulse amp compatability
+  //   data.peak_amp = enc_data[nread++];
+  // //std::cout << enc_data[0] << " " << data.integral << std::endl;
+  return nread == nwords;
 }
 
-bool LADSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data,
-				 const unsigned int *enc_data,
-				 unsigned short nwords)
-{
-  for(unsigned short n = 0; n < nwords; n++) {
-    //std::cout << "n = " << n << ": encoded data " << enc_data[n] << " edge bit " << fEdgeBit << std::endl;
-    //data.time.push_back(((enc_data[n]>>fEdgeBit)<<31) |
-    //  (enc_data[n]&fBitMask));
+bool LADSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data, const unsigned int *enc_data, unsigned short nwords) {
+  for (unsigned short n = 0; n < nwords; n++) {
+    // std::cout << "n = " << n << ": encoded data " << enc_data[n] << " edge bit " << fEdgeBit << std::endl;
+    // data.time.push_back(((enc_data[n]>>fEdgeBit)<<31) |
+    //   (enc_data[n]&fBitMask));
     data.time.push_back(enc_data[n]);
-    //std::cout << " decoded data " << (((enc_data[n]>>fEdgeBit)<<31) | (enc_data[n]&fBitMask)) << " edge bit " << fEdgeBit << std::endl;
-    //std::cout << data.time[n] << " " << data.getTime(n) << " " << data.getEdge(n) << std::endl;
+    // std::cout << " decoded data " << (((enc_data[n]>>fEdgeBit)<<31) | (enc_data[n]&fBitMask)) << " edge bit " <<
+    // fEdgeBit << std::endl; std::cout << data.time[n] << " " << data.getTime(n) << " " << data.getEdge(n) <<
+    // std::endl;
   }
   return !data.time.empty();
 }
 
-bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data,
-    const unsigned int *enc_data,unsigned short nwords)
-{
+bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data, const unsigned int *enc_data, unsigned short nwords) {
+
+  // if(nwords>2) // LHE: Added 9/17/24 to add pulse amp compatability
+  //   return false;
+  // unsigned short nread = 0;
+  // data.integral = enc_data[nread++]&fBitMask;
+  // if(nwords>1) // LHE: Added 9/17/24 to add pulse amp compatability
+  //   data.peak_amp = enc_data[nread++];
+  // //std::cout << enc_data[0] << " " << data.integral << std::endl;
+  // return nread==nwords;
+
   data.integral = 0;
   data.samples.clear(); // Clear out any samples already in the data
-  //std::cout << " nwords: " << nwords << " => ";
-  for(unsigned short i = 0; i<nwords; i++){
-    data.integral+=enc_data[i];
+  // std::cout << " nwords: " << nwords << " => ";
+  for (unsigned short i = 0; i < nwords; i++) {
+    data.integral += enc_data[i];
     data.samples.push_back(enc_data[i]);
-    //std::cout << enc_data[i] << " ";
+    // std::cout << enc_data[i] << " ";
   }
-  //std::cout << std::endl;
+  // std::cout << std::endl;
   return true;
 }
 
 /*
 bool LADSimFADC250Encoder::DecodeFADC(//SimEncoder::fadc_data &data,
-				      SimEncoder::sadc_data &data,
+                                      SimEncoder::sadc_data &data,
     const unsigned int *enc_data,unsigned short nwords)
 {
   for(unsigned short i = 0; i<nwords; i++){
     data.samples.push_back(enc_data[i]);
   }
-  
+
   //OK, so the stuff below is flat-out out of date with the new digitization paradigm
 
   int nsamples = enc_data[0]&0xFFF;
@@ -272,48 +264,37 @@ void LADSimFADC250Encoder::UnpackSamples(unsigned int enc_data,
 }
 */
 
-unsigned int LADSimDataDecoder::EncodeHeader(unsigned short type,
-    unsigned short mult, unsigned int nwords)
-{
+unsigned int LADSimDataDecoder::EncodeHeader(unsigned short type, unsigned short mult, unsigned int nwords) {
   // First word bits
   // 31-26: encoder type
   // 25-14: channel multiplier (to be converted to local channel by SimDecoder)
   // 13-0 : number of words that follow
-  return ((type&LAD_TYPE_MASK)<<LAD_TYPE_FIRST_BIT) |
-    ((mult&LAD_CHANNEL_MASK)<<LAD_CHANNEL_FIRST_BIT) |
-    (nwords&LAD_NWORDS_MASK);
+  return ((type & LAD_TYPE_MASK) << LAD_TYPE_FIRST_BIT) | ((mult & LAD_CHANNEL_MASK) << LAD_CHANNEL_FIRST_BIT) |
+         (nwords & LAD_NWORDS_MASK);
 }
 
-void LADSimDataDecoder::DecodeHeader(unsigned int hdr, unsigned short &type, unsigned short &ch,
-    unsigned int &nwords)
-{
-  type = DecodeType(hdr);
-  ch = DecodeChannel(hdr);
+void LADSimDataDecoder::DecodeHeader(unsigned int hdr, unsigned short &type, unsigned short &ch, unsigned int &nwords) {
+  type   = DecodeType(hdr);
+  ch     = DecodeChannel(hdr);
   nwords = DecodeNwords(hdr);
 }
 
 unsigned short LADSimDataDecoder::DecodeChannel(unsigned int hdr) {
-  return (hdr>>LAD_CHANNEL_FIRST_BIT)&LAD_CHANNEL_MASK;
+  return (hdr >> LAD_CHANNEL_FIRST_BIT) & LAD_CHANNEL_MASK;
 }
 
-unsigned short LADSimDataDecoder::DecodeType(unsigned int hdr) {
-  return (hdr>>LAD_TYPE_FIRST_BIT)&LAD_TYPE_MASK;
-}
+unsigned short LADSimDataDecoder::DecodeType(unsigned int hdr) { return (hdr >> LAD_TYPE_FIRST_BIT) & LAD_TYPE_MASK; }
 
-unsigned short LADSimDataDecoder::DecodeNwords(unsigned int hdr) {
-  return hdr&LAD_NWORDS_MASK;
-}
+unsigned short LADSimDataDecoder::DecodeNwords(unsigned int hdr) { return hdr & LAD_NWORDS_MASK; }
 
-LADSimMPDEncoder::LADSimMPDEncoder(const char *enc_name,
-    unsigned short enc_id) : LADSimDataDecoder(enc_name,enc_id)
-{
-/*
-  fChannelBitMask  = MakeBitMask(8);
-  fDataBitMask     = MakeBitMask(12);
-  fOverflowBitMask = (1<<12);
-  fSampleBitMask   = fDataBitMask|fOverflowBitMask;
-  fValidBitMask    = (1<<13);
-*/
+LADSimMPDEncoder::LADSimMPDEncoder(const char *enc_name, unsigned short enc_id) : LADSimDataDecoder(enc_name, enc_id) {
+  /*
+    fChannelBitMask  = MakeBitMask(8);
+    fDataBitMask     = MakeBitMask(12);
+    fOverflowBitMask = (1<<12);
+    fSampleBitMask   = fDataBitMask|fOverflowBitMask;
+    fValidBitMask    = (1<<13);
+  */
 }
 /*
 bool LADSimMPDEncoder::EncodeMPD(SimEncoder::mpd_data data,
@@ -411,19 +392,17 @@ void LADSimMPDEncoder::DecodeMPDHeader(const unsigned int *hdr,
   data.gem_id   = (*hdr&LAD_MPD_GEM_ID_MASK)>>LAD_MPD_GEM_ID_BIT;
 }
 */
-bool LADSimMPDEncoder::DecodeMPD(SimEncoder::mpd_data &data,
-				 const unsigned int *enc_data,unsigned short nwords)
-{
+bool LADSimMPDEncoder::DecodeMPD(SimEncoder::mpd_data &data, const unsigned int *enc_data, unsigned short nwords) {
   data.samples.clear(); // Clear out any samples already in the data
-  //std::cout << "nwords " << nwords << std::endl;
-  //data.nstrips = nwords/data.nsamples;
-  for(unsigned short i = 0; i<nwords; i++){
-    //std::cout << enc_data[i] << " ";
-    
-    data.strips.push_back(enc_data[i]/8192);
-    data.samples.push_back(enc_data[i]%8192);
+  // std::cout << "nwords " << nwords << std::endl;
+  // data.nstrips = nwords/data.nsamples;
+  for (unsigned short i = 0; i < nwords; i++) {
+    // std::cout << enc_data[i] << " ";
+
+    data.strips.push_back(enc_data[i] / 8192);
+    data.samples.push_back(enc_data[i] % 8192);
   }
-  //std::cout << std::endl;
+  // std::cout << std::endl;
   /*
   if(nwords<=1) {
     std::cerr << "Error, not enough words to read. Expected more than one,"
@@ -457,7 +436,6 @@ bool LADSimMPDEncoder::DecodeMPD(SimEncoder::mpd_data &data,
   }
   */
   return true;
-
 }
 /*
-*/
+ */
