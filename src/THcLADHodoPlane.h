@@ -201,6 +201,7 @@ protected:
   Int_t fSampNSB;
   Int_t fOutputSampWaveform;
   Int_t fUseSampWaveform;
+  Int_t fIsSimulation;
 
   Double_t fPosBtm;
   Double_t fPosTop; 

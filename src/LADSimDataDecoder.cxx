@@ -180,25 +180,26 @@ bool LADSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data, const unsigned int 
 
 bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data, const unsigned int *enc_data, unsigned short nwords) {
 
-  // if(nwords>2) // LHE: Added 9/17/24 to add pulse amp compatability
-  //   return false;
-  // unsigned short nread = 0;
-  // data.integral = enc_data[nread++]&fBitMask;
-  // if(nwords>1) // LHE: Added 9/17/24 to add pulse amp compatability
-  //   data.peak_amp = enc_data[nread++];
-  // //std::cout << enc_data[0] << " " << data.integral << std::endl;
-  // return nread==nwords;
+  if(nwords>2) // LHE: Added 9/17/24 to add pulse amp compatability
+    return false;
+  unsigned short nread = 0;
+  data.integral = enc_data[nread++]&fBitMask;
+  data.samples.push_back(enc_data[nread++]&fBitMask);
+  if(nwords>1) // LHE: Added 9/17/24 to add pulse amp compatability
+    data.peak_amp = enc_data[nread++]&fBitMask;
+  //std::cout << enc_data[0] << " " << data.integral << std::endl;
+  return nread==nwords;
 
-  data.integral = 0;
-  data.samples.clear(); // Clear out any samples already in the data
-  // std::cout << " nwords: " << nwords << " => ";
-  for (unsigned short i = 0; i < nwords; i++) {
-    data.integral += enc_data[i];
-    data.samples.push_back(enc_data[i]);
-    // std::cout << enc_data[i] << " ";
-  }
-  // std::cout << std::endl;
-  return true;
+  // data.integral = 0;
+  // data.samples.clear(); // Clear out any samples already in the data
+  // // std::cout << " nwords: " << nwords << " => ";
+  // for (unsigned short i = 0; i < nwords; i++) {
+  //   data.integral += enc_data[i];
+  //   data.samples.push_back(enc_data[i]);
+  //   // std::cout << enc_data[i] << " ";
+  // }
+  // // std::cout << std::endl;
+  // return true;
 }
 
 /*

@@ -81,6 +81,89 @@ void LADSimADC::Init() {
 
 void LADSimADC::CheckDecoderStatus() const { std::cout << "LADSimADC has been called" << std::endl; }
 
+Bool_t LADSimADC::HasCapability(Decoder::EModuleType type) {
+  return (type == kSampleADC || type == kPulseIntegral || type == kPulseTime || type == kPulsePeak ||
+          type == kPulsePedestal);
+}
+
+UInt_t LADSimADC::GetData(Decoder::EModuleType emode, UInt_t chan, UInt_t ievent) const {
+  switch (emode) {
+  case kSampleADC:
+    return 0;
+    return GetPulseSamplesData(chan, ievent);
+  case kPulseIntegral:
+    return GetPulseIntegralData(chan, ievent);
+  case kPulseTime:
+    return GetPulseTimeData(chan, ievent);
+  case kPulsePeak:
+    return GetPulsePeakData(chan, ievent);
+  case kPulsePedestal:
+    return GetPulsePedestalData(chan, ievent);
+  }
+  return 0;
+}
+
+UInt_t LADSimADC::GetPulsePeakData(UInt_t chan, UInt_t ievent) const {
+  if (ievent >= sadc_data[chan].samples.size()) {
+    std::cerr << "Error: LADSimADC::GetPulsePeakData: ievent " << ievent << " out of range for channel " << chan
+              << std::endl;
+    return 0;
+  }
+  return sadc_data[chan].peak_amp;
+}
+
+UInt_t LADSimADC::GetPulsePedestalData(UInt_t chan, UInt_t ievent) const {
+  if (ievent >= sadc_data[chan].samples.size()) {
+    std::cerr << "Error: LADSimADC::GetPulsePedestalData: ievent " << ievent << " out of range for channel " << chan
+              << std::endl;
+    return 0;
+  }
+  return 0; // need to return pedestal
+}
+
+UInt_t LADSimADC::GetPulseSamplesData(UInt_t chan, UInt_t ievent) const {
+  if (ievent >= sadc_data[chan].samples.size()) {
+    std::cerr << "Error: LADSimADC::GetPulseSamplesData: ievent " << ievent << " out of range for channel " << chan
+              << std::endl;
+    return 0;
+  }
+  return sadc_data[chan].samples[ievent];
+}
+
+UInt_t LADSimADC::GetPulseIntegralData(UInt_t chan, UInt_t ievent) const {
+  if (ievent >= sadc_data[chan].samples.size()) {
+    std::cerr << "Error: LADSimADC::GetPulseIntegralData: ievent " << ievent << " out of range for channel " << chan
+              << std::endl;
+    return 0;
+  }
+  return sadc_data[chan].integral;
+}
+
+UInt_t LADSimADC::GetPulseTimeData(UInt_t chan, UInt_t ievent) const {
+  if (ievent >= sadc_data[chan].samples.size()) {
+    std::cerr << "Error: LADSimADC::GetPulseTimeData: ievent " << ievent << " out of range for channel " << chan
+              << std::endl;
+    return 0;
+  }
+  return 0; // need to return time
+}
+
+UInt_t LADSimADC::GetNumEvents(Decoder::EModuleType emode, UInt_t chan) const {
+  switch (emode) {
+  case kSampleADC:
+    return sadc_data[chan].samples.size();
+  case kPulseIntegral:
+    return sadc_data[chan].samples.size();
+  case kPulseTime:
+    return sadc_data[chan].samples.size();
+  case kPulsePeak:
+    return sadc_data[chan].samples.size();
+  case kPulsePedestal:
+    return sadc_data[chan].samples.size();
+  }
+  return 0;
+}
+
 UInt_t LADSimADC::LoadSlot(THaSlotData *sldat, const UInt_t *evbuffer, const UInt_t *pstop) {
   Clear();
   unsigned int nwords = 0;
@@ -107,11 +190,16 @@ UInt_t LADSimADC::LoadSlot(THaSlotData *sldat, const UInt_t *evbuffer, const UIn
           enc->DecodeSADC(tmp_sadc_data, evbuffer, nwords);
           // std::cout << tmp_sadc_data.samples.size() << std::endl;
           // std::cout << chan << " " << sadc_data[chan].samples.size() << std::endl;
+                      //LHE: temp fix to add pulse amp and integral. Should later fix to run as FADC
+          sadc_data[chan].integral = tmp_sadc_data.integral;
+          sadc_data[chan].peak_amp = tmp_sadc_data.peak_amp;
           for (size_t i = 0; i < tmp_sadc_data.samples.size(); i++) {
             raw_buff = tmp_sadc_data.samples[i];
             // std::cout << i << " " << tmp_sadc_data.samples[i] << endl;
             sadc_data[chan].samples.push_back(tmp_sadc_data.samples[i]);
             // std::cout << i << " " << sadc_data[chan].samples.size() << " " << raw_buff << endl;
+
+
             sldat->loadData("adc", chan, raw_buff, raw_buff);
           }
         } else if (enc->IsMPD()) {
@@ -128,7 +216,7 @@ UInt_t LADSimADC::LoadSlot(THaSlotData *sldat, const UInt_t *evbuffer, const UIn
           enc->DecodeADC(tmp_adc_data, evbuffer, nwords);
           raw_buff = tmp_adc_data.integral;
           // std::cout << " raw_buff " << raw_buff << endl;
-          sadc_data[chan].integral = raw_buff;// LHE: Added 9/17/24 to add pulse amp compatability
+          sadc_data[chan].integral = raw_buff; // LHE: Added 9/17/24 to add pulse amp compatability
           // sadc_data[chan].integral = tmp_adc_data.integral;
           // sadc_data[chan].peak_amp = tmp_adc_data.peak_amp;
           sldat->loadData("adc", chan, raw_buff, raw_buff);

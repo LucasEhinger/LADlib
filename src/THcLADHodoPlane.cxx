@@ -439,6 +439,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
                       {"hodo_SampNSB", &fSampNSB, kInt, 0, 1},
                       {"hodo_OutputSampWaveform", &fOutputSampWaveform, kInt, 0, 1},
                       {"hodo_UseSampWaveform", &fUseSampWaveform, kInt, 0, 1},
+                      {"is_simulation", &fIsSimulation, kInt, 0, 1},
                       {0}};
 
   // Set Default values
@@ -453,6 +454,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fSampNSAT           = 2; // default value in THcRawHit::SetF250Params
   fOutputSampWaveform = 0; // 0= no output , 1 = output Sample Waveform
   fUseSampWaveform    = 0; // 0= do not use , 1 = use Sample Waveform
+  fIsSimulation       = 0;
 
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
@@ -720,7 +722,7 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"GoodTopAdcPulseInt", "List of top ADC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopAdcPulseInt"},
       {"GoodBtmAdcPulseInt", "List of Bottom ADC values (passed TDC && ADC Min and Max cuts for either end)",
-        "fGoodBtmAdcPulseInt"},
+       "fGoodBtmAdcPulseInt"},
       {"GoodTopAdcPulseAmp", "List of top ADC peak amp (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopAdcPulseAmp"},
       {"GoodBtmAdcPulseAmp", "List of Bottom ADC peak amp (passed TDC && ADC Min and Max cuts for either end)",
@@ -826,7 +828,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
   UInt_t nrTopADCHits     = 0; // Don't really use this. Not sure how it's different from nrTopAdcHits
   UInt_t nrBtmADCHits     = 0; // Don't really use this. Not sure how it's different from nrBtmAdcHits
 
-
   Int_t nrawhits = rawhits->GetLast() + 1;
   Int_t ihit     = nexthit;
 
@@ -884,7 +885,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     // if (rawBtmTdcHit.GetNHits() > 0 && rawBtmTdcHit.HasRefTime()) { //Remove RefTime Requirement
     if (rawBtmTdcHit.GetNHits() > 0) {
 
-
       // if (fBtmTdcRefTime == kBig) {
       //   fBtmTdcRefTime     = rawBtmTdcHit.GetRefTime();
       //   fBtmTdcRefDiffTime = rawBtmTdcHit.GetRefDiffTime();
@@ -908,9 +908,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     // Top ADC hits
     THcRawAdcHit &rawTopAdcHit = hit->GetRawAdcHitPos(); // Pos=Top
 
-    // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) { //Removed RefTime Requirement
+    // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) { //Removed
+    // RefTime Requirement
     if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0)) {
-
 
       // if (fTopAdcRefTime == kBig) {
       //   fTopAdcRefTime     = rawTopAdcHit.GetRefTime();
@@ -965,7 +965,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       if (fSampNSB == 0)
         fSampNSB = rawTopAdcHit.GetF250_NSB();
 
-      rawTopAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+      if (!fIsSimulation)
+        rawTopAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+
       if (fSampNSAT != 2)
         rawTopAdcHit.SetSampNSAT(fSampNSAT);
       rawTopAdcHit.SetSampIntTimePedestalPeak();
@@ -1027,9 +1029,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Btm ADC hits
     THcRawAdcHit &rawBtmAdcHit = hit->GetRawAdcHitNeg(); // Neg=Btm
-    // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) { // Remove RefTime Requirement
+    // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) { // Remove
+    // RefTime Requirement
     if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0)) { // Remove RefTime Requirement
-
 
       // if (fBtmAdcRefTime == kBig) {
       //   fBtmAdcRefTime     = rawBtmAdcHit.GetRefTime();
@@ -1084,7 +1086,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       if (fSampNSB == 0)
         fSampNSB = rawBtmAdcHit.GetF250_NSB();
 
-      rawBtmAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+      if (!fIsSimulation)
+        rawBtmAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+
       if (fSampNSAT != 2)
         rawBtmAdcHit.SetSampNSAT(fSampNSAT);
       rawBtmAdcHit.SetSampIntTimePedestalPeak();

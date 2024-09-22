@@ -498,10 +498,7 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
     assert(simev->Tlad->b_LAD_Hodo_dighit_nchan);
     for (int j = 0; j < simev->Tlad->LAD_Hodo_dighit_nchan; j++) {
       ntdc  = 0;
-      lchan = simev->Tlad->LAD_Hodo_dighit_chan->at(j); // TODO: fixe me: out of range error occuring. LHE: now fixed
-      // col   = lchan % 2;
-      // row   = (lchan - col) / 2;
-      // lchan = col * 90 + row;
+      lchan = simev->Tlad->LAD_Hodo_dighit_chan->at(j); 
       ChanToROC(detname, lchan, crate, slot, chan);
 
       if (crate >= 0 || slot >= 0) {
@@ -539,6 +536,7 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
         myev->push_back(LADSimDataDecoder::EncodeHeader(5, chan, 1));
         // if (simev->Tlad->Earm_BBHodo_dighit_adc->at(j) > -1000000) {
         myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc->at(j));
+        // myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc_amp->at(j)*100);
         // }
 
         if (fDebug > 2) {
@@ -1007,10 +1005,6 @@ void LADSimDecoder::ChanToROC(const std::string &detname, Int_t h_chan, Int_t &c
   slot  = ((fInvDetMap.at(detname)).at(h_chan)).slot;
   chan  = ((fInvDetMap.at(detname)).at(h_chan)).chan;
 
-  // TODO: fixme. This is a hack to test crate and slot for the hodoscope
-  // crate = 1;
-  // slot  = 8 + h_chan % 9;
-  // chan  = h_chan % 16;
 }
 
 int LADSimDecoder::APVnum(const std::string &detname, Int_t mod, Int_t h_chan, Int_t &crate, Int_t &slot,
