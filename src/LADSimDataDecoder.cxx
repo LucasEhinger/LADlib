@@ -1,4 +1,5 @@
 #include "LADSimDataDecoder.h"
+#include "THcRawAdcHit.h"
 #include <TString.h>
 #include <iostream>
 
@@ -183,11 +184,10 @@ bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data, const unsigned i
   if(nwords>2) // LHE: Added 9/17/24 to add pulse amp compatability
     return false;
   unsigned short nread = 0;
-  data.integral = enc_data[nread++]&fBitMask;
-  data.samples.push_back(enc_data[nread++]&fBitMask);
-  if(nwords>1) // LHE: Added 9/17/24 to add pulse amp compatability
-    data.peak_amp = enc_data[nread++]&fBitMask;
-  //std::cout << enc_data[0] << " " << data.integral << std::endl;
+  data.integral = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTopC();
+  data.samples.push_back(0);
+  if(nwords>1) 
+    data.peak_amp = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTomV();
   return nread==nwords;
 
   // data.integral = 0;
