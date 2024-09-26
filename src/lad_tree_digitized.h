@@ -114,10 +114,10 @@ public:
   // LAD Hodo Digitized
   Int_t LAD_Hodo_dighit_nchan;
   std::vector<int> *LAD_Hodo_dighit_chan;
-  std::vector<int> *LAD_Hodo_dighit_adc;
-  std::vector<int> *LAD_Hodo_dighit_tdc_l;
-  std::vector<int> *LAD_Hodo_dighit_tdc_t;
-  std::vector<int> *LAD_Hodo_dighit_adc_amp;
+  std::vector<double> *LAD_Hodo_dighit_adc;
+  std::vector<double> *LAD_Hodo_dighit_tdc_l;
+  std::vector<double> *LAD_Hodo_dighit_tdc_t;
+  std::vector<double> *LAD_Hodo_dighit_adc_amp;
 
   // LAD GEM Digitized
   Int_t Earm_BBGEM_dighit_nstrips;

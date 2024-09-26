@@ -524,8 +524,11 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
         // }
 
         myev->push_back(LADSimDataDecoder::EncodeHeader(1, chan, 1));
-        if (simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
-          myev->push_back(simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j));
+        myev->push_back(simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j));
+        // if (simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j) > -1000000)
+        //   myev->push_back(simev->Tlad->LAD_Hodo_dighit_tdc_l->at(j));
+        // else
+        //   myev->push_back(0);
 
         ChanToROC(detname, lchan, crate, slot, chan); //+91 ??? that might be the trick
         if (crate >= 0 || slot >= 0) {
@@ -533,10 +536,10 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
         }
         myev = &(map[sldat]);
 
-        myev->push_back(LADSimDataDecoder::EncodeHeader(5, chan, 1));
+        myev->push_back(LADSimDataDecoder::EncodeHeader(5, chan, 2));
         // if (simev->Tlad->Earm_BBHodo_dighit_adc->at(j) > -1000000) {
         myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc->at(j));
-        // myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc_amp->at(j)*100);
+        myev->push_back(simev->Tlad->LAD_Hodo_dighit_adc_amp->at(j));
         // }
 
         if (fDebug > 2) {
