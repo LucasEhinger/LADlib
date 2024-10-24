@@ -1,5 +1,6 @@
 #include "LADSimDataDecoder.h"
 #include "THcRawAdcHit.h"
+#include "THcRawTdcHit.h"
 #include <TString.h>
 #include <iostream>
 
@@ -159,7 +160,8 @@ bool LADSimADCEncoder::DecodeADC(SimEncoder::adc_data &data, const unsigned int 
   if (nwords > 1) // LHE: Added 9/17/24 to add pulse amp compatability
     return false;
   unsigned short nread = 0;
-  data.integral        = enc_data[nread++] & fBitMask;
+  // data.integral        = enc_data[nread++] & fBitMask;
+  data.integral        = enc_data[nread++];
   // if(nwords>1) // LHE: Added 9/17/24 to add pulse amp compatability
   //   data.peak_amp = enc_data[nread++];
   // //std::cout << enc_data[0] << " " << data.integral << std::endl;
@@ -171,7 +173,8 @@ bool LADSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data, const unsigned int 
     // std::cout << "n = " << n << ": encoded data " << enc_data[n] << " edge bit " << fEdgeBit << std::endl;
     // data.time.push_back(((enc_data[n]>>fEdgeBit)<<31) |
     //   (enc_data[n]&fBitMask));
-    data.time.push_back(enc_data[n]);
+    data.time.push_back(enc_data[n]);//TODO: remove tdcChanToTime conversion from entire class
+
     // std::cout << " decoded data " << (((enc_data[n]>>fEdgeBit)<<31) | (enc_data[n]&fBitMask)) << " edge bit " <<
     // fEdgeBit << std::endl; std::cout << data.time[n] << " " << data.getTime(n) << " " << data.getEdge(n) <<
     // std::endl;
@@ -181,13 +184,18 @@ bool LADSimTDCEncoder::DecodeTDC(SimEncoder::tdc_data &data, const unsigned int 
 
 bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data, const unsigned int *enc_data, unsigned short nwords) {
 
-  if(nwords>2) // LHE: Added 9/17/24 to add pulse amp compatability
+  if(nwords>3) // LHE: Added 9/17/24 to add pulse amp compatability
     return false;
   unsigned short nread = 0;
-  data.integral = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTopC();
+  // data.integral = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTopC();
+  data.integral = (enc_data[nread++])/THcRawAdcHit::GetAdcTopC();
   data.samples.push_back(0);
+  if(nwords>2) 
+    // data.peak_amp = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTomV();
+    data.peak_amp = (enc_data[nread++])/THcRawAdcHit::GetAdcTomV();
   if(nwords>1) 
-    data.peak_amp = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTomV();
+    // data.adc_time.push_back((enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTons());
+    data.adc_time.push_back((enc_data[nread++])/THcRawAdcHit::GetAdcTons());
   return nread==nwords;
 
   // data.integral = 0;

@@ -145,7 +145,7 @@ UInt_t LADSimADC::GetPulseTimeData(UInt_t chan, UInt_t ievent) const {
               << std::endl;
     return 0;
   }
-  return 0; // need to return time
+  return sadc_data[chan].adc_time[ievent];
 }
 
 UInt_t LADSimADC::GetNumEvents(Decoder::EModuleType emode, UInt_t chan) const {
@@ -197,6 +197,7 @@ UInt_t LADSimADC::LoadSlot(THaSlotData *sldat, const UInt_t *evbuffer, const UIn
             raw_buff = tmp_sadc_data.samples[i];
             // std::cout << i << " " << tmp_sadc_data.samples[i] << endl;
             sadc_data[chan].samples.push_back(tmp_sadc_data.samples[i]);
+            sadc_data[chan].adc_time.push_back(tmp_sadc_data.adc_time[i]);
             // std::cout << i << " " << sadc_data[chan].samples.size() << " " << raw_buff << endl;
 
 

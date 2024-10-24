@@ -118,6 +118,7 @@ public:
   std::vector<double> *LAD_Hodo_dighit_tdc_l;
   std::vector<double> *LAD_Hodo_dighit_tdc_t;
   std::vector<double> *LAD_Hodo_dighit_adc_amp;
+  std::vector<double> *LAD_Hodo_dighit_adc_time;
 
   // LAD GEM Digitized
   Int_t Earm_BBGEM_dighit_nstrips;
@@ -229,6 +230,7 @@ public:
   TBranch *b_LAD_Hodo_dighit_tdc_l; //!
   TBranch *b_LAD_Hodo_dighit_tdc_t; //!
   TBranch *b_LAD_Hodo_dighit_adc_amp; //!
+  TBranch *b_LAD_Hodo_dighit_adc_time; //!
 
   TBranch *b_Earm_BBGEM_dighit_nstrips; //!
   TBranch *b_Earm_BBGEM_dighit_module;  //!
@@ -395,6 +397,7 @@ void lad_tree_digitized::Init(TTree *tree) {
   LAD_Hodo_dighit_tdc_l = 0;
   LAD_Hodo_dighit_tdc_t = 0;
   LAD_Hodo_dighit_adc_amp = 0;
+  LAD_Hodo_dighit_adc_time = 0;
 
   // LAD GEM Digitized
   // Earm_BBGEM_dighit_module = 0;
@@ -511,6 +514,7 @@ void lad_tree_digitized::Init(TTree *tree) {
   fChain->SetBranchAddress("LAD.Hodo.dighit.tdc_l", &LAD_Hodo_dighit_tdc_l, &b_LAD_Hodo_dighit_tdc_l);
   fChain->SetBranchAddress("LAD.Hodo.dighit.tdc_t", &LAD_Hodo_dighit_tdc_t, &b_LAD_Hodo_dighit_tdc_t);
   fChain->SetBranchAddress("LAD.Hodo.dighit.amp", &LAD_Hodo_dighit_adc_amp, &b_LAD_Hodo_dighit_adc_amp);
+  fChain->SetBranchAddress("LAD.Hodo.dighit.adc_time", &LAD_Hodo_dighit_adc_time, &b_LAD_Hodo_dighit_adc_time);
   // LAD GEM Digitized
   //  fChain->SetBranchAddress("Earm.BBGEM.dighit.nstrips", &Earm_BBGEM_dighit_nstrips, &b_Earm_BBGEM_dighit_nstrips);
   //  fChain->SetBranchAddress("Earm.BBGEM.dighit.module", &Earm_BBGEM_dighit_module, &b_Earm_BBGEM_dighit_module);
