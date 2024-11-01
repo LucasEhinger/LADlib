@@ -8,8 +8,6 @@
 #include "THcRawTdcHit.h"
 #include "THcSignalHit.h"
 
-//#pragma GCC optimize ("O0") //For debugging purposes
-
 // This is similar to THcScintillatorPlane from hcana
 
 //_______________________________________________________________________________________
@@ -344,6 +342,15 @@ void THcLADHodoPlane::Clear(Option_t *opt) {
   for (UInt_t ielem = 0; ielem < fNumGoodBtmTdcHits.size(); ielem++)
     fNumGoodBtmTdcHits.at(ielem) = 0;
 
+  for (UInt_t ielem = 0; ielem < fNumTopAdcHits.size(); ielem++)
+    fNumTopAdcHits.at(ielem) = 0;
+  for (UInt_t ielem = 0; ielem < fNumBtmAdcHits.size(); ielem++)
+    fNumBtmAdcHits.at(ielem) = 0;
+  for (UInt_t ielem = 0; ielem < fNumTopTdcHits.size(); ielem++)
+    fNumTopTdcHits.at(ielem) = 0;
+  for (UInt_t ielem = 0; ielem < fNumBtmTdcHits.size(); ielem++)
+    fNumBtmTdcHits.at(ielem) = 0;
+
   // Clear Ped/Amps/Int/Time
   for (UInt_t ielem = 0; ielem < fGoodTopAdcPed.size(); ielem++) {
     fGoodTopAdcPed.at(ielem)         = 0.0;
@@ -412,14 +419,15 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   DBRequest list_1[] = {{parname.c_str(), &fNelem, kInt}, {0}};
   gHcParms->LoadParmValues(list_1, prefix);
 
-  delete [] fPosCenter; fPosCenter = new Double_t[fNelem];
+  delete[] fPosCenter;
+  fPosCenter       = new Double_t[fNelem];
   DBRequest list[] = {{Form("scin_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("scin_%s_dzpos", GetName()), &fDzpos, kDouble},
                       {Form("scin_%s_size", GetName()), &fSize, kDouble},
                       {Form("scin_%s_spacing", GetName()), &fSpacing, kDouble},
                       {Form("scin_%s_%s", GetName(), "btm"), &fPosBtm, kDouble},
                       {Form("scin_%s_%s", GetName(), "top"), &fPosTop, kDouble},
-                      {Form("scin_%s_offset",GetName()), &fPosOffset, kDouble},
+                      {Form("scin_%s_offset", GetName()), &fPosOffset, kDouble},
                       {Form("scin_%s_center", GetName()), fPosCenter, kDouble, fNelem},
                       {"hodo_adc_mode", &fADCMode, kInt, 0, 1},
                       {"hodo_adc_diag_cut", &fADCDiagCut, kInt, 0, 1},
@@ -431,6 +439,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
                       {"hodo_SampNSB", &fSampNSB, kInt, 0, 1},
                       {"hodo_OutputSampWaveform", &fOutputSampWaveform, kInt, 0, 1},
                       {"hodo_UseSampWaveform", &fUseSampWaveform, kInt, 0, 1},
+                      {"is_simulation", &fIsSimulation, kInt, 0, 1},
                       {0}};
 
   // Set Default values
@@ -445,6 +454,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fSampNSAT           = 2; // default value in THcRawHit::SetF250Params
   fOutputSampWaveform = 0; // 0= no output , 1 = output Sample Waveform
   fUseSampWaveform    = 0; // 0= do not use , 1 = use Sample Waveform
+  fIsSimulation       = 0;
 
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
@@ -529,6 +539,11 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   InitializePedestals();
 
   // Initialize
+
+  fNumTopAdcHits = vector<Int_t>(fNelem, 0.0);
+  fNumBtmAdcHits = vector<Int_t>(fNelem, 0.0);
+  fNumTopTdcHits = vector<Int_t>(fNelem, 0.0);
+  fNumBtmTdcHits = vector<Int_t>(fNelem, 0.0);
 
   fNumGoodTopAdcHits = vector<Int_t>(fNelem, 0.0);
   fNumGoodBtmAdcHits = vector<Int_t>(fNelem, 0.0);
@@ -627,6 +642,14 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
         {"BtmAdcSampPulseAmp", "Bottom Samp ADC pulse amplitudes", "frBtmAdcSampPulseAmp.THcSignalHit.GetData()"},
         {"BtmAdcSampPulseTime", "Bottom Samp ADC pulse times", "frBtmAdcSampPulseTime.THcSignalHit.GetData()"},
 
+        {"numTopAdcHits", "Number of Top ADC Hits Per PMT", "fNumTopAdcHits"}, // Hodo+ ADC occupancy - vector<Int_t>
+        {"numBtmAdcHits", "Number of Bottom ADC Hits Per PMT",
+         "fNumBtmAdcHits"}, // Hodo- ADC occupancy - vector <Int_t>
+
+        {"numTopTdcHits", "Number of Top TDC Hits Per PMT", "fNumTopTdcHits"}, // Hodo+ TDC occupancy - vector<Int_t>
+        {"numBtmTdcHits", "Number of Bottom TDC Hits Per PMT",
+         "fNumBtmTdcHits"}, // Hodo- TDC occupancy - vector <Int_t>
+
         {"totNumTopAdcHits", "Total Number of Top ADC Hits", "fTotNumTopAdcHits"}, // Hodo+ raw ADC multiplicity Int_t
         {"totNumBtmAdcHits", "Total Number of Bottom ADC Hits", "fTotNumBtmAdcHits"}, // Hodo- raw ADC multiplicity ""
         {"totNumAdcHits", "Total Number of PMTs Hit (as measured by ADCs)",
@@ -698,6 +721,8 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
 
       {"GoodTopAdcPulseInt", "List of top ADC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopAdcPulseInt"},
+      {"GoodBtmAdcPulseInt", "List of Bottom ADC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmAdcPulseInt"},
       {"GoodTopAdcPulseAmp", "List of top ADC peak amp (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopAdcPulseAmp"},
       {"GoodBtmAdcPulseAmp", "List of Bottom ADC peak amp (passed TDC && ADC Min and Max cuts for either end)",
@@ -710,6 +735,25 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
        "fGoodTopAdcTdcDiffTime"},
       {"GoodBtmAdcTdcDiffTime", "List of Bottom TDC - ADC time (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodBtmAdcTdcDiffTime"},
+
+      {"GoodTopTdcTimeUnCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeUnCorr"},
+      {"GoodBtmTdcTimeUnCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeUnCorr"},
+      {"GoodTopTdcTimeCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeCorr"},
+      {"GoodBtmTdcTimeCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeCorr"},
+      {"GoodTopTdcTimeTOFCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeTOFCorr"},
+      {"GoodBtmTdcTimeTOFCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeTOFCorr"},
+      {"GoodTopTdcTimeWalkCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodTopTdcTimeWalkCorr"},
+      {"GoodBtmTdcTimeWalkCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodBtmTdcTimeWalkCorr"},
+      {"GoodDiffDistTrack", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+       "fGoodDiffDistTrack"},
 
       /*
       // cluster variables
@@ -728,6 +772,12 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"BtmTdcRefDiffTime", "Reference Diff time of Btm TDC", "fBtmTdcRefDiffTime"},
       {"TopAdcRefDiffTime", "Reference Diff time of Top ADC", "fTopAdcRefDiffTime"},
       {"BtmAdcRefDiffTime", "Reference Diff time of Btm aDC", "fBtmAdcRefDiffTime"},
+
+      {"totNumTopTdcHits", "Total Number of Top TDC Hits", "fTotNumTopTdcHits"},    // Hodo+ raw TDC multiplicity ""
+      {"totNumBtmTdcHits", "Total Number of Bottom TDC Hits", "fTotNumBtmTdcHits"}, // Hodo- raw TDC multiplicity ""
+      {"totNumTdcHits", "Total Number of PMTs Hits (as measured by TDCs)",
+       "fTotNumTdcHits"}, // Hodo raw TDC multiplicity  ""
+
       //{"ngoodhits", "Number of paddle hits (passed tof tolerance and used to determine the focal plane time )",
       //"GetNGoodHits() "},
       {0}};
@@ -755,8 +805,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
    *
    */
 
-  // Clear() is being called event by event   
-  // LHE: Is this true?? I don't think so. Adding Clear() here changes the output (to something that looks reasonable). FixMe
+  // Clear() is being called event by event
+  // LHE: Is this true?? I don't think so. Adding Clear() here changes the output (to something that looks reasonable).
+  // FixMe
   Clear();
 
   fTopTdcRefTime     = kBig;
@@ -776,10 +827,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
   UInt_t nrSampBtmAdcHits = 0;
   UInt_t nrTopADCHits     = 0; // Don't really use this. Not sure how it's different from nrTopAdcHits
   UInt_t nrBtmADCHits     = 0; // Don't really use this. Not sure how it's different from nrBtmAdcHits
-
-  // Added 07/03/2024
-
-  // End added 07/03/2024
 
   Int_t nrawhits = rawhits->GetLast() + 1;
   Int_t ihit     = nexthit;
@@ -807,18 +854,19 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Top Tdc hits
     THcRawTdcHit &rawTopTdcHit = hit->GetRawTdcHitPos(); // Pos=Top
-    if (rawTopTdcHit.GetNHits() > 0 && rawTopTdcHit.HasRefTime()) {
+    // if (rawTopTdcHit.GetNHits() > 0 && rawTopTdcHit.HasRefTime()) { //Removed RefTime Requirement
+    if (rawTopTdcHit.GetNHits() > 0) {
 
-      // Assume fTopTdcRefTime is initialized
-      if (fTopTdcRefTime == kBig) {
-        fTopTdcRefTime     = rawTopTdcHit.GetRefTime();
-        fTopTdcRefDiffTime = rawTopTdcHit.GetRefDiffTime();
-      }
+      // // Assume fTopTdcRefTime is initialized
+      // if (fTopTdcRefTime == kBig) {
+      //   fTopTdcRefTime     = rawTopTdcHit.GetRefTime();
+      //   fTopTdcRefDiffTime = rawTopTdcHit.GetRefDiffTime();
+      // }
 
-      // Set problem_flag if the it's not set correctly
-      if (fTopTdcRefTime != rawTopTdcHit.GetRefTime()) {
-        problem_flag = kTRUE;
-      }
+      // // Set problem_flag if the it's not set correctly
+      // if (fTopTdcRefTime != rawTopTdcHit.GetRefTime()) {
+      //   problem_flag = kTRUE;
+      // }
     }
 
     // Loop over multiple tdc hits within ihit
@@ -829,20 +877,22 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       nrTopTdcHits++; // FIXME: just use thit? or is it used somewhere else too?
       fTotNumTdcHits++;
       fTotNumTopTdcHits++;
+      fNumTopTdcHits.at(padnum - 1) = padnum;
     }
 
     // Now, repeat for the Btm end
     THcRawTdcHit &rawBtmTdcHit = hit->GetRawTdcHitNeg(); // Neg=Btm
-    if (rawBtmTdcHit.GetNHits() > 0 && rawBtmTdcHit.HasRefTime()) {
+    // if (rawBtmTdcHit.GetNHits() > 0 && rawBtmTdcHit.HasRefTime()) { //Remove RefTime Requirement
+    if (rawBtmTdcHit.GetNHits() > 0) {
 
-      if (fBtmTdcRefTime == kBig) {
-        fBtmTdcRefTime     = rawBtmTdcHit.GetRefTime();
-        fBtmTdcRefDiffTime = rawBtmTdcHit.GetRefDiffTime();
-      }
+      // if (fBtmTdcRefTime == kBig) {
+      //   fBtmTdcRefTime     = rawBtmTdcHit.GetRefTime();
+      //   fBtmTdcRefDiffTime = rawBtmTdcHit.GetRefDiffTime();
+      // }
 
-      if (fBtmTdcRefTime != rawBtmTdcHit.GetRefTime()) {
-        problem_flag = kTRUE;
-      }
+      // if (fBtmTdcRefTime != rawBtmTdcHit.GetRefTime()) {
+      //   problem_flag = kTRUE;
+      // }
     }
 
     for (UInt_t thit = 0; thit < rawBtmTdcHit.GetNHits(); thit++) {
@@ -852,21 +902,24 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       nrBtmTdcHits++; // FIXME: just use thit? or is it used somewhere else too?
       fTotNumTdcHits++;
       fTotNumBtmTdcHits++;
+      fNumBtmTdcHits.at(padnum - 1) = padnum;
     } // thit loop
 
     // Top ADC hits
     THcRawAdcHit &rawTopAdcHit = hit->GetRawAdcHitPos(); // Pos=Top
 
-    if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) {
+    // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) { //Removed
+    // RefTime Requirement
+    if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0)) {
 
-      if (fTopAdcRefTime == kBig) {
-        fTopAdcRefTime     = rawTopAdcHit.GetRefTime();
-        fTopAdcRefDiffTime = rawTopAdcHit.GetRefDiffTime();
-      }
+      // if (fTopAdcRefTime == kBig) {
+      //   fTopAdcRefTime     = rawTopAdcHit.GetRefTime();
+      //   fTopAdcRefDiffTime = rawTopAdcHit.GetRefDiffTime();
+      // }
 
-      if (fTopAdcRefTime != rawTopAdcHit.GetRefTime()) {
-        problem_flag = kTRUE;
-      }
+      // if (fTopAdcRefTime != rawTopAdcHit.GetRefTime()) {
+      //   problem_flag = kTRUE;
+      // }
     }
 
     if (fUseSampWaveform == 0) {
@@ -900,6 +953,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         nrTopAdcHits++;
         fTotNumAdcHits++;
         fTotNumTopAdcHits++;
+        fNumTopAdcHits.at(padnum - 1) = padnum;
       }
     }
 
@@ -911,7 +965,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       if (fSampNSB == 0)
         fSampNSB = rawTopAdcHit.GetF250_NSB();
 
-      rawTopAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+      if (!fIsSimulation)
+        rawTopAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+
       if (fSampNSAT != 2)
         rawTopAdcHit.SetSampNSAT(fSampNSAT);
       rawTopAdcHit.SetSampIntTimePedestalPeak();
@@ -973,16 +1029,18 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Btm ADC hits
     THcRawAdcHit &rawBtmAdcHit = hit->GetRawAdcHitNeg(); // Neg=Btm
-    if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) {
+    // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) { // Remove
+    // RefTime Requirement
+    if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0)) { // Remove RefTime Requirement
 
-      if (fBtmAdcRefTime == kBig) {
-        fBtmAdcRefTime     = rawBtmAdcHit.GetRefTime();
-        fBtmAdcRefDiffTime = rawBtmAdcHit.GetRefDiffTime();
-      }
+      // if (fBtmAdcRefTime == kBig) {
+      //   fBtmAdcRefTime     = rawBtmAdcHit.GetRefTime();
+      //   fBtmAdcRefDiffTime = rawBtmAdcHit.GetRefDiffTime();
+      // }
 
-      if (fBtmAdcRefTime != rawBtmAdcHit.GetRefTime()) {
-        problem_flag = kTRUE;
-      }
+      // if (fBtmAdcRefTime != rawBtmAdcHit.GetRefTime()) {
+      //   problem_flag = kTRUE;
+      // }
     }
 
     if (fUseSampWaveform == 0) {
@@ -1016,6 +1074,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         nrBtmAdcHits++;
         fTotNumAdcHits++;
         fTotNumBtmAdcHits++;
+        fNumBtmAdcHits.at(padnum - 1) = padnum;
       }
     }
 
@@ -1027,7 +1086,9 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       if (fSampNSB == 0)
         fSampNSB = rawBtmAdcHit.GetF250_NSB();
 
-      rawBtmAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+      if (!fIsSimulation)
+        rawBtmAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
+
       if (fSampNSAT != 2)
         rawBtmAdcHit.SetSampNSAT(fSampNSAT);
       rawBtmAdcHit.SetSampIntTimePedestalPeak();

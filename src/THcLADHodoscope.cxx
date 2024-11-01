@@ -316,10 +316,12 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"tof_tolerance", &fTofTolerance, kDouble, 0, 1},
                        {"hodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
                        {"hodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
+                       {"hodo_tdc_to_time", &fScinTdcToTime, kDouble},
                        {"hodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_BtmAdcTimeWindowMax", fHodoBtmAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"is_simulation", &fIsSimulation, kInt, 0, 1},
                        {0}};
 
   fCosmicFlag    = 0;
@@ -328,6 +330,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fScinTdcMin    = 0;
   fScinTdcMax    = 0;
   fScinTdcToTime = 0;
+  fIsSimulation  = 0;
 
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
@@ -376,6 +379,13 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
   Bool_t present = kTRUE;
   if (fPresentP) {
     present = *fPresentP;
+  }
+
+  if (fIsSimulation) {
+    fNSA=1;
+    fNSB=0;
+    fNPED=1;
+    fHaveFADCInfo=true;
   }
 
   fNHits = DecodeToHitList(evdata, !present);

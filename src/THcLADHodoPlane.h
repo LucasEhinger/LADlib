@@ -78,6 +78,11 @@ protected:
   Int_t fTotNumTopAdcHits;
   Int_t fTotNumBtmAdcHits;
 
+  vector<Int_t> fNumTopAdcHits;
+  vector<Int_t> fNumBtmAdcHits;
+  vector<Int_t> fNumTopTdcHits;
+  vector<Int_t> fNumBtmTdcHits;
+
   Int_t fTotNumGoodTopAdcHits;
   Int_t fTotNumGoodBtmAdcHits;
   Int_t fTotNumGoodAdcHits;
@@ -196,6 +201,7 @@ protected:
   Int_t fSampNSB;
   Int_t fOutputSampWaveform;
   Int_t fUseSampWaveform;
+  Int_t fIsSimulation;
 
   Double_t fPosBtm;
   Double_t fPosTop; 
