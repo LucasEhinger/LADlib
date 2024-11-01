@@ -10,5 +10,12 @@
 #pragma link C++ class THcLADHodoscope+;
 #pragma link C++ class THcLADHodoPlane+;
 #pragma link C++ class THcLADHodoHit+;
+#pragma link C++ class Decoder::LADSimADC+;
+#pragma link C++ class Decoder::LADSimTDC+;
+#pragma link C++ class LADSimDataDecoder+;
+#pragma link C++ class LADSimDecoder+;
+#pragma link C++ class LADSimEvent+;
+#pragma link C++ class LADSimFile+;
+#pragma link C++ class lad_tree_digitized+;
 
 #endif

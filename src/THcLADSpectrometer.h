@@ -8,8 +8,8 @@
 /////////////////////////////////////////////////
 
 #include "THaSpectrometer.h"
-#include "THcLADHodoscope.h"
 #include "THcLADGEM.h"
+#include "THcLADHodoscope.h"
 
 class THcLADSpectrometer : public THaSpectrometer {
 
@@ -27,6 +27,10 @@ public:
   virtual Int_t Track();
   */
 
+  // Mass of nominal detected particle type
+  Double_t GetParticleMass() const { return fPartMass; }
+  Double_t GetBetaAtPcentral() const { return fPcentral / TMath::Sqrt(fPcentral * fPcentral + fPartMass * fPartMass); }
+
   virtual Int_t FindVertices(TClonesArray &tracks);
   virtual Int_t TrackCalc();
   virtual Int_t Decode(const THaEvData &);
@@ -36,9 +40,10 @@ public:
   virtual Int_t ReadRunDatabase(const TDatime &date);
 
 protected:
+  Double_t fPartMass;
   Int_t fNtracks;
-  THcLADHodoscope* fHodo;
-  THcLADGEM* fGEM;
+  THcLADHodoscope *fHodo;
+  THcLADGEM *fGEM;
 
   ClassDef(THcLADSpectrometer, 0)
 };

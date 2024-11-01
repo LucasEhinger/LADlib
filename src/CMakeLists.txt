@@ -16,6 +16,13 @@ set(src
   THcLADHodoHit.cxx
   THcLADGEM.cxx
   THcLADGEMPlane.cxx
+  LADSimADC.cxx
+  LADSimDataDecoder.cxx
+  LADSimDecoder.cxx
+  LADSimEvent.cxx
+  LADSimFile.cxx
+  LADSimTDC.cxx
+  lad_tree_digitized.cxx
   )
 
 # Headers
