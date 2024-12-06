@@ -10,11 +10,14 @@ set(PACKAGE LAD)
 
 # Sources
 set(src
+  MPDModule.cxx
+  MPDModuleVMEv4.cxx
   THcLADSpectrometer.cxx
   THcLADHodoscope.cxx
   THcLADHodoPlane.cxx
   THcLADHodoHit.cxx
   THcLADGEM.cxx
+  THcLADGEMModule.cxx
   THcLADGEMPlane.cxx
   LADSimADC.cxx
   LADSimDataDecoder.cxx
@@ -23,6 +26,8 @@ set(src
   LADSimFile.cxx
   LADSimTDC.cxx
   lad_tree_digitized.cxx
+  THcLADGEMCluster.cxx
+  THcLADGEMTrack.cxx
   )
 
 # Headers

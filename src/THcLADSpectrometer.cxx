@@ -1,71 +1,155 @@
 #include "THcLADSpectrometer.h"
+#include "THaNonTrackingDetector.h"
+#include "TDatime.h"
+#include "TList.h"
+#include "THaTrack.h"
+#include "THcGlobals.h"
+#include "THcParmList.h"
 
-
-THcLADSpectrometer::THcLADSpectrometer(const char *name, const char *description) : THaSpectrometer(name, description) {
-  // default constructor
-}
-
-//____________________________________________________________________
-THcLADSpectrometer::~THcLADSpectrometer() {
-  // Destructor
-
-  DefineVariables(kDelete);
-}
-
-//____________________________________________________________________
-void THcLADSpectrometer::Clear(Option_t *opt) {}
-
-//____________________________________________________________________
-Int_t THcLADSpectrometer::DefineVariables(EMode mode) { return 0; }
-
-//____________________________________________________________________
-Int_t THcLADSpectrometer::ReadDatabase(const TDatime &date) {
-  static const char *const here = "THcLADSpectrometer::ReadDatabase";
 
 #ifdef WITH_DEBUG
-  cout << "In THcLADSpectrometer::ReadDatabase" << endl;
+#include <iostream>
 #endif
 
-  const char *detector_name = "hod";
-  // THaApparatus* app = GetDetector();
-  THaDetector *det = GetDetector("hod");
-  // THaDetector* det = app->GetDetector( shower_detector_name );
+using namespace std;
 
-  if (dynamic_cast<THcLADHodoscope *>(det)) {
-    fHodo = static_cast<THcLADHodoscope *>(det); // fHodo is a membervariable
-  } else {
-    Error("THcLADSpectrometer", "Cannot find lad hodoscope detector %s", detector_name);
-    fHodo = NULL;
+THcLADSpectrometer::THcLADSpectrometer( const char* name, const char* description ) :
+  THaApparatus( name, description )
+{
+  // default constructor 
+  fTracks = 0;
+  fNtracks = 0;
+  fStagesDone = 0;
+  fNonTrackingDetectors = new TList;
+  fListInit = kFALSE;
+}
+
+//____________________________________________________________________
+THcLADSpectrometer::~THcLADSpectrometer()
+{
+  // Destructor
+
+  DefineVariables( kDelete );
+  
+}
+
+//____________________________________________________________________
+void THcLADSpectrometer::ListInit()
+{
+
+  fNonTrackingDetectors->Clear();
+  TIter next(fDetectors);
+  while( THaDetector* theDetector =
+	 static_cast<THaDetector*>( next() )) {
+
+    // We don't really have a tracking detector 
+    // fTrackingDetectors->Add( theDetector );
+
+    fNonTrackingDetectors->Add( theDetector );
   }
 
-  return kOK;
+  fListInit = kTRUE;  
 }
+
 //____________________________________________________________________
-Int_t THcLADSpectrometer::ReadRunDatabase( const TDatime& date )
+Int_t THcLADSpectrometer::DefineVariables( EMode mode )
 {
-  // Override THaSpectrometer with nop method.  All needed kinamatics
-  // read in ReadDatabase.
+  if (mode == kDefine && fIsSetup) return kOK;
+  fIsSetup = (mode == kDefine);
 
   return kOK;
 }
 
 //____________________________________________________________________
+Int_t THcLADSpectrometer::ReadDatabase( const TDatime& date )
+{
 
-Int_t THcLADSpectrometer::Decode(const THaEvData &evdata) { return THaSpectrometer::Decode(evdata); }
+  DBRequest list[]={
+    {"lpartmass",    &fPartMass, kDouble },
+    {"lad_pcentral", &fPcentral, kDouble },
+    {0}    
+  };
+  
+  gHcParms->LoadParmValues((DBRequest*)&list);
+
+  return kOK;
+
+}
 
 //____________________________________________________________________
-Int_t THcLADSpectrometer::FindVertices(TClonesArray &tracks) {
+/*
+Int_t THcLADSpectrometer::CoarseTrack()
+{
 
-  fNtracks = tracks.GetLast() + 1;
+  //  THaSpectrometer::CoarseTrack();
+  TIter next( fTrackingDetectors );
+  while( THaTrackingDetector* theTrackDetector =
+	 static_cast<THaTrackingDetector*>( next() )) {
+#ifdef WITH_DEBUG
+    if( fDebug >1 ) cout << "Call CoarseProcess() for "
+			 << theTrackDetector->GetName() << "... ";
+#endif
+    theTrackDetector->CoarseTrack( *fTracks );
+#ifdef WITH_DEBUG
+    if ( fDebug>1 ) cout << "done.\n";
+#endif
+  }
 
-  // add more
-  // HallC spectrometer chooses between 3 different method to select best track
-  // depends
-  // (see THcHallCSpectrometer)
+  fStatesDone |= kCoarseTrack;
+  return 0;
 
+}
+*/
+//____________________________________________________________________
+Int_t THcLADSpectrometer::Reconstruct()
+{
+
+  // Fine Process
+
+  TIter next( fNonTrackingDetectors );
+  while( THaNonTrackingDetector* theNonTrackDetector =
+	 static_cast<THaNonTrackingDetector*>( next() )) {
+#ifdef WITH_DEBUG
+    if( fDebug > 1 ) cout << "Call FineProcess() for"
+			  << theNonTrackDetector->GetName() << "... ";
+#endif
+    theNonTrackDetector->FineProcess( *fTracks );
+#ifdef WITH_DEBUG
+    if( fDebug > 1 ) cout << "done.\n";
+#endif
+  }
+
+  fStagesDone |= kReconstruct;
   return 0;
 }
+
 //____________________________________________________________________
-Int_t THcLADSpectrometer::TrackCalc() { return 0; }
+Int_t THcLADSpectrometer::CoarseReconstruct()
+{
+
+  if( !fListInit )
+    ListInit();
+
+  TIter next( fNonTrackingDetectors );
+  while( THaNonTrackingDetector* theNonTrackDetector =
+	 static_cast<THaNonTrackingDetector*>( next() )) {
+#ifdef WITH_DEBUG
+    if( fDebug >1 ) cout << "Call CoarseProcess() for "
+			 << theNonTrackDetector->GetName() << "... ";
+#endif
+    theNonTrackDetector->CoarseProcess( *fTracks );
+#ifdef WITH_DEBUG
+    if ( fDebug>1 ) cout << "done.\n";
+#endif
+  }
+  
+  fStagesDone |= kCoarseRecon;
+  return 0;
+
+}
+
+//____________________________________________________________________
+THcLADSpectrometer::THcLADSpectrometer() {}
 
 ClassImp(THcLADSpectrometer)
+
