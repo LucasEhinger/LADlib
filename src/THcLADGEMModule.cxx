@@ -21,9 +21,6 @@ THcLADGEMModule::THcLADGEMModule( const char* name, const char* description, Int
   fN_MPD_TIME_SAMP = 6; // mpd time sample
   fMPDMAP_ROW_SIZE = 9;
 
-  // FIXME: file name to be set in replay script
-  fChanMapFileName = "DB/lgem_chan.map";
-
   fIsMC = false;
 }
 
@@ -99,9 +96,6 @@ THaAnalysisObject::EStatus THcLADGEMModule::Init( const TDatime& date )
 Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
 {
   //  cout << "THcLADGEMModule::ReadDatabase" << endl;
-
-  string prefix = "lgem_";
-  prefix += GetName(); // e.g. prefix: lgem_m0
 
   // Define default values
   fZeroSuppress    = kTRUE;
@@ -256,6 +250,15 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
 
   //  std::vector<Double_t> rawpedu,rawpedv;
   //  std::vector<Double_t> rawrmsu,rawrmsv;
+
+  const DBRequest list[] = {
+    { "lgem_chanmap_file",     &fChanMapFileName,      kString},
+    {0}
+  };
+  gHcParms->LoadParmValues((DBRequest*)&list, "");
+
+  string prefix = "lgem_";
+  prefix += GetName(); // e.g. prefix: lgem_m0
 
   for(int i=0; i<3; i++)
     fCenter[i] = 0.;   // init
@@ -478,7 +481,7 @@ Int_t THcLADGEMModule::GetChannelMap(const char* prefix, const TDatime& date)
 
   // Keept it separate for now from ReadDatabase
   // as a reminder to merge the format of channel map into Hall C type parameters
-  // or update parsing class to inclue vector type -- SP
+  // or update parsing class to inclue vector type -- SP FIXME
 
   Int_t status;
 

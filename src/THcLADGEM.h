@@ -49,10 +49,9 @@ class THcLADGEM : public THaNonTrackingDetector, public THcHitList {
   virtual Int_t   CoarseProcess( TClonesArray& tracks );
   virtual Int_t   FineProcess( TClonesArray& tracks );
   virtual void    Clear( Option_t* opt="" );
-  //  virtual Int_t   End( THaRunBase* r=0 );
 
-  Int_t   GetNTracks() const { return fNTracks; }
-  TClonesArray* GetTracks() const { return fGEMTracks; }
+  Int_t           GetNTracks() const { return fNTracks; }
+  TClonesArray*   GetTracks() const { return fGEMTracks; }
 
  protected:
 
