@@ -12,7 +12,7 @@
 #include <deque>
 
 namespace LADGEM {
-  enum GEMaxis_t { kUaxis=0, kVaxis };
+  enum GEMaxis_t { kUaxis=0, kVaxis }; // U=X, V=Y
   enum APVmap_t { kINFN=0, kUVA_XY, kUVA_UV, kMC };
 }
 
@@ -63,6 +63,8 @@ class THcLADGEMModule : public THaSubDetector {
   Int_t fModuleID;
 
   bool fIsDecoded;
+
+  std::string fChanMapFileName;
 
   std::vector<mpdmap_t> fMPDmap;
   std::vector<Int_t> fChanMapData;
@@ -360,10 +362,6 @@ class THcLADGEMModule : public THaSubDetector {
 
   void     InitAPVMAP();
   Int_t    GetChannelMap(const char* prefix, const TDatime& date);
-
-  // FIXME: Should move to THcLADGEM? (public)
-  void     SetChanMapFile(std::string fname){ fChanMapFileName = fname; };
-  std::string fChanMapFileName;
 
   void FindClusters1D(LADGEM::GEMaxis_t axis);
   void Find2DHits();

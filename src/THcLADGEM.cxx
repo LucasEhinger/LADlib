@@ -117,23 +117,26 @@ Int_t THcLADGEM::DefineVariables( EMode mode )
 
   DefineVarsFromList( vars_clus, mode );
 
-  // Track/Space point variables
-  RVarDef vars_trk[] = {
-    {"trk.ntracks",    "Number of GEM track candidates", "fNTracks"},
-    {"trk.id",         "GEM Track ID",                   "fGEMTracks.THcLADGEMTrack.GetTrackID()"},
-    {"trk.x1",         "Space point1 X",                 "fGEMTracks.THcLADGEMTrack.GetX1()"},
-    {"trk.y1",         "Space point1 Y",                 "fGEMTracks.THcLADGEMTrack.GetY1()"},
-    {"trk.z1",         "Space point1 Z",                 "fGEMTracks.THcLADGEMTrack.GetZ1()"},
-    {"trk.x2",         "Space point2 X",                 "fGEMTracks.THcLADGEMTrack.GetX2()"},
-    {"trk.y2",         "Space point2 Y",                 "fGEMTracks.THcLADGEMTrack.GetY2()"},
-    {"trk.z2",         "Space point2 Z",                 "fGEMTracks.THcLADGEMTrack.GetZ2()"},
-    {"trk.t",          "Avg time",                       "fGEMTracks.THcLADGEMTrack.GetT()"},
-    {"trk.dt",         "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
-    {"trk.d0",         "Track dist from vertex",         "fGEMTracks.THcLADGEMTrack.GetD0()"},
-    {"trk.projz",      "Projected z-vertex",             "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
-    { 0 }
-  };
-  DefineVarsFromList( vars_trk, mode );
+  // track variables only available when there are at least two layers
+  if(fNLayers > 1 ) {
+    // Track/Space point variables
+    RVarDef vars_trk[] = {
+      {"trk.ntracks",    "Number of GEM track candidates", "fNTracks"},
+      {"trk.id",         "GEM Track ID",                   "fGEMTracks.THcLADGEMTrack.GetTrackID()"},
+      {"trk.x1",         "Space point1 X",                 "fGEMTracks.THcLADGEMTrack.GetX1()"},
+      {"trk.y1",         "Space point1 Y",                 "fGEMTracks.THcLADGEMTrack.GetY1()"},
+      {"trk.z1",         "Space point1 Z",                 "fGEMTracks.THcLADGEMTrack.GetZ1()"},
+      {"trk.x2",         "Space point2 X",                 "fGEMTracks.THcLADGEMTrack.GetX2()"},
+      {"trk.y2",         "Space point2 Y",                 "fGEMTracks.THcLADGEMTrack.GetY2()"},
+      {"trk.z2",         "Space point2 Z",                 "fGEMTracks.THcLADGEMTrack.GetZ2()"},
+      {"trk.t",          "Avg time",                       "fGEMTracks.THcLADGEMTrack.GetT()"},
+      {"trk.dt",         "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
+      {"trk.d0",         "Track dist from vertex",         "fGEMTracks.THcLADGEMTrack.GetD0()"},
+      {"trk.projz",      "Projected z-vertex",             "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
+      { 0 }
+    };
+    DefineVarsFromList( vars_trk, mode );
+  }
 
   return kOK;
 }
@@ -225,6 +228,9 @@ Int_t THcLADGEM::CoarseProcess( TClonesArray& tracks )
   // LAD has only two layers...If more than two layers, use the outer two
 
   double angle = fGEMAngle * TMath::DegToRad();
+
+  // if we have less than two layers, no tracking can be done
+  if(fNLayers < 2) return 0;
 
   for(auto& gemhit1 : f2DHits[fNLayers-2] ) {
     for(auto& gemhit2 : f2DHits[fNLayers-1] ) {
