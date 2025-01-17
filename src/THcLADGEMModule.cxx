@@ -21,6 +21,8 @@ THcLADGEMModule::THcLADGEMModule( const char* name, const char* description, Int
   fN_MPD_TIME_SAMP = 6; // mpd time sample
   fMPDMAP_ROW_SIZE = 9;
 
+  fMAX2DHITS = 10000;
+
   fIsMC = false;
 }
 
@@ -75,6 +77,7 @@ void THcLADGEMModule::Clear( Option_t* opt )
   fNClusU = 0;
   fNClusV = 0;
 
+  fN2Dhits = 0;
 }
 
 //____________________________________________________________________________________
@@ -107,7 +110,7 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
   fSubtractPedBeforeCommonMode = false; //only affects the pedestal-mode analysis 
   fOnlineZeroSuppression = kFALSE;
 
-  fCommonModeFlag = 0; //"sorting" method
+  fCommonModeFlag = 1; // 
   fCommonModeOnlFlag = 3; // 3 = Danning method during GMn, 4 = Danning method during GEn
   //Default: discard highest and lowest 28 strips for "sorting method" common-mode calculation:
   fCommonModeNstripRejectHigh = 28; 
@@ -127,7 +130,7 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
   fSamplePeriod = 24.0; //nanoseconds:
   fSigma_hitshape = 0.0004; //0.4 mm; controls cluster-splitting algorithm
 
-//Default clustering parameters:
+  //Default clustering parameters:
   fThresholdSample = 50.0;
   fThresholdStripSum = 250.0;
   fThresholdClusterSum = 500.0;
@@ -136,7 +139,7 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
   fThresholdDeconvADCMaxCombo = 75.0;
   fThresholdClusterSumDeconv = 150.0;
   
-  fADCasymCut = 1.1;
+  fADCasymCut = 0.8;
   fTimeCutUVdiff = 30.0;
   //  fCorrCoeffCut = -1.1;
   //  fCorrCoeffCutDeconv = -1.1;
@@ -263,7 +266,7 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
   for(int i=0; i<3; i++)
     fCenter[i] = 0.;   // init
 
-  // Geometry
+  // Geometry for each module
   const DBRequest list1[] = {
     { "_layer",     &fLayer,      kInt, 0, 1},
     { "_apvmap",    &fAPVmapping, kInt, 0, 1},
@@ -275,6 +278,78 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
     {0}
   };
   gHcParms->LoadParmValues((DBRequest*)&list1, prefix.c_str());
+
+  // common for all layers -- move to THcLADGEM::ReadDatabase?
+  const DBRequest list2[] = {
+    { "lgem_zerosuppress",  &fZeroSuppress, kInt, 0, 1}, // optional
+    { "lgem_zerosuppress_nsigma",  &fZeroSuppressRMS, kDouble, 0, 1},
+    { "lgem_do_neg_signal_study",  &fNegSignalStudy, kInt, 0, 1},
+    { "lgem_pedestal_mode",  &fPedestalMode, kInt, 0, 1},
+    { "lgem_onlinezerosuppress",  &fOnlineZeroSuppression, kInt, 0, 1},
+    { "lgem_commonmode_flag",  &fCommonModeFlag, kInt, 0, 1},
+    { "lgem_commonmode_online_flag",  &fCommonModeOnlFlag, kInt, 0, 1},
+    { "lgem_commonmode_nstriphi",  &fCommonModeNstripRejectHigh, kInt, 0, 1},
+    { "lgem_commonmode_nstriplo",  &fCommonModeNstripRejectLow, kInt, 0, 1},
+    { "lgem_commonmode_niter",  &fCommonModeNumIterations, kInt, 0, 1},
+    { "lgem_commonmode_range_nsigma",  &fCommonModeRange_nsigma, kDouble, 0, 1},
+    { "lgem_commonmode_minstrips",  &fCommonModeMinStripsInRange, kInt, 0, 1},
+    { "lgem_cmplots_flag",  &fMakeCommonModePlots, kInt, 0, 1},
+    { "lgem_pedsub_online",  &fPedSubFlag, kInt, 0, 1},
+    { "lgem_max2Dhits",  &fMAX2DHITS, kInt, 0, 1},
+    { "lgem_maxtrigtime_correction",  &fMaxTrigTimeCorrection, kDouble, 0, 1},
+    { "lgem_trigtime_slope",  &fTrigTimeSlope, kDouble, 0, 1},
+    { "lgem_sample_period",  &fSamplePeriod, kDouble, 0, 1},
+    { "lgem_sigmahitshape",  &fSigma_hitshape, kDouble, 0, 1},
+    { "lgem_threshold_sample",  &fThresholdSample, kDouble, 0, 1},
+    { "lgem_threshold_stripsum",  &fThresholdStripSum, kDouble, 0, 1},
+    { "lgem_threshold_clustersum",  &fThresholdClusterSum, kDouble, 0, 1},
+    { "lgem_threshold_sample_deconv",  &fThresholdSampleDeconv, kDouble, 0, 1},
+    { "lgem_threshold_maxcombo_deconv",  &fThresholdDeconvADCMaxCombo, kDouble, 0, 1},
+    { "lgem_threshold_clustersum_deconv",  &fThresholdClusterSumDeconv, kDouble, 0, 1},
+    { "lgem_adcasym_cut",  &fADCasymCut, kDouble, 0, 1},
+    { "lgem_adcasym_sigma",  &fADCasymSigma, kDouble, 0, 1},
+    { "lgem_deltat_cut",  &fTimeCutUVdiff, kDouble, 0, 1},
+    { "lgem_deltat_sigma",  &fTimeCutUVsigma, kDouble, 0, 1},
+    { "lgem_deltat_cut_deconv",  &fTimeCutUVdiffDeconv, kDouble, 0, 1},
+    { "lgem_deltat_sigma_deconv",  &fTimeCutUVsigmaDeconv, kDouble, 0, 1},
+    { "lgem_deltat_cut_fit",  &fTimeCutUVdiffFit, kDouble, 0, 1},
+    { "lgem_deltat_sigma_fit",  &fTimeCutUVsigmaFit, kDouble, 0, 1},
+    { "lgem_adcratio_sigma",  &fADCratioSigma, kDouble, 0, 1},
+    { "lgem_upitch",  &fUStripPitch, kDouble, 0, 1},
+    { "lgem_vpitch",  &fVStripPitch, kDouble, 0, 1},
+    { "lgem_chan_cm_flags",  &fChan_CM_flags, kInt, 0, 1},
+    { "lgem_chan_timestamp_low",  &fChan_TimeStamp_low, kInt, 0, 1},
+    { "lgem_chan_timestamp_high",  &fChan_TimeStamp_high, kInt, 0, 1},
+    { "lgem_chan_event_count",  &fChan_MPD_EventCount, kInt, 0, 1},
+    { "lgem_chan_mpd_debug",  &fChan_MPD_Debug, kInt, 0, 1},
+    { "lgem_modulegain",  &fModuleGain, kDouble, 0, 1},
+    { "lgem_suppressfirstlast",  &fSuppressFirstLast, kInt, 0, 1},
+    { "lgem_deconvolution_tau",  &fStripTau, kDouble, 0, 1},
+    { "lgem_usestriptimingcut",  &fUseStripTimingCuts, kInt, 0, 1},
+    { "lgem_useTSchi2cut",  &fUseTSchi2cut, kInt, 0, 1},
+    { "lgem_sigma_tcorr",  &fSigmaHitTimeAverageCorrected, kDouble, 0, 1},
+    { "lgem_addstrip_tcut",  &fStripAddTcut_width, kDouble, 0, 1},
+    { "lgem_addstrip_ccor_cut",  &fStripAddCorrCoeffCut, kDouble, 0, 1},
+    { "lgem_striptschi2_cut",  &fStripTSchi2Cut, kDouble, 0, 1},
+    { "lgem_measure_common_mode",  &fMeasureCommonMode, kInt, 0, 1},
+    { "lgem_commonmode_nevents_lookback",  &fNeventsCommonModeLookBack, kUInt, 0, 1},
+    { "lgem_correct_common_mode",  &fCorrectCommonMode, kInt, 0, 1},
+    { "lgem_correct_common_mode_minstrips",  &fCorrectCommonModeMinStrips, kUInt, 0, 1},
+    { "lgem_correct_common_mode_nsigma",  &fCorrectCommonMode_Nsigma, kDouble, 0, 1},
+    { "lgem_commonmode_binwidth_nsigma",  &fCommonModeBinWidth_Nsigma, kDouble, 0, 1},
+    { "lgem_commonmode_scanrange_nsigma",  &fCommonModeScanRange_Nsigma, kDouble, 0, 1},
+    { "lgem_commonmode_stepsize_nsigma",  &fCommonModeStepSize_Nsigma, kDouble, 0, 1},
+    { "lgem_clustering_flag",  &fClusteringFlag, kInt, 0, 1},
+    { "lgem_deconvolution_flag",  &fDeconvolutionFlag, kInt, 0, 1},
+    { "lgem_peakprominence_minsigma",  &fThresh_2ndMax_nsigma, kDouble, 0, 1},
+    { "lgem_peakprominence_minfraction",  &fThresh_2ndMax_fraction, kDouble, 0, 1},
+    { "lgem_maxnu_charge",  &fMaxNeighborsU_totalcharge, kInt, 0, 1},
+    { "lgem_maxnv_charge",  &fMaxNeighborsV_totalcharge, kInt, 0, 1},
+    { "lgem_maxnu_pos",  &fMaxNeighborsU_hitpos, kInt, 0, 1},
+    { "lgem_maxnv_pos",  &fMaxNeighborsV_hitpos, kInt, 0, 1},
+    {0}
+  };
+  gHcParms->LoadParmValues((DBRequest*)&list2, "");
 
   InitAPVMAP();
 
@@ -491,7 +566,6 @@ Int_t THcLADGEMModule::GetChannelMap(const char* prefix, const TDatime& date)
 
   const DBRequest request[] = {
     {"_chanmap", &fChanMapData, kIntV, 0, 0, 0},
-    {"_commonmode_nevents_lookback", &fNeventsCommonModeLookBack, kUInt, 0, 1, 1 },
     {0}
   };
 
@@ -586,6 +660,12 @@ Int_t THcLADGEMModule::DefineVariables( EMode mode )
     {"strip.DeconvADCsamples", "Deconvoluted ADC samples (index = isamp+Nsamples*istrip)", kDouble, 0, &(fADCsamplesDeconv1D[0]), &fNdecoded_ADCsamples },
     {"strip.ADCsum", "Sum of ADC samples on a strip", kDouble, 0, &(fADCsums[0]), &fNstrips_hit },
     {"strip.DeconvADCsum", "Sum of deconvoluted ADC samples on a strip", kDouble, 0, &(fADCsumsDeconv[0]), &fNstrips_hit },
+    {"strip.isampmax", "sample in which max ADC occurred on a strip", kUInt, 0, &(fMaxSamp[0]), &fNstrips_hit },
+    {"strip.isampmaxDeconv", "sample in which max deconvoluted ADC occurred", kUInt, 0, &(fMaxSampDeconv[0]), &fNstrips_hit },
+    {"strip.isampmaxDeconvCombo", "first of max. pair of deconvoluted samples", kUInt, 0, &(fMaxSampDeconvCombo[0]), &fNstrips_hit },
+    {"strip.ADCmax", "Value of max ADC sample on a strip", kDouble, 0, &(fADCmax[0]), &fNstrips_hit },
+    {"strip.DeconvADCmax", "Value of max deconvoluted ADC sample", kDouble, 0, &(fADCmaxDeconv[0]), &fNstrips_hit },
+    {"strip.DeconvADCmaxCombo", "max sum of two adjacent deconv. samples", kDouble, 0, &(fADCmaxDeconvCombo[0]), &fNstrips_hit },
     {"strip.Tmean", "ADC-weighted mean strip time", kDouble, 0, &(fTmean[0]), &fNstrips_hit },
     {"strip.Tsigma", "ADC-weighted rms strip time", kDouble, 0, &(fTsigma[0]), &fNstrips_hit },
     {"strip.TmeanDeconv", "ADC-weighted mean deconvoluted strip time", kDouble, 0, &(fTmeanDeconv[0]), &fNstrips_hit },
@@ -812,6 +892,9 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
 	
 	rawADC[iraw] = ADC;
 	
+	//Note: this prints out all 128 channels for 6 samples for each APV 
+	//cout << "nsamp, iraw, rawstrip, strip, ADC: " << nsamp << " " << iraw << " "<< strip << " " << Strip[iraw] << " " << ADC << endl;
+
 	double ped = (axis == LADGEM::kUaxis ) ? fPedestalU[Strip[iraw]] : fPedestalV[Strip[iraw]];
 
 	// If pedestal subtraction was done online, don't do it again:
@@ -1077,7 +1160,10 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
 	    minADC = ADCvalue;
 	    iSampMin = adc_samp;
 	  }
-	  
+
+	  //	  cout << "nstrip,correctCM: " << nstrips << " " << fCorrectCommonMode << " " << pedsubADC[iraw] << " " << commonMode[adc_samp] << endl;
+	  //	  cout << "istrip, iraw, samp, rawADC, ADC: " << istrip << " " << iraw << " " << adc_samp << " " << RawADC << " " << ADCvalue << endl;
+
 	  //for crude strip timing, just take simple time bins at the center of each sample (we'll worry about trigger time words later):
 	  double Tsamp = fSamplePeriod * ( adc_samp + 0.5 );
 	  
@@ -1233,7 +1319,7 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
 	    fADCsamples1D[isamp + fN_MPD_TIME_SAMP * fNstrips_hit ] = ADCtemp[isamp];
 	    fRawADCsamples1D[isamp + fN_MPD_TIME_SAMP * fNstrips_hit ] = rawADCtemp[isamp];
 	    fADCsamplesDeconv1D[isamp + fN_MPD_TIME_SAMP * fNstrips_hit ] = fADCsamples_deconv[fNstrips_hit][isamp];
-	    
+
 	    // Disable histogram stuff for now
 	    /*
 	    if( fKeepStrip[fNstrips_hit] && hADCfrac_vs_timesample_allstrips != NULL ){
@@ -1896,12 +1982,6 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis)
       fNClusV++;
     }
 
-    /*
-      {
-	cout << "strip: " << fLayer << " " << axis << " " << nstrips <<  " " << striplo << " " << striphi << " " << stripmax
-	     << " pos: " << sumx/sumwx << " " << maxpos << " " << " " << sumADC << " " << sumt/sumwx << " " << GetName() << endl;
-      }
-    */
   }// loop over local maxima
 
 }
@@ -1909,6 +1989,9 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis)
 //____________________________________________________________________________________
 void THcLADGEMModule::Find2DHits()
 {
+
+  fN2Dhits = 0;
+
   Int_t nclustU = GetNClusters(0);
   Int_t nclustV = GetNClusters(1);
 
@@ -1978,11 +2061,19 @@ void THcLADGEMModule::Find2DHits()
 	// filter for 2D hits apply tdiff, adcasym, corrcoeff cuts based on
 	// fTimeCutUVdiff, fADCasymCut....
 
-	// Add to 2Dhit list
-	if(nstripU > 1 && nstripV > 1){
-	  static_cast<THcLADGEM*>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos,
+	fN2Dhits++;
+
+	if(fN2Dhits < fMAX2DHITS) {
+	  // Add to 2Dhit list
+	  if(nstripU > 1 && nstripV > 1){
+	    static_cast<THcLADGEM*>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos,
 						      tmean, tdiff, tcorr,
 						      isgoodhit, emean, adcasym);
+	  }
+	}
+	else {
+	  cout << "THcLADGEMModule::Find2DHits -- Warning: Max number of 2D hits exceeded" << endl;
+	  return;
 	}
 
       }//v clusters
