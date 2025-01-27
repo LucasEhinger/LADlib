@@ -1219,15 +1219,15 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         //   Double_t pulseAmp       = rawBtmAdcHit.GetPulseAmp(ielem);
         //   Double_t pulseTime      = rawBtmAdcHit.GetPulseTime(ielem) + fAdcTdcOffset;
         for (UInt_t ielem = 0; ielem < frBtmAdcPulseTime->GetEntries(); ielem++) {
-          Double_t pulseAmp     = ((THcSignalHit*) frBtmAdcPulseAmp->ConstructedAt(ielem))->GetData();
-	        Double_t pulseTime    = ((THcSignalHit*) frBtmAdcPulseTime->ConstructedAt(ielem))->GetData()+fAdcTdcOffset;
+          Double_t pulseAmp  = ((THcSignalHit *)frBtmAdcPulseAmp->ConstructedAt(ielem))->GetData();
+          Double_t pulseTime = ((THcSignalHit *)frBtmAdcPulseTime->ConstructedAt(ielem))->GetData() + fAdcTdcOffset;
 
           Double_t TdcAdcTimeDiff = tdc_btm * fScinTdcToTime - pulseTime;
 
           // if (rawBtmAdcHit.GetPulseAmpRaw(ielem) <= 0)
           //   pulseAmp = 200.; // do we want to to this? or skip simply this element?
-          if ( ((THcSignalHit*) frBtmAdcErrorFlag->ConstructedAt(ielem))->GetData()== 1) pulseAmp= 200.;
-          
+          if (((THcSignalHit *)frBtmAdcErrorFlag->ConstructedAt(ielem))->GetData() == 1)
+            pulseAmp = 200.;
 
           Bool_t pulseTimeCut =
               (TdcAdcTimeDiff > fHodoBtmAdcTimeWindowMin[index]) && (TdcAdcTimeDiff < fHodoBtmAdcTimeWindowMax[index]);
@@ -1246,19 +1246,20 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       // good_ielem_BtmAdc_test2: selects the pulse with minimum value of TdcAdcTimeDiff
       if (good_ielem_BtmAdc == -1 && good_ielem_BtmAdc_test2 != -1)
         good_ielem_BtmAdc = good_ielem_BtmAdc_test2;
-      if ( good_ielem_BtmAdc == -1 && good_ielem_BtmAdc_test2 == -1 && frBtmAdcPulseTime->GetEntries()>0) {
+      if (good_ielem_BtmAdc == -1 && good_ielem_BtmAdc_test2 == -1 && frBtmAdcPulseTime->GetEntries() > 0) {
         good_ielem_BtmAdc = 0;
       }
 
-    if (good_ielem_BtmAdc != -1 && good_ielem_BtmAdc<frBtmAdcPulseTime->GetEntries()) {
-        adcped_btm = ((THcSignalHit*) frBtmAdcPed->ConstructedAt(good_ielem_BtmAdc))->GetData();
-        adcmult_btm = frBtmAdcPulseTime->GetEntries();
+      if (good_ielem_BtmAdc != -1 && good_ielem_BtmAdc < frBtmAdcPulseTime->GetEntries()) {
+        adcped_btm     = ((THcSignalHit *)frBtmAdcPed->ConstructedAt(good_ielem_BtmAdc))->GetData();
+        adcmult_btm    = frBtmAdcPulseTime->GetEntries();
         adchitused_btm = good_ielem_BtmAdc + 1;
-        adcint_btm = ((THcSignalHit*) frBtmAdcPulseInt->ConstructedAt(good_ielem_BtmAdc))->GetData();
-	      adcamp_btm = ((THcSignalHit*) frBtmAdcPulseAmp->ConstructedAt(good_ielem_BtmAdc))->GetData();
-	      if (((THcSignalHit*) frBtmAdcErrorFlag->ConstructedAt(good_ielem_BtmAdc))->GetData() == 1) adcamp_btm= 200.;
-	      adctime_btm = ((THcSignalHit*) frBtmAdcPulseTime->ConstructedAt(good_ielem_BtmAdc))->GetData() + fAdcTdcOffset;
-        badcraw_btm        = kTRUE;
+        adcint_btm     = ((THcSignalHit *)frBtmAdcPulseInt->ConstructedAt(good_ielem_BtmAdc))->GetData();
+        adcamp_btm     = ((THcSignalHit *)frBtmAdcPulseAmp->ConstructedAt(good_ielem_BtmAdc))->GetData();
+        if (((THcSignalHit *)frBtmAdcErrorFlag->ConstructedAt(good_ielem_BtmAdc))->GetData() == 1)
+          adcamp_btm = 200.;
+        adctime_btm = ((THcSignalHit *)frBtmAdcPulseTime->ConstructedAt(good_ielem_BtmAdc))->GetData() + fAdcTdcOffset;
+        badcraw_btm = kTRUE;
         adctdcdifftime_btm = tdc_btm * fScinTdcToTime - adctime_btm;
       }
 
@@ -1269,13 +1270,14 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         Double_t max_adcamp_test     = -1000.;
         Double_t max_adctdcdiff_test = 1000.;
         //
-        for (Int_t ielem=0;ielem<frTopAdcPulseTime->GetEntries();ielem++) {
-       	  Double_t pulseAmp     =  ((THcSignalHit*) frTopAdcPulseAmp->ConstructedAt(ielem))->GetData();
-	        Double_t pulseTime    = ((THcSignalHit*) frTopAdcPulseTime->ConstructedAt(ielem))->GetData()+fAdcTdcOffset;
+        for (Int_t ielem = 0; ielem < frTopAdcPulseTime->GetEntries(); ielem++) {
+          Double_t pulseAmp  = ((THcSignalHit *)frTopAdcPulseAmp->ConstructedAt(ielem))->GetData();
+          Double_t pulseTime = ((THcSignalHit *)frTopAdcPulseTime->ConstructedAt(ielem))->GetData() + fAdcTdcOffset;
           Double_t TdcAdcTimeDiff = tdc_top * fScinTdcToTime - pulseTime;
           Bool_t pulseTimeCut =
               (TdcAdcTimeDiff > fHodoTopAdcTimeWindowMin[index]) && (TdcAdcTimeDiff < fHodoTopAdcTimeWindowMax[index]);
-          if ( ((THcSignalHit*) frTopAdcErrorFlag->ConstructedAt(ielem))->GetData()== 1)pulseAmp= 200.;
+          if (((THcSignalHit *)frTopAdcErrorFlag->ConstructedAt(ielem))->GetData() == 1)
+            pulseAmp = 200.;
           if (pulseTimeCut && pulseAmp > max_adcamp_test) {
             good_ielem_TopAdc = ielem;
             max_adcamp_test   = pulseAmp;
@@ -1289,16 +1291,18 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
       if (good_ielem_TopAdc == -1 && good_ielem_TopAdc_test2 != -1)
         good_ielem_TopAdc = good_ielem_TopAdc_test2;
-      if ( good_ielem_TopAdc == -1 &&  good_ielem_TopAdc_test2 == -1 && frTopAdcPulseTime->GetEntries()>0)   good_ielem_TopAdc=0;
-      if (good_ielem_TopAdc != -1 && good_ielem_TopAdc<frTopAdcPulseTime->GetEntries()) {
-	      adcped_top =  ((THcSignalHit*) frTopAdcPed->ConstructedAt(good_ielem_TopAdc))->GetData();
-	      adcmult_top = frTopAdcPulseTime->GetEntries();
+      if (good_ielem_TopAdc == -1 && good_ielem_TopAdc_test2 == -1 && frTopAdcPulseTime->GetEntries() > 0)
+        good_ielem_TopAdc = 0;
+      if (good_ielem_TopAdc != -1 && good_ielem_TopAdc < frTopAdcPulseTime->GetEntries()) {
+        adcped_top     = ((THcSignalHit *)frTopAdcPed->ConstructedAt(good_ielem_TopAdc))->GetData();
+        adcmult_top    = frTopAdcPulseTime->GetEntries();
         adchitused_top = good_ielem_TopAdc + 1;
-        adcint_top =  ((THcSignalHit*) frTopAdcPulseInt->ConstructedAt(good_ielem_TopAdc))->GetData();
-	      adcamp_top = ((THcSignalHit*) frTopAdcPulseAmp->ConstructedAt(good_ielem_TopAdc))->GetData();
-	      if (((THcSignalHit*) frTopAdcErrorFlag->ConstructedAt(good_ielem_TopAdc))->GetData() == 1) adcamp_top= 200.;
-	      adctime_top = ((THcSignalHit*) frTopAdcPulseTime->ConstructedAt(good_ielem_TopAdc))->GetData() + fAdcTdcOffset;
-        badcraw_top        = kTRUE;
+        adcint_top     = ((THcSignalHit *)frTopAdcPulseInt->ConstructedAt(good_ielem_TopAdc))->GetData();
+        adcamp_top     = ((THcSignalHit *)frTopAdcPulseAmp->ConstructedAt(good_ielem_TopAdc))->GetData();
+        if (((THcSignalHit *)frTopAdcErrorFlag->ConstructedAt(good_ielem_TopAdc))->GetData() == 1)
+          adcamp_top = 200.;
+        adctime_top = ((THcSignalHit *)frTopAdcPulseTime->ConstructedAt(good_ielem_TopAdc))->GetData() + fAdcTdcOffset;
+        badcraw_top = kTRUE;
         adctdcdifftime_top = tdc_top * fScinTdcToTime - adctime_top;
       }
 
