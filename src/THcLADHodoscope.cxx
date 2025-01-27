@@ -259,6 +259,8 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) { return 0; }
 Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   cout << "THcLADHodoscope::ReadDatabase()" << endl;
+
+
   char prefix[2];
   prefix[0] = tolower(GetApparatus()->GetName()[0]); // "lad"
   prefix[1] = '\0';
@@ -394,7 +396,8 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
   // To analyze pedestal events -- Must define "Pedestal_event" cut in the cuts .def file
   // do we want to do this? or calculate pedestal for each event (using the first # of samples, e.g)
   // keeping it for now
-  if (gHaCuts->Result("Pedestal_event")) {
+  /*
+  if (gHaCuts->Result("Pedestal_event")) { //LHE: temp fit rename to Pedestal_event
     Int_t nexthit = 0;
     for (Int_t ip = 0; ip < fNPlanes; ip++) {
       nexthit = fPlanes[ip]->AccumulatePedestals(fRawHitList, nexthit);
@@ -402,6 +405,7 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
     fAnalyzePedestals = 1; // Analyze pedestals first normal events
     return (0);
   }
+  */
   if (fAnalyzePedestals) {
     for (Int_t ip = 0; ip < fNPlanes; ip++) {
       fPlanes[ip]->CalculatePedestals();
@@ -421,6 +425,7 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
 //_________________________________________________________________
 Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
+  return 0;
   Int_t ntracks = tracks.GetLast() + 1; // Number of reconstructed tracks
 
   if (ntracks > 0) {
