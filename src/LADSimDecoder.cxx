@@ -652,7 +652,8 @@ void LADSimDecoder::SetDetectors() {
   // If the following works, we should be gold:
   // TDatime rundate;
   // rundate.Set(GetRunTime()); // GetRunTime() gives the run time as a UNIX time
-  TDatime rundate(124, 1, 1, 0, 0, 0); // FIXME: this is a hack, but it should work for now
+  // TDatime rundate(124, 1, 1, 0, 0, 0); // FIXME: this is a hack, but it should work for now
+  TDatime rundate(134, 1, 1, 0, 0, 0); // FIXME: this is a hack, but it should work for now
 
   rundate.Print();
 
@@ -669,7 +670,14 @@ void LADSimDecoder::SetDetectors() {
       // 	    (app->GetDetector(det->GetName()))->GetInitDate());
 
       // AddDetector(Form("%s.%s", app->GetName(), det->GetName()), rundate);
-      string tmp = "L.hod"; //TODO: FIXME. This is hard coded
+      string tmp;// = "L.hod"; //TODO: FIXME. This is hard coded
+      if (strcmp(det->GetName(), "hod") == 0) {
+        tmp = "L.hod"; //TODO: FIXME. This is hard coded
+      }
+      else{
+        tmp = "bb.gem"; //TODO: FIXME. This is hard coded
+      }
+      
       AddDetector(tmp, rundate); // FIXME: this is a hack, but it should work for now
     }
   }
@@ -689,7 +697,8 @@ Int_t LADSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
   // const string &fileName = path + "db_" + detname + ".dat";
 
   // const string fileName = "DBASE/LAD/general.param"; // TODO: FIXME. This is hard coded
-  const string fileName = "MAPS/LAD/DETEC/HODO/lhodo_mc.map"; // TODO: FIXME. This is hard coded
+  // const string fileName = "MAPS/LAD/DETEC/HODO/lhodo_mc_input.map"; // TODO: FIXME. This is hard coded
+  const string fileName = "MAPS/LAD/DETEC/GEM/lgem_mc_input.map"; // TODO: FIXME. This is hard coded
 
   const string prefix = detname + ".";
   // First, open the common db file and parse info there, later, the
@@ -1020,6 +1029,8 @@ int LADSimDecoder::APVnum(const std::string &detname, Int_t mod, Int_t h_chan, I
   // 	    << h_chan << ", " << chan << ", " << n << ")" << std::endl;
 
   assert((size_t)mod < fInvGEMDetMap.at(detname).size());
+  // cout << "mod " << mod << " size " << fInvGEMDetMap.at(detname).size() << endl;
+  // cout << "n " << n << " size " << (fInvGEMDetMap.at(detname)[mod]).size() << endl;
   assert((size_t)n < (fInvGEMDetMap.at(detname)[mod]).size());
 
   // if( mod>fInvGEMDetMap.at(detname).size() ){

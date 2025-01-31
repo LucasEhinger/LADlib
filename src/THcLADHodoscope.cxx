@@ -267,6 +267,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   // we will need to use the detector name to load parameters
   // for each detector -- to be updated
   fNPaddle = new Int_t[fNPlanes];
+  fFPTime = new Double_t [fNPlanes];
   for (int ip = 0; ip < fNPlanes; ip++) {
     string parname    = "hodo_" + string(fPlanes[ip]->GetName()) + "_nr";
     DBRequest list2[] = {{parname.c_str(), &fNPaddle[ip], kInt}, {0}};
@@ -420,6 +421,7 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
 //_________________________________________________________________
 Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
+  return 0; //short term fix
   Int_t ntracks = tracks.GetLast() + 1; // Number of reconstructed tracks
 
   if (ntracks > 0) {
