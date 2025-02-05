@@ -253,6 +253,7 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
 
   const DBRequest list[] = {
     { "lgem_chanmap_file",     &fChanMapFileName,      kString},
+    { "is_mc",                 &fIsMC,                 kInt, 0,1},
     {0}
   };
   gHcParms->LoadParmValues((DBRequest*)&list, "");
@@ -801,6 +802,7 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
       // First loop over the hits: populate strip, raw strip, raw ADC, ped sub ADC and common-mode-subtracted aDC:
       for( int iraw=0; iraw<nsamp; iraw++ ){ //NOTE: iraw = isamp + fN_MPD_TIME_SAMP * istrip
 	int strip = evdata.GetRawData( it->crate, it->slot, effChan, iraw );
+  // cout << "mpd_id = " << it->mpd_id << " adc_id = " << it->adc_id << " strip = " << strip << " iraw = " << iraw << endl;
 	UInt_t decoded_rawADC = evdata.GetData( it->crate, it->slot, effChan, iraw );
 	
 	int isamp = iraw%fN_MPD_TIME_SAMP;
@@ -809,7 +811,7 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
 	
 	rawStrip[iraw] = strip;
 	Strip[iraw] = GetStripNumber( strip, it->pos, it->invert );
-	
+	cout << "Strip: " << Strip[iraw] << endl;
 	rawADC[iraw] = ADC;
 	
 	double ped = (axis == LADGEM::kUaxis ) ? fPedestalU[Strip[iraw]] : fPedestalV[Strip[iraw]];

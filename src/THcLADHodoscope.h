@@ -70,7 +70,7 @@ protected:
   Int_t *fTdcOffset;
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
-  Int_t fIsSimulation;
+  Int_t fIsMC;
 
   Double_t *fHodoVelLight;
 
