@@ -121,11 +121,11 @@ public:
   std::vector<double> *LAD_Hodo_dighit_adc_time;
 
   // LAD GEM Digitized
-  Int_t Earm_BBGEM_dighit_nstrips;
-  std::vector<int> *Earm_BBGEM_dighit_module;
-  std::vector<int> *Earm_BBGEM_dighit_strip;
-  std::vector<int> *Earm_BBGEM_dighit_adc;
-  std::vector<int> *Earm_BBGEM_dighit_samp;
+  Int_t LAD_GEM_dighit_nstrips;
+  std::vector<int> *LAD_GEM_dighit_module;
+  std::vector<int> *LAD_GEM_dighit_strip;
+  std::vector<int> *LAD_GEM_dighit_adc;
+  std::vector<int> *LAD_GEM_dighit_samp;
 
   // List of branches
   TBranch *b_ev; //!
@@ -232,11 +232,11 @@ public:
   TBranch *b_LAD_Hodo_dighit_adc_amp; //!
   TBranch *b_LAD_Hodo_dighit_adc_time; //!
 
-  TBranch *b_Earm_BBGEM_dighit_nstrips; //!
-  TBranch *b_Earm_BBGEM_dighit_module;  //!
-  TBranch *b_Earm_BBGEM_dighit_strip;   //!
-  TBranch *b_Earm_BBGEM_dighit_adc;     //!
-  TBranch *b_Earm_BBGEM_dighit_samp;    //!
+  TBranch *b_LAD_GEM_dighit_nstrips; //!
+  TBranch *b_LAD_GEM_dighit_module;  //!
+  TBranch *b_LAD_GEM_dighit_strip;   //!
+  TBranch *b_LAD_GEM_dighit_adc;     //!
+  TBranch *b_LAD_GEM_dighit_samp;    //!
 
   lad_tree_digitized(TTree *tree = 0);
   virtual ~lad_tree_digitized();
@@ -400,10 +400,10 @@ void lad_tree_digitized::Init(TTree *tree) {
   LAD_Hodo_dighit_adc_time = 0;
 
   // LAD GEM Digitized
-  Earm_BBGEM_dighit_module = 0;
-  Earm_BBGEM_dighit_strip = 0;
-  Earm_BBGEM_dighit_adc = 0;
-  Earm_BBGEM_dighit_samp = 0;
+  LAD_GEM_dighit_module = 0;
+  LAD_GEM_dighit_strip = 0;
+  LAD_GEM_dighit_adc = 0;
+  LAD_GEM_dighit_samp = 0;
 
   // Set branch addresses and branch pointers
   if (!tree)
@@ -516,11 +516,11 @@ void lad_tree_digitized::Init(TTree *tree) {
   fChain->SetBranchAddress("LAD.Hodo.dighit.amp", &LAD_Hodo_dighit_adc_amp, &b_LAD_Hodo_dighit_adc_amp);
   fChain->SetBranchAddress("LAD.Hodo.dighit.adc_time", &LAD_Hodo_dighit_adc_time, &b_LAD_Hodo_dighit_adc_time);
   // LAD GEM Digitized
-   fChain->SetBranchAddress("Earm.BBGEM.dighit.nstrips", &Earm_BBGEM_dighit_nstrips, &b_Earm_BBGEM_dighit_nstrips);
-   fChain->SetBranchAddress("Earm.BBGEM.dighit.module", &Earm_BBGEM_dighit_module, &b_Earm_BBGEM_dighit_module);
-   fChain->SetBranchAddress("Earm.BBGEM.dighit.strip", &Earm_BBGEM_dighit_strip, &b_Earm_BBGEM_dighit_strip);
-   fChain->SetBranchAddress("Earm.BBGEM.dighit.adc", &Earm_BBGEM_dighit_adc, &b_Earm_BBGEM_dighit_adc);
-   fChain->SetBranchAddress("Earm.BBGEM.dighit.samp", &Earm_BBGEM_dighit_samp, &b_Earm_BBGEM_dighit_samp);
+   fChain->SetBranchAddress("LAD.GEM.dighit.nstrips", &LAD_GEM_dighit_nstrips, &b_LAD_GEM_dighit_nstrips);
+   fChain->SetBranchAddress("LAD.GEM.dighit.module", &LAD_GEM_dighit_module, &b_LAD_GEM_dighit_module);
+   fChain->SetBranchAddress("LAD.GEM.dighit.strip", &LAD_GEM_dighit_strip, &b_LAD_GEM_dighit_strip);
+   fChain->SetBranchAddress("LAD.GEM.dighit.adc", &LAD_GEM_dighit_adc, &b_LAD_GEM_dighit_adc);
+   fChain->SetBranchAddress("LAD.GEM.dighit.samp", &LAD_GEM_dighit_samp, &b_LAD_GEM_dighit_samp);
   Notify();
 }
 
