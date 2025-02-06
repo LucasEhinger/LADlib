@@ -57,7 +57,21 @@ class THcLADGEMModule : public THaSubDetector {
   }
 
   Int_t GetModuleID() { return fModuleID; }
+  Int_t GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert );
 
+  std::vector<mpdmap_t> fMPDmap;
+  std::vector<Int_t> fChanMapData;
+
+  //Pedestal means and RMS values for all channels:
+  std::vector<Double_t> fPedestalU, fPedRMSU; 
+  std::vector<Double_t> fPedestalV, fPedRMSV;
+
+  //Optional database parameters for monitoring common-mode fluctuations in pedestal runs and/or full readout events:
+  std::vector<Double_t> fCommonModeMeanU; 
+  std::vector<Double_t> fCommonModeMeanV;
+  std::vector<Double_t> fCommonModeRMSU;
+  std::vector<Double_t> fCommonModeRMSV;
+  
  protected:
   
   Int_t fModuleID;
@@ -65,9 +79,6 @@ class THcLADGEMModule : public THaSubDetector {
   bool fIsDecoded;
 
   std::string fChanMapFileName;
-
-  std::vector<mpdmap_t> fMPDmap;
-  std::vector<Int_t> fChanMapData;
 
   std::vector<std::deque<Double_t> > fCommonModeResultContainer_by_APV;
   std::vector<Double_t> fCommonModeRollingAverage_by_APV;
@@ -281,7 +292,6 @@ class THcLADGEMModule : public THaSubDetector {
 
 
 
-
   std::vector<Double_t> fADCsamples1D; //1D array to hold ADC samples; should end up with dimension fNstrips_hit*fN_MPD_TIME_SAMP
   std::vector<Int_t> fRawADCsamples1D;
   std::vector<Double_t> fADCsamplesDeconv1D; //1D array of deconvoluted ADC samples
@@ -292,10 +302,6 @@ class THcLADGEMModule : public THaSubDetector {
   UInt_t   fNstripsU; // Total number of strips in this module along the generic "U" axis
   UInt_t   fNstripsV; // Total number of strips in this module along the generic "V" axis
 
-  //Pedestal means and RMS values for all channels:
-  std::vector<Double_t> fPedestalU, fPedRMSU; 
-  std::vector<Double_t> fPedestalV, fPedRMSV;
-
   Double_t fRMS_ConversionFactor; // = sqrt(fN_MPD_TIME_SAMP);
 
   UInt_t fNAPVs_U; //Number of APV cards per module along "U" strip direction; this is typically 8, 10, or 12, but could be larger for U/V GEMs
@@ -303,12 +309,6 @@ class THcLADGEMModule : public THaSubDetector {
   std::vector<Double_t> fUgain; // Internal "gain match" coefficients for U strips by APV card;
   std::vector<Double_t> fVgain; // Internal "gain match" coefficients for V strips by APV card;
   Double_t fModuleGain; // Module gain relative to some "Target" ADC value:
-
-  //Optional database parameters for monitoring common-mode fluctuations in pedestal runs and/or full readout events:
-  std::vector<Double_t> fCommonModeMeanU; 
-  std::vector<Double_t> fCommonModeMeanV;
-  std::vector<Double_t> fCommonModeRMSU;
-  std::vector<Double_t> fCommonModeRMSV;
 
   std::vector<Double_t> fCMbiasU;
   std::vector<Double_t> fCMbiasV;
@@ -351,7 +351,6 @@ class THcLADGEMModule : public THaSubDetector {
   TVector2 XYtoUV( TVector2 XY );
   Double_t CorrCoeff(int nsamples, const std::vector<double> &Usamples, const std::vector<double> &Vsamples, int firstsample=0 );
 
-  Int_t    GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert );
   double   GetCommonMode( UInt_t isamp, Int_t flag, const mpdmap_t &apvinfo, UInt_t nhits=128 ); //default to "sorting" method:
   double   GetCommonModeCorrection( int isamp, const mpdmap_t &apvinfo, UInt_t &ngood, const UInt_t &nhits=128, bool fullreadout=false, Int_t flag=0 );
   double   FitStripTime( int striphitindex, double RMS=20.0 ); // "dumb" fit method 
@@ -371,6 +370,9 @@ class THcLADGEMModule : public THaSubDetector {
   // temp for test
   Int_t fNClusU;
   Int_t fNClusV;
+
+  Int_t fMAX2DHITS;
+  Int_t fN2Dhits;
 
   THaDetectorBase* fParent;
 

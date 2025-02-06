@@ -553,35 +553,35 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
     }
   }
 
-  if (strcmp(detname.c_str(), "bb.gem") == 0) {
+  if (strcmp(detname.c_str(), "L.gem") == 0) {
     // cout << fPx << " " << fPy << " " << fPz << "   " << fVz << endl;
     samps.clear();
     strips.clear();
-    // cout << " ouh " << detname.c_str() << " " << simev->Tlad->Earm_BBGEM_dighit_nstrips << endl;
-    assert(simev->Tlad->b_Earm_BBGEM_dighit_nstrips);
-    for (int j = 0; j < simev->Tlad->Earm_BBGEM_dighit_nstrips; j++) {
+    // cout << " ouh " << detname.c_str() << " " << simev->Tlad->LAD_GEM_dighit_nstrips << endl;
+    assert(simev->Tlad->b_LAD_GEM_dighit_nstrips);
+    for (int j = 0; j < simev->Tlad->LAD_GEM_dighit_nstrips; j++) {
       loadevt = false;
-      mod     = simev->Tlad->Earm_BBGEM_dighit_module->at(j);
-      lchan   = simev->Tlad->Earm_BBGEM_dighit_strip->at(j);
+      mod     = simev->Tlad->LAD_GEM_dighit_module->at(j);
+      lchan   = simev->Tlad->LAD_GEM_dighit_strip->at(j);
       apvnum  = APVnum(detname, mod, lchan, crate, slot, chan);
 
-      if (simev->Tlad->Earm_BBGEM_dighit_samp->at(j) >= 0) {
+      if (simev->Tlad->LAD_GEM_dighit_samp->at(j) >= 0) {
         strips.push_back(chan);
-        samps.push_back(simev->Tlad->Earm_BBGEM_dighit_adc->at(j));
+        samps.push_back(simev->Tlad->LAD_GEM_dighit_adc->at(j));
       }
 
       if (fDebug > 3)
         cout << " mod " << mod << " lchan " << lchan << " crate " << crate << " slot " << slot << " apvnum " << apvnum
-             << " chan " << chan << " samp " << simev->Tlad->Earm_BBGEM_dighit_samp->at(j) << " adc "
-             << simev->Tlad->Earm_BBGEM_dighit_adc->at(j) << endl;
-      // if(mod>=26 && simev->Tlad->Earm_BBGEM_dighit_samp->at(j)==5)cout << mod << " " << lchan << " " << apvnum <<
+             << " chan " << chan << " samp " << simev->Tlad->LAD_GEM_dighit_samp->at(j) << " adc "
+             << simev->Tlad->LAD_GEM_dighit_adc->at(j) << endl;
+      // if(mod>=26 && simev->Tlad->LAD_GEM_dighit_samp->at(j)==5)cout << mod << " " << lchan << " " << apvnum <<
       // endl;
 
-      if (j == simev->Tlad->Earm_BBGEM_dighit_nstrips - 1) {
+      if (j == simev->Tlad->LAD_GEM_dighit_nstrips - 1) {
         loadevt = true;
-      } else if (mod != simev->Tlad->Earm_BBGEM_dighit_module->at(j + 1) ||
-                 // fabs(lchan-simev->Tlad->Earm_BBGEM_dighit_strip->at(j+1))>=128
-                 floor(simev->Tlad->Earm_BBGEM_dighit_strip->at(j + 1) / 128) != floor(lchan / 128)) {
+      } else if (mod != simev->Tlad->LAD_GEM_dighit_module->at(j + 1) ||
+                 // fabs(lchan-simev->Tlad->LAD_GEM_dighit_strip->at(j+1))>=128
+                 floor(simev->Tlad->LAD_GEM_dighit_strip->at(j + 1) / 128) != floor(lchan / 128)) {
         loadevt = true;
       }
 
@@ -652,7 +652,8 @@ void LADSimDecoder::SetDetectors() {
   // If the following works, we should be gold:
   // TDatime rundate;
   // rundate.Set(GetRunTime()); // GetRunTime() gives the run time as a UNIX time
-  TDatime rundate(124, 1, 1, 0, 0, 0); // FIXME: this is a hack, but it should work for now
+  // TDatime rundate(124, 1, 1, 0, 0, 0); // FIXME: this is a hack, but it should work for now
+  TDatime rundate(134, 1, 1, 0, 0, 0); // FIXME: this is a hack, but it should work for now
 
   rundate.Print();
 
@@ -668,9 +669,16 @@ void LADSimDecoder::SetDetectors() {
       // AddDetector(Form("%s.%s",app->GetName(), det->GetName()),
       // 	    (app->GetDetector(det->GetName()))->GetInitDate());
 
-      // AddDetector(Form("%s.%s", app->GetName(), det->GetName()), rundate);
-      string tmp = "L.hod"; //TODO: FIXME. This is hard coded
-      AddDetector(tmp, rundate); // FIXME: this is a hack, but it should work for now
+      AddDetector(Form("%s.%s", app->GetName(), det->GetName()), rundate);
+      // string tmp;// = "L.hod"; //TODO: FIXME. This is hard coded. Should delete.
+      // if (strcmp(det->GetName(), "hod") == 0) {
+      //   tmp = "L.hod"; //TODO: FIXME. This is hard coded
+      // }
+      // else{
+      //   tmp = "bb.gem"; //TODO: FIXME. This is hard coded
+      // }
+      
+      // AddDetector(tmp, rundate); // FIXME: this is a hack, but it should work for now
     }
   }
 }
@@ -689,7 +697,8 @@ Int_t LADSimDecoder::ReadDetectorDB(std::string detname, TDatime date) {
   // const string &fileName = path + "db_" + detname + ".dat";
 
   // const string fileName = "DBASE/LAD/general.param"; // TODO: FIXME. This is hard coded
-  const string fileName = "MAPS/LAD/DETEC/HODO/lhodo_mc.map"; // TODO: FIXME. This is hard coded
+  // const string fileName = "MAPS/LAD/DETEC/HODO/lhodo_mc_input.map"; // TODO: FIXME. This is hard coded
+  const string fileName = "MAPS/LAD/DETEC/GEM/lgem_mc_input.map"; // TODO: FIXME. This is hard coded
 
   const string prefix = detname + ".";
   // First, open the common db file and parse info there, later, the
@@ -1020,6 +1029,8 @@ int LADSimDecoder::APVnum(const std::string &detname, Int_t mod, Int_t h_chan, I
   // 	    << h_chan << ", " << chan << ", " << n << ")" << std::endl;
 
   assert((size_t)mod < fInvGEMDetMap.at(detname).size());
+  // cout << "mod " << mod << " size " << fInvGEMDetMap.at(detname).size() << endl;
+  // cout << "n " << n << " size " << (fInvGEMDetMap.at(detname)[mod]).size() << endl;
   assert((size_t)n < (fInvGEMDetMap.at(detname)[mod]).size());
 
   // if( mod>fInvGEMDetMap.at(detname).size() ){

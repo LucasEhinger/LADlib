@@ -322,19 +322,21 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"hodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"hodo_BtmAdcTimeWindowMax", fHodoBtmAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"is_simulation", &fIsSimulation, kInt, 0, 1},
                        {0}};
 
-  fCosmicFlag    = 0;
+  fCosmicFlag        = 0;
   fNumPlanesBetaCalc = 2;
-  fTofTolerance  = 3.0;
-  fScinTdcMin    = 0;
-  fScinTdcMax    = 0;
-  fScinTdcToTime = 0;
-  fIsSimulation  = 0;
+  fTofTolerance      = 3.0;
+  fScinTdcMin        = 0;
+  fScinTdcMax        = 0;
+  fScinTdcToTime     = 0;
 
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
+  DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
+  fIsMC = 0;
+  gHcParms->LoadParmValues((DBRequest *)&list5, "");
+  
   DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
@@ -382,11 +384,11 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
     present = *fPresentP;
   }
 
-  if (fIsSimulation) {
-    fNSA=1;
-    fNSB=0;
-    fNPED=1;
-    fHaveFADCInfo=true;
+  if (fIsMC) {
+    fNSA          = 1;
+    fNSB          = 0;
+    fNPED         = 1;
+    fHaveFADCInfo = true;
   }
 
   fNHits = DecodeToHitList(evdata, !present);
@@ -420,6 +422,10 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
 
 //_________________________________________________________________
 Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
+
+
+
+  return 0; //FIXME. short term fix to allow for hodo only replay.
 
   Int_t ntracks = tracks.GetLast() + 1; // Number of reconstructed tracks
 
