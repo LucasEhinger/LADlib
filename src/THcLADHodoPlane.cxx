@@ -439,7 +439,6 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
                       {"hodo_SampNSB", &fSampNSB, kInt, 0, 1},
                       {"hodo_OutputSampWaveform", &fOutputSampWaveform, kInt, 0, 1},
                       {"hodo_UseSampWaveform", &fUseSampWaveform, kInt, 0, 1},
-                      {"is_simulation", &fIsSimulation, kInt, 0, 1},
                       {0}};
 
   // Set Default values
@@ -454,9 +453,14 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fSampNSAT           = 2; // default value in THcRawHit::SetF250Params
   fOutputSampWaveform = 0; // 0= no output , 1 = output Sample Waveform
   fUseSampWaveform    = 0; // 0= do not use , 1 = use Sample Waveform
-  fIsSimulation       = 0;
 
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
+  
+  DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
+  fIsMC = 0;
+  gHcParms->LoadParmValues((DBRequest *)&list5, "");
+
+
 
   if (fCosmicFlag == 1)
     cout << " setup for cosmics in scint plane" << endl;
@@ -965,7 +969,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       if (fSampNSB == 0)
         fSampNSB = rawTopAdcHit.GetF250_NSB();
 
-      if (!fIsSimulation)
+      if (!fIsMC)
         rawTopAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
 
       if (fSampNSAT != 2)
@@ -1086,7 +1090,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       if (fSampNSB == 0)
         fSampNSB = rawBtmAdcHit.GetF250_NSB();
 
-      if (!fIsSimulation)
+      if (!fIsMC)
         rawBtmAdcHit.SetF250Params(fSampNSA, fSampNSB, 4); // Set NPED =4
 
       if (fSampNSAT != 2)

@@ -150,7 +150,7 @@ Int_t LADSimFile::Init()
   // Initialize the run. Sets run date, reads run database etc.
 
   // TODO: get date from MC production file?
-  //fDate.Set(2012,1,1,0,0,0);
+  fDate.Set(2012,1,1,0,0,0);
   fAssumeDate = kTRUE;
   fDataSet |= kDate;
 
