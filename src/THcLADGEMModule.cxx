@@ -256,6 +256,7 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
 
   const DBRequest list[] = {
     { "lgem_chanmap_file",     &fChanMapFileName,      kString},
+    { "is_mc",                 &fIsMC,                 kInt, 0,1},
     {0}
   };
   gHcParms->LoadParmValues((DBRequest*)&list, "");
@@ -889,7 +890,6 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
 	
 	rawStrip[iraw] = strip;
 	Strip[iraw] = GetStripNumber( strip, it->pos, it->invert );
-	
 	rawADC[iraw] = ADC;
 	
 	//Note: this prints out all 128 channels for 6 samples for each APV 
