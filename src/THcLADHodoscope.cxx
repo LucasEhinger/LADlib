@@ -331,12 +331,12 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fScinTdcMax        = 0;
   fScinTdcToTime     = 0;
 
-  DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
-  gHcParms->LoadParmValues((DBRequest *)&list5, "");
-  fIsMC = 0;
-
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
+  DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
+  fIsMC = 0;
+  gHcParms->LoadParmValues((DBRequest *)&list5, "");
+  
   DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 

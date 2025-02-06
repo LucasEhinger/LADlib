@@ -454,11 +454,13 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fOutputSampWaveform = 0; // 0= no output , 1 = output Sample Waveform
   fUseSampWaveform    = 0; // 0= do not use , 1 = use Sample Waveform
 
-  DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
-  gHcParms->LoadParmValues((DBRequest *)&list5, "");
-  fIsMC = 0;
-
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
+  
+  DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
+  fIsMC = 0;
+  gHcParms->LoadParmValues((DBRequest *)&list5, "");
+
+
 
   if (fCosmicFlag == 1)
     cout << " setup for cosmics in scint plane" << endl;
