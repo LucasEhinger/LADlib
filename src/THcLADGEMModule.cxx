@@ -2054,7 +2054,7 @@ void THcLADGEMModule::Find2DHits()
 	if(nstripV < 2) isgoodhit = false;
 	if(emean < adcthreshold) isgoodhit = false;
 	if(fabs(tdiff) > dtcut) isgoodhit = false;
-	if(fabs(tmean-t0) > tcut) isgoodhit = false;
+  if((fabs(tmean-t0) > tcut)&& !fIsMC) isgoodhit = false;
 
 	tcorr = tmean - t0;
 
