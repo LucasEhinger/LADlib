@@ -424,8 +424,8 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
 Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
 
-
-  return 0; //FIXME. short term fix to allow for hodo only replay.
+  if(&tracks == nullptr)
+    return 0; //FIXME. (Potentially) temp fix to prevent error when tracks is nullptr
 
   Int_t ntracks = tracks.GetLast() + 1; // Number of reconstructed tracks
 
