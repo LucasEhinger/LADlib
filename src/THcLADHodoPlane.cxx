@@ -423,6 +423,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fPosCenter       = new Double_t[fNelem];
   DBRequest list[] = {{Form("scin_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("scin_%s_dzpos", GetName()), &fDzpos, kDouble},
+                      {Form("scin_%s_theta", GetName()), &fTheta, kDouble},
                       {Form("scin_%s_size", GetName()), &fSize, kDouble},
                       {Form("scin_%s_spacing", GetName()), &fSpacing, kDouble},
                       {Form("scin_%s_%s", GetName(), "btm"), &fPosBtm, kDouble},
@@ -673,6 +674,16 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
                       {0}};
     DefineVarsFromList(vars, mode);
   }
+
+  RVarDef track_vars[] ={
+      //Track ID
+      //Track Based Beta
+      //Delta_transverse
+      //Delta_longitudinal
+      //Matching HodoHit ID
+      {0}
+  };
+  DefineVarsFromList(track_vars, mode);
 
   RVarDef vars[] = {
       {"nhits", "Number of paddle hits (passed TDC && ADC Min and Max cuts for either end)", "GetNScinHits() "},
