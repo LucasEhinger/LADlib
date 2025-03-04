@@ -57,6 +57,7 @@ class THcLADGEMModule : public THaSubDetector {
   }
 
   Int_t GetModuleID() { return fModuleID; }
+  Int_t GetLayerNum() { return fLayer; }
   Int_t GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert );
 
   std::vector<mpdmap_t> fMPDmap;
@@ -71,10 +72,19 @@ class THcLADGEMModule : public THaSubDetector {
   std::vector<Double_t> fCommonModeMeanV;
   std::vector<Double_t> fCommonModeRMSU;
   std::vector<Double_t> fCommonModeRMSV;
+
+  Int_t GetNStripsHitU() { return fNstrips_hitU; }
+  Int_t GetNStripsHitV() { return fNstrips_hitV; }
+  Int_t GetNStripsHit()  { return fNstrips_hit; }
+  Int_t GetN2DHits()     { return fN2Dhits; }
   
  protected:
   
-  Int_t fModuleID;
+  //Constant, module-specific parameters:
+  Int_t    fModuleID;
+  UShort_t fLayer;
+  UInt_t   fNstripsU; // Total number of strips in this module along the generic "U" axis
+  UInt_t   fNstripsV; // Total number of strips in this module along the generic "V" axis
 
   bool fIsDecoded;
 
@@ -290,17 +300,9 @@ class THcLADGEMModule : public THaSubDetector {
   UShort_t fMaxNeighborsU_hitpos; 
   UShort_t fMaxNeighborsV_hitpos; 
 
-
-
   std::vector<Double_t> fADCsamples1D; //1D array to hold ADC samples; should end up with dimension fNstrips_hit*fN_MPD_TIME_SAMP
   std::vector<Int_t> fRawADCsamples1D;
   std::vector<Double_t> fADCsamplesDeconv1D; //1D array of deconvoluted ADC samples
-
-  //Constant, module-specific parameters:
-  UShort_t fModule;
-  UShort_t fLayer;
-  UInt_t   fNstripsU; // Total number of strips in this module along the generic "U" axis
-  UInt_t   fNstripsV; // Total number of strips in this module along the generic "V" axis
 
   Double_t fRMS_ConversionFactor; // = sqrt(fN_MPD_TIME_SAMP);
 
@@ -367,10 +369,8 @@ class THcLADGEMModule : public THaSubDetector {
 
   std::vector<THcLADGEMCluster> fClustersU;
   std::vector<THcLADGEMCluster> fClustersV;
-  // temp for test
-  Int_t fNClusU;
-  Int_t fNClusV;
 
+  Int_t fNClus;
   Int_t fMAX2DHITS;
   Int_t fN2Dhits;
 

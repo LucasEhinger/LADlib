@@ -53,11 +53,14 @@ void THcLADGEM::Clear( Option_t* opt)
   fNClusters = 0;
   fNTracks = 0;
 
+
+
   for(auto& module: fModules )
     module->Clear();
-
+ 
   for(int i=0; i<fNLayers; i++)
     f2DHits[i].clear();
+
 }
 
 
@@ -112,14 +115,50 @@ Int_t THcLADGEM::DefineVariables( EMode mode )
     {"clust.nstrip",  "Number of strips in cluster",     "fClusOutData.nstrip"},
     {"clust.maxstrip","Max strip of the given cluster",  "fClusOutData.maxstrip"},
     {"clust.index",   "Cluster index",                   "fClusOutData.clindex"},
-    {"clust.adc",     "Cluster ADC mean",                "fClusOutData.adc"},
+    {"clust.adc",     "Cluster ADC sum",                 "fClusOutData.adc"},
     {"clust.time",    "Cluster Time mean",               "fClusOutData.time"},
     {"clust.pos",     "Weighted cluster position",       "fClusOutData.pos"},
     {"clust.maxpos",  "Max strip pos of the cluster",    "fClusOutData.mpos"},
+    {"clust.maxsamp", "Time sample with max ADC",        "fClusOutData.maxsamp"},
+    {"clust.maxadc",  "Max strip ADC",                   "fClusOutData.maxadc"},
     { 0 }
   };
 
   DefineVarsFromList( vars_clus, mode );
+
+  // Hit variables
+  RVarDef vars_hit[] = {  
+    {"hit.nlayer",         "number of layers with any strip fired",   "fNlayers_hit"}, 
+    {"hit.nlayeru",        "number of layers with U strip fired",     "fNlayers_hitU"}, 
+    {"hit.nlayerv",        "number of layers with V strip fired",     "fNlayers_hitV"}, 
+    {"hit.nlayeruv",       "number of layers with 2d hits",           "fNlayers_hitUV"}, 
+    {"hit.nstripsu_layer", "total number of U strips fired by layer", "fNstripsU_layer"},
+    {"hit.nstripsv_layer", "total number of V strips fired by layer", "fNstripsV_layer"},
+    {"hit.nclustu_layer",  "total number of U clusters by layer",     "fNclustU_layer"},
+    {"hit.nclustv_layer",  "total number of V clusters by layer",     "fNclustV_layer"},
+    { 0 }
+  };
+  DefineVarsFromList( vars_hit, mode );
+
+//  Place holder for space point output
+/*
+  RVarDef vars_sp[] = {
+    {"sp.layer",      "2D hit layer",                             ""},
+    {"sp.trackid",    "Track ID associated with the space point", ""},
+    {"sp.clusid",     "Cluster IDs associated with the sp",       ""},
+    {"sp.adc",        "2D hit ADC mean",                          ""},
+    {"sp.asy",        "2D hit ADC asym",                          ""},
+    {"sp.x",          "2D hit x pos",                             ""},
+    {"sp.y",          "2D hit y pos",                             ""},
+    {"sp.z",          "2D hit z pos",                             ""},
+    {"sp.t",          "2D hit avg time",                          ""},
+    {"sp.dt",         "2D hit time difference",                   ""},
+    {"sp.ct",         "2D hit corrected time",                    ""},
+    {"sp.isgoodhit",  "2D hit good hit flag",                     ""},
+    { 0 }
+  };
+  DefineVarsFromList( vars_sp, mode );
+*/
 
   // track variables only available when there are at least two layers
   if(fNLayers > 1 ) {
@@ -127,6 +166,10 @@ Int_t THcLADGEM::DefineVariables( EMode mode )
     RVarDef vars_trk[] = {
       {"trk.ntracks",    "Number of GEM track candidates", "fNTracks"},
       {"trk.id",         "GEM Track ID",                   "fGEMTracks.THcLADGEMTrack.GetTrackID()"},
+      {"trk.adc1",       "2D hit ADC mean for 1st layer",  "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp1()"},
+      {"trk.adc2",       "2D hit ADC mean for 2nd layer",  "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp2()"},
+      {"trk.asy1",       "2D hit ADC asym for 1st layer",  "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp1()"},
+      {"trk.asy2",       "2D hit ADC asym for 2nd layer",  "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp2()"},
       {"trk.x1",         "Space point1 X",                 "fGEMTracks.THcLADGEMTrack.GetX1()"},
       {"trk.y1",         "Space point1 Y",                 "fGEMTracks.THcLADGEMTrack.GetY1()"},
       {"trk.z1",         "Space point1 Z",                 "fGEMTracks.THcLADGEMTrack.GetZ1()"},
@@ -181,6 +224,10 @@ Int_t THcLADGEM::ReadDatabase( const TDatime& date )
   }
 
   f2DHits.resize(fNLayers);
+  fNstripsU_layer.resize(fNLayers);
+  fNstripsV_layer.resize(fNLayers);
+  fNclustU_layer.resize(fNLayers);
+  fNclustV_layer.resize(fNLayers);
 
   return kOK;
 }
@@ -194,14 +241,6 @@ Int_t THcLADGEM::Decode( const THaEvData& evdata )
     module->Decode(evdata);
   }
 
-  /*
-  Bool_t present = kTRUE;
-  if(fPresentP) {
-    present = *fPresentP;
-  }
-  Int_t nhits = DecodeToHitList(evdata, !present);
-  */
-
   return 0;
 }
 
@@ -213,8 +252,32 @@ Int_t THcLADGEM::CoarseProcess( TClonesArray& tracks )
   fNTracks = 0;
   fGEMTracks->Delete();
   
+  fNlayers_hit = 0;
+  fNlayers_hitU = 0;
+  fNlayers_hitV = 0;
+  fNlayers_hitUV = 0;
+
+  for(int i=0; i < fNLayers; i++) {
+    fNstripsU_layer[i] = 0;
+    fNstripsV_layer[i] = 0;
+    fNclustU_layer[i] = 0;
+    fNclustV_layer[i] = 0;
+  }
+
   for( auto module : fModules ) {
     module->CoarseProcess(tracks); // X/Y clustering, form 2D hits
+
+    // Counters, number of layers with strip fired (each layer has one module for LAD)
+    fNstripsU_layer[module->GetLayerNum()] += module->GetNStripsHitU();
+    fNstripsV_layer[module->GetLayerNum()] += module->GetNStripsHitV();
+
+    if(module->GetNStripsHitU() > 0) fNlayers_hitU++;
+    if(module->GetNStripsHitV() > 0) fNlayers_hitV++;
+    if(module->GetNStripsHitU() + module->GetNStripsHitV() > 0) fNlayers_hit++;
+    if(module->GetN2DHits() > 0) fNlayers_hitUV++;
+
+    fNclustU_layer[module->GetLayerNum()] += module->GetNClusters(0);
+    fNclustV_layer[module->GetLayerNum()] += module->GetNClusters(1);
 
     // Cluster output handling
     for(int i=0; i<2; i++) {
@@ -226,11 +289,13 @@ Int_t THcLADGEM::CoarseProcess( TClonesArray& tracks )
 	fClusOutData.axis.push_back(cluster.GetAxis());
 	fClusOutData.nstrip.push_back(cluster.GetNStrips());
 	fClusOutData.maxstrip.push_back(cluster.GetStripMax());
-	fClusOutData.clindex.push_back(fNClusters);
+	fClusOutData.clindex.push_back(cluster.GetCLIndex());
 	fClusOutData.adc.push_back(cluster.GetADCsum());
 	fClusOutData.time.push_back(cluster.GetTime());
 	fClusOutData.pos.push_back(cluster.GetPos());
 	fClusOutData.mpos.push_back(cluster.GetPosMax());
+	fClusOutData.maxsamp.push_back(cluster.GetSampMax());
+	fClusOutData.maxadc.push_back(cluster.GetADCMax());
 	fNClusters++;
       }
     }
@@ -291,6 +356,9 @@ Int_t THcLADGEM::CoarseProcess( TClonesArray& tracks )
       else
 	vpz = -v_hit1[0]*(v_hit2[2]-v_hit1[2])/(v_hit2[0]-v_hit1[0]) + v_hit1[2];
 
+      gemhit1.trackID = fNTracks;
+      gemhit2.trackID = fNTracks;
+
       if(fNTracks < MAXTRACKS){
 	// Add track object
 	THcLADGEMTrack *theGEMTrack = new ( (*fGEMTracks)[fNTracks] ) THcLADGEMTrack(fNLayers);
@@ -324,12 +392,18 @@ void THcLADGEM::RotateToLab(Double_t angle, TVector3& vect)
 
 //____________________________________________________________
 void THcLADGEM::Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z,
-			  Double_t t, Double_t dt, Double_t tc,
-			  Bool_t goodhit, Double_t adc, Double_t adcasy)
+			  Double_t t, Double_t dt, Double_t tc, Bool_t goodhit,
+			  Double_t adc, Double_t adcasy)
 {
   // FIXME:Add flag for filtering good hits?
 
-  f2DHits[ilayer].push_back( {ilayer, x, y, z, t, dt, tc, goodhit, adc, adcasy} );
+  GEM2DHits gemhit;
+  gemhit.Set(ilayer, x, y, z, t, dt, tc, goodhit, adc, adcasy);
+  gemhit.SetClusterIDs(-1, -1);
+  gemhit.SetTrackID(-1);
+  f2DHits[ilayer].push_back(gemhit);
+  // Set initial trackID = -1
+  //  f2DHits[ilayer].push_back( {ilayer, x, y, z, t, dt, tc, goodhit, adc, adcasy, -1} );
 }
 
 //____________________________________________________________
