@@ -21,6 +21,8 @@ THcLADGEMModule::THcLADGEMModule( const char* name, const char* description, Int
   fN_MPD_TIME_SAMP = 6; // mpd time sample
   fMPDMAP_ROW_SIZE = 9;
 
+  fNClus = 0;
+  
   fMAX2DHITS = 10000;
 
   fIsMC = false;
@@ -74,8 +76,7 @@ void THcLADGEMModule::Clear( Option_t* opt )
   fClustersU.clear();
   fClustersV.clear();
 
-  fNClusU = 0;
-  fNClusV = 0;
+  fNClus = 0;
 
   fN2Dhits = 0;
 }
@@ -1966,6 +1967,7 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis)
     cluster.SetPosSigma(pos_sigma);
 
     cluster.SetADCsum(sumADC); // ADCsum, ADCsumDeconv.... are determined by clustering flag
+    cluster.SetADCMax(maxADC);
     cluster.SetSampMax(sampleMax);
     cluster.SetTime(sumt/sumwx, sqrt(sumt2/sumwx - pow(sumt/sumwx, 2)));
 
@@ -1974,14 +1976,14 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis)
     cluster.SetTimeFit(tfit);
 
     if( axis == LADGEM::kUaxis ){
+      cluster.SetCLIndex(fNClus);
       fClustersU.push_back(cluster);
-      fNClusU++;
     }
     else {
+      cluster.SetCLIndex(fNClus);
       fClustersV.push_back(cluster);
-      fNClusV++;
     }
-
+    fNClus++;
   }// loop over local maxima
 
 }
@@ -2067,8 +2069,8 @@ void THcLADGEMModule::Find2DHits()
 	  // Add to 2Dhit list
 	  if(nstripU > 1 && nstripV > 1){
 	    static_cast<THcLADGEM*>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos,
-						      tmean, tdiff, tcorr,
-						      isgoodhit, emean, adcasym);
+							tmean, tdiff, tcorr, isgoodhit,
+							emean, adcasym);
 	  }
 	}
 	else {

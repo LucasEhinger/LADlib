@@ -17,10 +17,12 @@ struct ClusterOutputData {
   std::vector<Int_t> nstrip;
   std::vector<Int_t> maxstrip;
   std::vector<Int_t> clindex;
-  std::vector<Double_t> adc;
+  std::vector<Double_t> adc;  // adc sum
   std::vector<Double_t> time;
   std::vector<Double_t> pos;
   std::vector<Double_t> mpos; // max strip pos
+  std::vector<Double_t> maxsamp; // max time sample
+  std::vector<Double_t> maxadc; // max adc
 
   void clear(){
     layer.clear();
@@ -34,6 +36,8 @@ struct ClusterOutputData {
     time.clear();
     pos.clear();
     mpos.clear();
+    maxsamp.clear();
+    maxadc.clear();
   }
 };
 
@@ -90,10 +94,21 @@ class THcLADGEM : public THaNonTrackingDetector, public THcHitList {
 
   std::vector<vector<GEM2DHits>> f2DHits;
 
+  // Hit output variables
+  Int_t fNlayers_hit;
+  Int_t fNlayers_hitU;
+  Int_t fNlayers_hitV;
+  Int_t fNlayers_hitUV;
+
+  std::vector<Int_t> fNstripsU_layer;
+  std::vector<Int_t> fNstripsV_layer;
+  std::vector<Int_t> fNclustU_layer;
+  std::vector<Int_t> fNclustV_layer;
+
  public:
   void Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z,
-		 Double_t t, Double_t dt, Double_t tc,
-		 Bool_t goodhit, Double_t adc, Double_t adcasy);
+		 Double_t t, Double_t dt, Double_t tc, Bool_t goodhit,
+		 Double_t adc, Double_t adcasy);
   std::vector<GEM2DHits> Get2DHits(int layer) { return f2DHits[layer]; }
 
   ClassDef(THcLADGEM,0)
