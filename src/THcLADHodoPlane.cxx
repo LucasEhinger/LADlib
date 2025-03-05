@@ -788,11 +788,6 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"TopAdcRefDiffTime", "Reference Diff time of Top ADC", "fTopAdcRefDiffTime"},
       {"BtmAdcRefDiffTime", "Reference Diff time of Btm aDC", "fBtmAdcRefDiffTime"},
 
-      {"totNumTopTdcHits", "Total Number of Top TDC Hits", "fTotNumTopTdcHits"},    // Hodo+ raw TDC multiplicity ""
-      {"totNumBtmTdcHits", "Total Number of Bottom TDC Hits", "fTotNumBtmTdcHits"}, // Hodo- raw TDC multiplicity ""
-      {"totNumTdcHits", "Total Number of PMTs Hits (as measured by TDCs)",
-       "fTotNumTdcHits"}, // Hodo raw TDC multiplicity  ""
-
       //{"ngoodhits", "Number of paddle hits (passed tof tolerance and used to determine the focal plane time )",
       //"GetNGoodHits() "},
       {0}};
