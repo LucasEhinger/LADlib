@@ -261,6 +261,10 @@ Int_t THcLADGEMModule::ReadDatabase( const TDatime& date )
     {0}
   };
   gHcParms->LoadParmValues((DBRequest*)&list, "");
+  if (fIsMC) {
+    fChanMapFileName = "MAPS/LAD/DETEC/GEM/lgem_chan_mc.map"; //Todo: make this a parameter, but this works for now
+  }
+
 
   string prefix = "lgem_";
   prefix += GetName(); // e.g. prefix: lgem_m0
