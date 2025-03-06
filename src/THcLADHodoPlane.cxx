@@ -421,6 +421,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
 
   delete[] fPosCenter;
   fPosCenter       = new Double_t[fNelem];
+
   DBRequest list[] = {{Form("ladhodo_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("ladhodo_%s_dzpos", GetName()), &fDzpos, kDouble},
                       {Form("ladhodo_%s_theta", GetName()), &fTheta, kDouble},
