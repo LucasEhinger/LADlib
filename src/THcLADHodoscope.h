@@ -169,6 +169,7 @@ protected:
   Double_t *fHodoTopAdcTimeWindowMin;
   Double_t *fHodoTopAdcTimeWindowMax;
 
+  //FIXME. Neither of these are used or initialized.
   Double_t fPartMass;    // Nominal particle mass
   Double_t fBetaNominal; // Beta for central ray of nominal particle type
 

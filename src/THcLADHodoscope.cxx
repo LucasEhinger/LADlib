@@ -159,10 +159,10 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
   hTime            = new TH1F(histname, "", 400, 0, 200);
 
   string planenamelist;
-  DBRequest listextra[] = {{"hodo_num_planes", &fNPlanes, kInt},
-                           {"hodo_plane_names", &planenamelist, kString},
-                           {"hodo_tdcrefcut", &fTDC_RefTimeCut, kInt, 0, 1},
-                           {"hodo_adcrefcut", &fADC_RefTimeCut, kInt, 0, 1},
+  DBRequest listextra[] = {{"ladhodo_num_planes", &fNPlanes, kInt},
+                           {"ladhodo_plane_names", &planenamelist, kString},
+                           {"ladhodo_tdcrefcut", &fTDC_RefTimeCut, kInt, 0, 1},
+                           {"ladhodo_adcrefcut", &fADC_RefTimeCut, kInt, 0, 1},
                            {0}};
   // fNPlanes = 4; 		// Default if not defined
   fTDC_RefTimeCut = 0; // Minimum allowed reference times
@@ -196,9 +196,10 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
     cout << "Created Scintillator Plane " << fPlaneNames[i] << ", " << desc << endl;
   }
   // Save the nominal particle mass
-  THcLADSpectrometer *app = dynamic_cast<THcLADSpectrometer *>(GetApparatus());
-  fPartMass               = app->GetParticleMass();
-  fBetaNominal            = app->GetBetaAtPcentral();
+  //This throws an error if it's not a part of the LADspectrometer
+  // THcLADSpectrometer *app = dynamic_cast<THcLADSpectrometer *>(GetApparatus());
+  // fPartMass               = app->GetParticleMass();
+  // fBetaNominal            = app->GetBetaAtPcentral();
 
   delete[] desc;
 }
@@ -207,7 +208,7 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
 THaAnalysisObject::EStatus THcLADHodoscope::Init(const TDatime &date) {
   Setup(GetName(), GetTitle());
 
-  char EngineDID[] = "xSCIN";
+  char EngineDID[] = "xLADSCIN"; //LADSCIN avoids confusion with spectrometer scintillators
   EngineDID[0]     = toupper(GetApparatus()->GetName()[0]);
   if (gHcDetectorMap->FillMap(fDetMap, EngineDID) < 0) {
     static const char *const here = "Init()";
@@ -302,7 +303,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fNPaddle = new Int_t[fNPlanes];
   fFPTime  = new Double_t[fNPlanes];
   for (int ip = 0; ip < fNPlanes; ip++) {
-    string parname    = "hodo_" + string(fPlanes[ip]->GetName()) + "_nr";
+    string parname    = "ladhodo_" + string(fPlanes[ip]->GetName()) + "_nr";
     DBRequest list2[] = {{parname.c_str(), &fNPaddle[ip], kInt}, {0}};
 
     gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
@@ -343,18 +344,18 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
     fHodoBtmAdcTimeWindowMax[ii] = 1000.;
   }
 
-  DBRequest list3[] = {{"cosmicflag", &fCosmicFlag, kInt, 0, 1},
-                       {"NumPlanesBetaCalc", &fNumPlanesBetaCalc, kInt, 0, 1},
-                       {"scin_tdc_min", &fScinTdcMin, kDouble},
-                       {"scin_tdc_max", &fScinTdcMax, kDouble},
-                       {"tof_tolerance", &fTofTolerance, kDouble, 0, 1},
-                       {"hodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
-                       {"hodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
-                       {"hodo_tdc_to_time", &fScinTdcToTime, kDouble},
-                       {"hodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_BtmAdcTimeWindowMax", fHodoBtmAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+  DBRequest list3[] = {{"ladcosmicflag", &fCosmicFlag, kInt, 0, 1},
+                       {"ladNumPlanesBetaCalc", &fNumPlanesBetaCalc, kInt, 0, 1},
+                       {"ladhodo_tdc_min", &fScinTdcMin, kDouble},
+                       {"ladhodo_tdc_max", &fScinTdcMax, kDouble},
+                       {"ladtof_tolerance", &fTofTolerance, kDouble, 0, 1},
+                       {"ladhodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
+                       {"ladhodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
+                       {"ladhodo_tdc_to_time", &fScinTdcToTime, kDouble},
+                       {"ladhodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_BtmAdcTimeWindowMax", fHodoBtmAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {0}};
 
   fCosmicFlag        = 0;
@@ -370,16 +371,16 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fIsMC             = 0;
   gHcParms->LoadParmValues((DBRequest *)&list5, "");
 
-  DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
+  DBRequest list[] = {{"ladhodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
-  DBRequest list4[] = {{"hodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"hodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c1_Top", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+  DBRequest list4[] = {{"ladhodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"lad_c1_Top", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"lad_c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"lad_c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"lad_c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {0}};
 
   // fTdc_Thrs = 1.0;
