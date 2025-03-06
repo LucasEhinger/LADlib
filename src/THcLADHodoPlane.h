@@ -43,6 +43,7 @@ public:
   Double_t GetHodoSlop() { return fHodoSlop; }; // hodo slop
   Double_t GetZpos() { return fZpos; };         // return the z position
   Double_t GetDzpos() { return fDzpos; }
+  Double_t GetTheta() { return fTheta; };
   Double_t GetPosBtm() { return fPosBtm; };
   Double_t GetPosTop() { return fPosTop; };
   Double_t GetPosOffset() {return fPosOffset;};
@@ -260,6 +261,7 @@ protected:
   Double_t fSize;    /* paddle size */
   Double_t fZpos;    /* z position */
   Double_t fDzpos;
+  Double_t fTheta;
   Double_t fHodoSlop;
 
   virtual Int_t ReadDatabase(const TDatime &date);

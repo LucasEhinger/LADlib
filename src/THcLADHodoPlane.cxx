@@ -423,6 +423,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fPosCenter       = new Double_t[fNelem];
   DBRequest list[] = {{Form("scin_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("scin_%s_dzpos", GetName()), &fDzpos, kDouble},
+                      {Form("scin_%s_theta", GetName()), &fTheta, kDouble},
                       {Form("scin_%s_size", GetName()), &fSize, kDouble},
                       {Form("scin_%s_spacing", GetName()), &fSpacing, kDouble},
                       {Form("scin_%s_%s", GetName(), "btm"), &fPosBtm, kDouble},
@@ -674,6 +675,16 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
     DefineVarsFromList(vars, mode);
   }
 
+  RVarDef track_vars[] ={
+      //Track ID
+      //Track Based Beta
+      //Delta_transverse
+      //Delta_longitudinal
+      //Matching HodoHit ID
+      {0}
+  };
+  DefineVarsFromList(track_vars, mode);
+
   RVarDef vars[] = {
       {"nhits", "Number of paddle hits (passed TDC && ADC Min and Max cuts for either end)", "GetNScinHits() "},
 
@@ -776,11 +787,6 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"BtmTdcRefDiffTime", "Reference Diff time of Btm TDC", "fBtmTdcRefDiffTime"},
       {"TopAdcRefDiffTime", "Reference Diff time of Top ADC", "fTopAdcRefDiffTime"},
       {"BtmAdcRefDiffTime", "Reference Diff time of Btm aDC", "fBtmAdcRefDiffTime"},
-
-      {"totNumTopTdcHits", "Total Number of Top TDC Hits", "fTotNumTopTdcHits"},    // Hodo+ raw TDC multiplicity ""
-      {"totNumBtmTdcHits", "Total Number of Bottom TDC Hits", "fTotNumBtmTdcHits"}, // Hodo- raw TDC multiplicity ""
-      {"totNumTdcHits", "Total Number of PMTs Hits (as measured by TDCs)",
-       "fTotNumTdcHits"}, // Hodo raw TDC multiplicity  ""
 
       //{"ngoodhits", "Number of paddle hits (passed tof tolerance and used to determine the focal plane time )",
       //"GetNGoodHits() "},

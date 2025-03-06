@@ -2,6 +2,7 @@
 #include "THaCutList.h"
 #include "THaEvData.h"
 #include "THaGlobals.h"
+#include "THaSpectrometer.h"
 #include "THaTrack.h"
 #include "THcDetectorMap.h"
 #include "THcGlobals.h"
@@ -118,6 +119,19 @@ void THcLADHodoscope::Clear(Option_t *opt) {
   // fThreeScin.clear();
   // fGoodScinHitsX.clear();
   fGoodFlags.clear();
+
+  // Hodo good hit variables
+  goodhit_plane.clear();
+  goodhit_paddle.clear();
+  goodhit_track_id.clear();
+  goodhit_beta.clear();
+  goodhit_delta_pos_trans.clear();
+  goodhit_delta_pos_long.clear();
+  goodhit_hit_time.clear();
+  goodhit_matching_hit_index.clear();
+  goodhit_hit_theta.clear();
+  goodhit_hit_phi.clear();
+  goodhit_hit_edep.clear();
 }
 //_________________________________________________________________
 
@@ -253,7 +267,26 @@ Int_t THcLADHodoscope::End(THaRunBase *run) {
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::DefineVariables(EMode mode) { return 0; }
+Int_t THcLADHodoscope::DefineVariables(EMode mode) { 
+  
+  // Initialize variables to read out
+  RVarDef vars[] = {
+    {"goodhit_plane", "Good hit plane", "goodhit_plane"},
+    {"goodhit_paddle", "Good hit paddle", "goodhit_paddle"},
+    {"goodhit_track_id", "Good hit track ID", "goodhit_track_id"},
+    {"goodhit_beta", "Good hit beta", "goodhit_beta"},
+    {"goodhit_delta_pos_trans", "Good hit delta position transverse", "goodhit_delta_pos_trans"},
+    {"goodhit_delta_pos_long", "Good hit delta position longitudinal", "goodhit_delta_pos_long"},
+    {"goodhit_hit_time", "Good hit time", "goodhit_hit_time"},
+    {"goodhit_matching_hit_index", "Good hit matching hit index", "goodhit_matching_hit_index"},
+    {"goodhit_hit_theta", "Good hit theta", "goodhit_hit_theta"},
+    {"goodhit_hit_phi", "Good hit phi", "goodhit_hit_phi"},
+    {"goodhit_hit_edep", "Good hit energy deposition", "goodhit_hit_edep"},
+    {0}
+  };
+
+  return DefineVarsFromList(vars, mode);
+}
 
 //_________________________________________________________________
 Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
@@ -267,9 +300,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   // we will need to use the detector name to load parameters
   // for each detector -- to be updated
   fNPaddle = new Int_t[fNPlanes];
-
-  fFPTime = new Double_t [fNPlanes];
-
+  fFPTime  = new Double_t[fNPlanes];
   for (int ip = 0; ip < fNPlanes; ip++) {
     string parname    = "hodo_" + string(fPlanes[ip]->GetName()) + "_nr";
     DBRequest list2[] = {{parname.c_str(), &fNPaddle[ip], kInt}, {0}};
@@ -336,9 +367,9 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
   DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
-  fIsMC = 0;
+  fIsMC             = 0;
   gHcParms->LoadParmValues((DBRequest *)&list5, "");
-  
+
   DBRequest list[] = {{"hodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
@@ -425,11 +456,22 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
 //_________________________________________________________________
 Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
+  // FIXME. (Potentially) temp fix to prevent error when tracks is nullptr
 
+  fSpectro                 = dynamic_cast<THaApparatus *>(GetApparatus());
+  fGEM                     = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
+  if (!fGEM) {
+    return 0;
+  }
+  TClonesArray *fGEMTracks = fGEM->GetTracks();
 
-  return 0; //FIXME. short term fix to allow for hodo only replay.
+  if (!fGEMTracks) {
+    return 0;
+  }
 
-  Int_t ntracks = tracks.GetLast() + 1; // Number of reconstructed tracks
+  // TClonesArray* gemTracks = spectrometer->GetGEM()->GetTracks();
+
+  Int_t ntracks = fGEMTracks->GetLast() + 1; // Number of reconstructed tracks
 
   if (ntracks > 0) {
     vector<Double_t> nPmtHit(ntracks);
@@ -442,9 +484,27 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
       nPmtHit[itrack]  = 0;
       timeAtFP[itrack] = 0;
 
-      THaTrack *theTrack = dynamic_cast<THaTrack *>(tracks.At(itrack));
+      THcLADGEMTrack *theTrack = dynamic_cast<THcLADGEMTrack *>(fGEMTracks->At(itrack));
       if (!theTrack)
         return -1;
+
+      // Calculate Theta, Phi, X and Y (intercepts with z=0 plane) from THcLADGEMTrack
+      // FIXME. GEMs currently use m, whereas LAD uses cm
+      TVector3 sp1(theTrack->GetX1() * 100, theTrack->GetY1() * 100, theTrack->GetZ1() * 100);
+      TVector3 sp2(theTrack->GetX2() * 100, theTrack->GetY2() * 100, theTrack->GetZ2() * 100);
+
+      Double_t track_dz = sp2.Z() - sp1.Z();
+      if (track_dz == 0) {
+        return 0;
+      }
+      Double_t track_dx = sp2.X() - sp1.X();
+      Double_t track_dy = sp2.Y() - sp1.Y();
+
+      Double_t track_theta = TMath::ATan2(TMath::Sqrt(track_dx * track_dx + track_dy * track_dy), track_dz);
+      Double_t track_phi   = TMath::ATan2(track_dy, track_dx);
+
+      Double_t track_x0 = sp1.X() - sp1.Z() * track_dx / track_dz;
+      Double_t track_y0 = sp1.Y() - sp1.Z() * track_dy / track_dz;
 
       for (Int_t ip = 0; ip < fNumPlanesBetaCalc; ip++) {
         fGoodPlaneTime[ip] = kFALSE;
@@ -452,6 +512,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
         fNPlaneTime[ip]    = 0;
         fSumPlaneTime[ip]  = 0.;
       }
+
       std::vector<Double_t> dedx_temp;
       std::vector<std::vector<GoodFlags>> goodflagstmp1;
       goodflagstmp1.reserve(fNumPlanesBetaCalc);
@@ -475,7 +536,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
       Int_t ihhit = 0;   // Hit # overall
 
       // Loop over all scintillator planes
-      for (Int_t ip = 0; ip < fNumPlanesBetaCalc; ip++) {
+      for (Int_t ip = 0; ip < fNPlanes; ip++) {
 
         std::vector<GoodFlags> goodflagstmp2;
         goodflagstmp2.reserve(fNScinHits[ip]);
@@ -487,8 +548,9 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
         fNScinHits[ip]         = fPlanes[ip]->GetNScinHits();
         TClonesArray *hodoHits = fPlanes[ip]->GetHits();
 
-        Double_t zPos  = fPlanes[ip]->GetZpos();
-        Double_t dzPos = fPlanes[ip]->GetDzpos();
+        Double_t zPos       = fPlanes[ip]->GetZpos();
+        Double_t dzPos      = fPlanes[ip]->GetDzpos();
+        Double_t planeTheta = fPlanes[ip]->GetTheta();
 
         // Loop over hits with in a single plane
         for (Int_t iphit = 0; iphit < fNScinHits[ip]; iphit++) {
@@ -505,22 +567,19 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
           fTOFPInfo[ihhit].onTrack       = kFALSE;
 
           Int_t paddle       = hit->GetPaddleNumber() - 1;
-          Double_t zposition = zPos + (paddle % 2) * dzPos; // TODO: fix this (lad won't have this offset)
+          Double_t zposition = zPos; // TODO: fix this (lad won't have this offset)
 
-          Double_t xHitCoord = theTrack->GetX() + theTrack->GetTheta() * (zposition); // Line 183
-
-          Double_t yHitCoord = theTrack->GetY() + theTrack->GetPhi() * (zposition); // Line 184
+          Double_t track_TrnsCoord, track_LongCoord;
+          track_TrnsCoord = track_x0 * TMath::Cos(planeTheta - TMath::Pi() / 2);
+          track_LongCoord = track_y0;
 
           Double_t scinTrnsCoord, scinLongCoord;
-          if ((ip == 0) || (ip == 2)) { // !x plane. Line 185
-            scinTrnsCoord = xHitCoord;
-            scinLongCoord = yHitCoord;
-          } else if ((ip == 1) || (ip == 3)) { // !y plane. Line 188
-            scinTrnsCoord = yHitCoord;
-            scinLongCoord = xHitCoord;
-          } else {
-            return -1;
-          } // Line 195
+          // x & y cooridnates are with respect to the central angle pointing to the scintillator plane
+          scinTrnsCoord = track_TrnsCoord + TMath::Tan(track_theta - planeTheta) * (zposition); // Line 183
+
+          scinLongCoord =
+              track_LongCoord + TMath::Tan(track_phi) / TMath::Cos(track_theta - planeTheta) * (zposition); // Line 184
+          // TODO: need to modify getX and getX to get the correct x and y coordinates
 
           fTOFPInfo[ihhit].scinTrnsCoord = scinTrnsCoord;
           fTOFPInfo[ihhit].scinLongCoord = scinLongCoord;
@@ -530,20 +589,45 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
           // Index to access the 2d arrays of paddle/scintillator properties
           Int_t fPIndex = GetScinIndex(ip, paddle);
           Double_t betatrack =
-              theTrack->GetP() / TMath::Sqrt(theTrack->GetP() * theTrack->GetP() + fPartMass * fPartMass);
+              0; // Todo. FixMe. Set to zero for now.
+                 //  theTrack->GetP() / TMath::Sqrt(theTrack->GetP() * theTrack->GetP() + fPartMass * fPartMass);
 
           if (TMath::Abs(scinCenter - scinTrnsCoord) <
               (fPlanes[ip]->GetSize() * 0.5 + fPlanes[ip]->GetHodoSlop())) { // Line 293
 
+            goodhit_plane.push_back(ip);
+            goodhit_paddle.push_back(paddle);
+            goodhit_track_id.push_back(itrack);
+            goodhit_delta_pos_trans.push_back(scinCenter - scinTrnsCoord);
+            goodhit_delta_pos_long.push_back(scinLongCoord - hit->GetCalcPosition());
+            goodhit_hit_time.push_back(hit->GetScinCorrectedTime());
+            goodhit_hit_theta.push_back(track_theta);
+            goodhit_hit_phi.push_back(track_phi);
+            goodhit_hit_edep.push_back(TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
+
+            // Calculate beta
+            TVector3 hit_vertex(0, 0, 0);
+            double xhit = track_x0 + zposition * TMath::Cos(planeTheta - TMath::Pi() / 2) -
+                          scinTrnsCoord * TMath::Sin(planeTheta - TMath::Pi() / 2);
+            double yhit = scinLongCoord + track_y0;
+            double zhit = -zposition * TMath::Sin(planeTheta - TMath::Pi() / 2) -
+                          scinTrnsCoord * TMath::Cos(planeTheta - TMath::Pi() / 2);
+            TVector3 hit_momentum(xhit, yhit, zhit);
+            TVector3 hit_end(scinTrnsCoord, scinLongCoord, zPos);
+            double path_length = (hit_vertex - hit_end).Mag();
+            double time        = hit->GetScinCorrectedTime(); // todo. Subtract reference time
+            double beta        = path_length / (time * 29.9792458);
+            goodhit_beta.push_back(beta);
+
+            // LHE. Everything from here can probably be deleted. It's just left over from the spectrometer hodoscope code (keep z-correction?).
+
             fTOFPInfo[ihhit].onTrack = kTRUE;
             Double_t zcor =
-                zposition / (29.979 * betatrack) *
-                TMath::Sqrt(1. + theTrack->GetTheta() * theTrack->GetTheta() + theTrack->GetPhi() * theTrack->GetPhi());
+                zposition / (29.979 * betatrack) * TMath::Sqrt(1. + track_theta * track_theta + track_phi * track_phi);
             fTOFPInfo[ihhit].zcor = zcor;
             if (fCosmicFlag) {
-              Double_t zcor = -zposition / (29.979 * 1.0) *
-                              TMath::Sqrt(1. + theTrack->GetTheta() * theTrack->GetTheta() +
-                                          theTrack->GetPhi() * theTrack->GetPhi());
+              Double_t zcor =
+                  -zposition / (29.979 * 1.0) * TMath::Sqrt(1. + track_theta * track_theta + track_phi * track_phi);
               fTOFPInfo[ihhit].zcor = zcor;
             }
             Double_t tdc_pos = hit->GetTopTDC();
@@ -771,9 +855,13 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
         }
 
       } // Second loop over hits of a scintillator plane ends here
-      theTrack->SetGoodPlane3(fGoodPlaneTime[2] ? 1 : 0);
-      if (fNumPlanesBetaCalc == 4)
-        theTrack->SetGoodPlane4(fGoodPlaneTime[3] ? 1 : 0);
+
+      // TODO FIXME. Uncommenting these lines.
+      //  theTrack->SetGoodPlane3(fGoodPlaneTime[2] ? 1 : 0);
+      //  if (fNumPlanesBetaCalc == 4)
+      //    theTrack->SetGoodPlane4(fGoodPlaneTime[3] ? 1 : 0);
+      //  End Uncomment
+
       //
       //------------------------------------------------------------------------------
       //------------------------------------------------------------------------------
@@ -833,8 +921,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
             } // condition for good scin time
           } // loop over hits
 
-          Double_t pathNorm =
-              TMath::Sqrt(1. + theTrack->GetTheta() * theTrack->GetTheta() + theTrack->GetPhi() * theTrack->GetPhi());
+          Double_t pathNorm = TMath::Sqrt(1. + track_theta * track_theta + track_phi * track_phi);
           // Take angle into account
           beta = beta / pathNorm;
           beta = beta / 29.979; // velocity / c
@@ -880,11 +967,13 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
           break;
         }
       }
-      theTrack->SetDedx(dedx);
-      theTrack->SetFPTime(fptime);
-      theTrack->SetBeta(beta);
-      theTrack->SetBetaChi2(betaChiSq);
-      theTrack->SetNPMT(nPmtHit[itrack]);
+
+      // TODO: Fixme. Uncommented the following lines. Not currently saving results
+      //  theTrack->SetDedx(dedx);
+      //  theTrack->SetFPTime(fptime);
+      //  theTrack->SetBeta(beta);
+      //  theTrack->SetBetaChi2(betaChiSq);
+      //  theTrack->SetNPMT(nPmtHit[itrack]);
 
     } // Main loop over tracks ends here.
 
