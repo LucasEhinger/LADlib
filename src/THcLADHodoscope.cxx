@@ -295,6 +295,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   cout << "THcLADHodoscope::ReadDatabase()" << endl;
   char prefix[2];
   prefix[0] = tolower(GetApparatus()->GetName()[0]); // "lad"
+  //Fix to prevent different param files for SHMS & HMS LAD hodoscopes
+  prefix[0] = 'l';
   prefix[1] = '\0';
 
   // since we define each hodoscope as a separate detector

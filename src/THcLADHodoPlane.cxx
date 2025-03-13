@@ -412,6 +412,8 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   // Read database files as needed here
   char prefix[2];
   prefix[0] = tolower(GetParent()->GetPrefix()[0]);
+  //Fix to prevent different param files for SHMS & HMS LAD hodoscopes
+  prefix[0] = 'l';
   prefix[1] = '\0';
 
   // Get # of element for each hodo detector
