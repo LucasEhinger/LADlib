@@ -8,6 +8,8 @@
 #include "THcLADHodoHit.h"
 #include "THcLADHodoPlane.h"
 #include "THcRawHodoHit.h"
+#include "THaSpectrometer.h"
+#include "THcLADGEM.h"
 
 class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
 public:
@@ -72,11 +74,29 @@ protected:
   Double_t *fHodoSlop;
   Int_t fIsMC;
 
+  //Output variables
+  vector<Int_t> goodhit_plane;
+  vector<Int_t> goodhit_paddle;
+  vector<Int_t> goodhit_track_id;
+  vector<Double_t> goodhit_beta;
+  vector<Double_t> goodhit_delta_pos_trans;
+  vector<Double_t> goodhit_delta_pos_long;
+  vector<Double_t> goodhit_hit_time;
+  vector<Int_t> goodhit_matching_hit_index;
+  vector<Double_t> goodhit_hit_theta;
+  vector<Double_t> goodhit_hit_phi;
+  vector<Double_t> goodhit_hit_edep;
+
+
+
   Double_t *fHodoVelLight;
 
   Double_t fStartTime;
   Double_t fFPTimeAll;
   Double_t *fFPTime; // [fNPlanes] Array
+
+  THaApparatus* fSpectro;
+  THcLADGEM* fGEM;
 
   struct TOFPInfo {
     Bool_t onTrack;
@@ -149,6 +169,7 @@ protected:
   Double_t *fHodoTopAdcTimeWindowMin;
   Double_t *fHodoTopAdcTimeWindowMax;
 
+  //FIXME. Neither of these are used or initialized.
   Double_t fPartMass;    // Nominal particle mass
   Double_t fBetaNominal; // Beta for central ray of nominal particle type
 

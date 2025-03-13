@@ -16,6 +16,7 @@ THcLADGEMCluster::THcLADGEMCluster()
   fMPD = -1;
   fAPV = -1;
   fAxis = -1;
+  fCLIndex = -1;
 
   fPos = -999.;
   fPosDiff = -999.;

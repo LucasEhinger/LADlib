@@ -24,19 +24,22 @@ class THcLADGEMCluster : public TObject {
   Int_t    GetStripHigh() { return fStripHigh; }
   Int_t    GetStripMax() { return fStripMax; }
 
-  Double_t GetADCsum() { return fADCsum; }
-  Double_t GetPos()     { return fPos; }
-  Double_t GetPosMax()     { return fPosMax; }
-  Double_t GetMoments()     { return fMoments; }
-  Double_t GetPosDiff()     { return fPosDiff; }
-  Double_t GetE()     { return fE; }
+  Double_t GetADCsum()   { return fADCsum; }
+  Double_t GetADCMax()   { return fADCMax; }
+  Double_t GetPos()      { return fPos; }
+  Double_t GetPosMax()   { return fPosMax; }
+  Double_t GetMoments()  { return fMoments; }
+  Double_t GetPosDiff()  { return fPosDiff; }
+  Double_t GetE()        { return fE; }
   Double_t GetTime()     { return fTime; }
-  Double_t GetTimeFit()     { return fTimeFit; }
+  Double_t GetTimeFit()  { return fTimeFit; }
+  Int_t    GetSampMax()  { return fSampMax; }
 
   Double_t GetMPD() { return fMPD; }
   Double_t GetAPV() { return fAPV; }
   Double_t GetLayer() { return fLayer; }
   Double_t GetAxis() { return fAxis; }
+  Int_t    GetCLIndex() { return fCLIndex; }
 
   void SetMode(int this_value) { fClusteringFlag = this_value; }
   void SetNStrips(int this_value) { fNStrips = this_value; }
@@ -55,12 +58,14 @@ class THcLADGEMCluster : public TObject {
   void SetTimeFit(double this_value) { fTimeFit = this_value; }
   void SetTime(double value1, double value2) { fTime = value1; fTSigma = value2; }
   void SetADCsum(double this_value) { fADCsum = this_value; }
+  void SetADCMax(double this_value) { fADCMax = this_value; }
   void SetSampMax(int this_value) { fSampMax = this_value; }
 
   void SetLayer(int this_value ) { fLayer = this_value; }
   void SetMPD(int this_value ) { fMPD = this_value; }
   void SetAPV(int this_value ) { fAPV = this_value; }
   void SetAxis(int this_value) { fAxis = this_value; }
+  void SetCLIndex(int this_value) { fCLIndex = this_value; }
 
  protected:
 
@@ -75,6 +80,7 @@ class THcLADGEMCluster : public TObject {
   Int_t    fMPD;
   Int_t    fAPV; // APV adc id
   Int_t    fAxis; // U/V, X/Y 
+  Int_t    fCLIndex; // cluster index, associated with a particular 2D hit
 
   Double_t fPos; // ADC weighted mean coordinate along the direction measured by the strip
   Double_t fPosMax;  // Max strip position
@@ -83,6 +89,7 @@ class THcLADGEMCluster : public TObject {
   Double_t fMoments;      // clustermoments
   Int_t    fSampMax; // time sample in which peak of cluster summed ADC values occurs
   Double_t fADCsum;
+  Double_t fADCMax;
 
   Int_t    fNHits;
   Double_t fE;
