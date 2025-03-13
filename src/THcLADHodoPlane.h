@@ -44,8 +44,8 @@ public:
   Double_t GetZpos() { return fZpos; };         // return the z position
   Double_t GetDzpos() { return fDzpos; }
   Double_t GetTheta() { return fTheta; };
-  Double_t GetPosBtm() { return fPosBtm; };
-  Double_t GetPosTop() { return fPosTop; };
+  Double_t GetPosBtm(Int_t PaddleNo) { return fPosBtm[PaddleNo]; };
+  Double_t GetPosTop(Int_t PaddleNo) { return fPosTop[PaddleNo]; };
   Double_t GetPosOffset() {return fPosOffset;};
   Double_t GetPosCenter(Int_t PaddleNo) { return fPosCenter[PaddleNo]; }; // counting from zero!
 
@@ -204,8 +204,8 @@ protected:
   Int_t fUseSampWaveform;
   Int_t fIsMC;
 
-  Double_t fPosBtm;
-  Double_t fPosTop; 
+  Double_t *fPosBtm; /* array with bottom position for all scintillators in the plane */
+  Double_t *fPosTop;  /* array with top position for all scintillators in the plane */
   Double_t fPosOffset;
   Int_t fTdcOffset;
   Double_t fAdcTdcOffset;
