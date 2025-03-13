@@ -151,6 +151,8 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
   char prefix[2];
 
   prefix[0] = tolower(GetApparatus()->GetName()[0]);
+  // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
+  prefix[0] = 'l';
   prefix[1] = '\0';
 
   TString temp(prefix[0]);
@@ -196,7 +198,7 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
     cout << "Created Scintillator Plane " << fPlaneNames[i] << ", " << desc << endl;
   }
   // Save the nominal particle mass
-  //This throws an error if it's not a part of the LADspectrometer
+  // This throws an error if it's not a part of the LADspectrometer
   // THcLADSpectrometer *app = dynamic_cast<THcLADSpectrometer *>(GetApparatus());
   // fPartMass               = app->GetParticleMass();
   // fBetaNominal            = app->GetBetaAtPcentral();
@@ -208,7 +210,7 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
 THaAnalysisObject::EStatus THcLADHodoscope::Init(const TDatime &date) {
   Setup(GetName(), GetTitle());
 
-  char EngineDID[] = "xLADSCIN"; //LADSCIN avoids confusion with spectrometer scintillators
+  char EngineDID[] = "xLADSCIN"; // LADSCIN avoids confusion with spectrometer scintillators
   EngineDID[0]     = toupper(GetApparatus()->GetName()[0]);
   if (gHcDetectorMap->FillMap(fDetMap, EngineDID) < 0) {
     static const char *const here = "Init()";
@@ -268,23 +270,21 @@ Int_t THcLADHodoscope::End(THaRunBase *run) {
 }
 
 //_________________________________________________________________
-Int_t THcLADHodoscope::DefineVariables(EMode mode) { 
-  
+Int_t THcLADHodoscope::DefineVariables(EMode mode) {
+
   // Initialize variables to read out
-  RVarDef vars[] = {
-    {"goodhit_plane", "Good hit plane", "goodhit_plane"},
-    {"goodhit_paddle", "Good hit paddle", "goodhit_paddle"},
-    {"goodhit_track_id", "Good hit track ID", "goodhit_track_id"},
-    {"goodhit_beta", "Good hit beta", "goodhit_beta"},
-    {"goodhit_delta_pos_trans", "Good hit delta position transverse", "goodhit_delta_pos_trans"},
-    {"goodhit_delta_pos_long", "Good hit delta position longitudinal", "goodhit_delta_pos_long"},
-    {"goodhit_hit_time", "Good hit time", "goodhit_hit_time"},
-    {"goodhit_matching_hit_index", "Good hit matching hit index", "goodhit_matching_hit_index"},
-    {"goodhit_hit_theta", "Good hit theta", "goodhit_hit_theta"},
-    {"goodhit_hit_phi", "Good hit phi", "goodhit_hit_phi"},
-    {"goodhit_hit_edep", "Good hit energy deposition", "goodhit_hit_edep"},
-    {0}
-  };
+  RVarDef vars[] = {{"goodhit_plane", "Good hit plane", "goodhit_plane"},
+                    {"goodhit_paddle", "Good hit paddle", "goodhit_paddle"},
+                    {"goodhit_track_id", "Good hit track ID", "goodhit_track_id"},
+                    {"goodhit_beta", "Good hit beta", "goodhit_beta"},
+                    {"goodhit_delta_pos_trans", "Good hit delta position transverse", "goodhit_delta_pos_trans"},
+                    {"goodhit_delta_pos_long", "Good hit delta position longitudinal", "goodhit_delta_pos_long"},
+                    {"goodhit_hit_time", "Good hit time", "goodhit_hit_time"},
+                    {"goodhit_matching_hit_index", "Good hit matching hit index", "goodhit_matching_hit_index"},
+                    {"goodhit_hit_theta", "Good hit theta", "goodhit_hit_theta"},
+                    {"goodhit_hit_phi", "Good hit phi", "goodhit_hit_phi"},
+                    {"goodhit_hit_edep", "Good hit energy deposition", "goodhit_hit_edep"},
+                    {0}};
 
   return DefineVarsFromList(vars, mode);
 }
@@ -295,6 +295,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   cout << "THcLADHodoscope::ReadDatabase()" << endl;
   char prefix[2];
   prefix[0] = tolower(GetApparatus()->GetName()[0]); // "lad"
+  // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
+  prefix[0] = 'l';
   prefix[1] = '\0';
 
   // since we define each hodoscope as a separate detector
@@ -459,8 +461,8 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
   // FIXME. (Potentially) temp fix to prevent error when tracks is nullptr
 
-  fSpectro                 = dynamic_cast<THaApparatus *>(GetApparatus());
-  fGEM                     = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
+  fSpectro = dynamic_cast<THaApparatus *>(GetApparatus());
+  fGEM     = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
   if (!fGEM) {
     return 0;
   }
@@ -620,7 +622,8 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
             double beta        = path_length / (time * 29.9792458);
             goodhit_beta.push_back(beta);
 
-            // LHE. Everything from here can probably be deleted. It's just left over from the spectrometer hodoscope code (keep z-correction?).
+            // LHE. Everything from here can probably be deleted. It's just left over from the spectrometer hodoscope
+            // code (keep z-correction?).
 
             fTOFPInfo[ihhit].onTrack = kTRUE;
             Double_t zcor =
