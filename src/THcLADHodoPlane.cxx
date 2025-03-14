@@ -22,6 +22,8 @@ THcLADHodoPlane::THcLADHodoPlane(const char *name, const char *description, cons
   fNScinGoodHits = 0;
 
   fPosCenter = 0;
+  fPosBtm    = 0;
+  fPosTop    = 0;
 
   fHodoHits = new TClonesArray("THcLADHodoHit", 16);
 
@@ -186,6 +188,10 @@ THcLADHodoPlane::~THcLADHodoPlane() {
 
   delete[] fPosCenter;
   fPosCenter = 0;
+  delete[] fPosBtm;
+  fPosBtm = 0;
+  delete[] fPosTop;
+  fPosTop = 0;
 
   // delete[] fHodoTopMinPh;
   // fHodoTopMinPh = NULL;
@@ -423,14 +429,18 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
 
   delete[] fPosCenter;
   fPosCenter = new Double_t[fNelem];
+  delete[] fPosBtm;
+  fPosBtm = new Double_t[fNelem];
+  delete[] fPosTop;
+  fPosTop = new Double_t[fNelem];
 
   DBRequest list[] = {{Form("ladhodo_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("ladhodo_%s_dzpos", GetName()), &fDzpos, kDouble},
                       {Form("ladhodo_%s_theta", GetName()), &fTheta, kDouble},
                       {Form("ladhodo_%s_size", GetName()), &fSize, kDouble},
                       {Form("ladhodo_%s_spacing", GetName()), &fSpacing, kDouble},
-                      {Form("ladhodo_%s_%s", GetName(), "btm"), &fPosBtm, kDouble, fNelem},
-                      {Form("ladhodo_%s_%s", GetName(), "top"), &fPosTop, kDouble, fNelem},
+                      {Form("ladhodo_%s_%s", GetName(), "btm"), fPosBtm, kDouble, fNelem},
+                      {Form("ladhodo_%s_%s", GetName(), "top"), fPosTop, kDouble, fNelem},
                       {Form("ladhodo_%s_offset", GetName()), &fPosOffset, kDouble},
                       {Form("ladhodo_%s_center", GetName()), fPosCenter, kDouble, fNelem},
                       {"ladhodo_adc_mode", &fADCMode, kInt, 0, 1},
@@ -1461,6 +1471,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         timec_top                   = scin_corrected_time;
         timec_btm                   = scin_corrected_time;
         Double_t adc_time_corrected = 0.5 * (adc_timec_top + adc_timec_btm);
+        //LHE: Need to change this to match LAD
         if (fCosmicFlag) {
           toptime     = timec_top + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
           btmtime     = timec_btm + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
