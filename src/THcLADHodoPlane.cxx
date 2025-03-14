@@ -412,7 +412,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   // Read database files as needed here
   char prefix[2];
   prefix[0] = tolower(GetParent()->GetPrefix()[0]);
-  //Fix to prevent different param files for SHMS & HMS LAD hodoscopes
+  // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
   prefix[0] = 'l';
   prefix[1] = '\0';
 
@@ -422,15 +422,15 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   gHcParms->LoadParmValues(list_1, prefix);
 
   delete[] fPosCenter;
-  fPosCenter       = new Double_t[fNelem];
+  fPosCenter = new Double_t[fNelem];
 
   DBRequest list[] = {{Form("ladhodo_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("ladhodo_%s_dzpos", GetName()), &fDzpos, kDouble},
                       {Form("ladhodo_%s_theta", GetName()), &fTheta, kDouble},
                       {Form("ladhodo_%s_size", GetName()), &fSize, kDouble},
                       {Form("ladhodo_%s_spacing", GetName()), &fSpacing, kDouble},
-                      {Form("ladhodo_%s_%s", GetName(), "btm"), &fPosBtm, kDouble},
-                      {Form("ladhodo_%s_%s", GetName(), "top"), &fPosTop, kDouble},
+                      {Form("ladhodo_%s_%s", GetName(), "btm"), &fPosBtm, kDouble, fNelem},
+                      {Form("ladhodo_%s_%s", GetName(), "top"), &fPosTop, kDouble, fNelem},
                       {Form("ladhodo_%s_offset", GetName()), &fPosOffset, kDouble},
                       {Form("ladhodo_%s_center", GetName()), fPosCenter, kDouble, fNelem},
                       {"ladhodo_adc_mode", &fADCMode, kInt, 0, 1},
@@ -459,12 +459,10 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fUseSampWaveform    = 0; // 0= do not use , 1 = use Sample Waveform
 
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-  
+
   DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
-  fIsMC = 0;
+  fIsMC             = 0;
   gHcParms->LoadParmValues((DBRequest *)&list5, "");
-
-
 
   if (fCosmicFlag == 1)
     cout << " setup for cosmics in scint plane" << endl;
@@ -678,14 +676,12 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
     DefineVarsFromList(vars, mode);
   }
 
-  RVarDef track_vars[] ={
-      //Track ID
-      //Track Based Beta
-      //Delta_transverse
-      //Delta_longitudinal
-      //Matching HodoHit ID
-      {0}
-  };
+  RVarDef track_vars[] = {// Track ID
+                          // Track Based Beta
+                          // Delta_transverse
+                          // Delta_longitudinal
+                          // Matching HodoHit ID
+                          {0}};
   DefineVarsFromList(track_vars, mode);
 
   RVarDef vars[] = {
@@ -1452,10 +1448,10 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         Double_t vellight = fHodoVelLight[index]; // read from hodo_cuts.param, where it is set fixed to 15.0
 
         Double_t dist_from_center = 0.5 * (timec_btm - timec_top) * vellight;
-        Double_t scint_center     = 0.5 * (fPosBtm + fPosTop);
+        Double_t scint_center     = 0.5 * (fPosBtm[padnum - 1] + fPosTop[padnum - 1]);
         Double_t hit_position     = scint_center + dist_from_center;
-        hit_position              = TMath::Min(hit_position, fPosBtm);
-        hit_position              = TMath::Max(hit_position, fPosTop);
+        hit_position              = TMath::Min(hit_position, fPosBtm[padnum - 1]);
+        hit_position              = TMath::Max(hit_position, fPosTop[padnum - 1]);
         Double_t scin_corrected_time, toptime, btmtime;
         Double_t adc_toptime = adc_timec_top;
         Double_t adc_btmtime = adc_timec_btm;
