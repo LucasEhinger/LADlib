@@ -686,13 +686,13 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
     DefineVarsFromList(vars, mode);
   }
 
-  RVarDef track_vars[] = {// Track ID
-                          // Track Based Beta
-                          // Delta_transverse
-                          // Delta_longitudinal
-                          // Matching HodoHit ID
-                          {0}};
-  DefineVarsFromList(track_vars, mode);
+  // RVarDef track_vars[] = {// Track ID
+  //                         // Track Based Beta
+  //                         // Delta_transverse
+  //                         // Delta_longitudinal
+  //                         // Matching HodoHit ID
+  //                         {0}};
+  // DefineVarsFromList(track_vars, mode);
 
   RVarDef vars[] = {
       {"nhits", "Number of paddle hits (passed TDC && ADC Min and Max cuts for either end)", "GetNScinHits() "},
@@ -778,16 +778,6 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
        "fGoodBtmTdcTimeWalkCorr"},
       {"GoodDiffDistTrack", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodDiffDistTrack"},
-
-      /*
-      // cluster variables
-      {"NumClus",         "Number of clusters", "fNumberClusters"},
-      {"Clus.Pos",        "Position of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterPosition()"},
-      {"Clus.Size",       "Size of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterSize()"},
-      {"Clus.Flag",       "Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterFlag()"},
-      {"Clus.UsedFlag",   "USed Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterUsedFlag()"},
-      */
-
       {"TopTdcRefTime", "Reference time of Top TDC", "fTopTdcRefTime"},
       {"BtmTdcRefTime", "Reference time of Btm TDC", "fBtmTdcRefTime"},
       {"TopAdcRefTime", "Reference time of Top ADC", "fTopAdcRefTime"},
@@ -800,6 +790,16 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       //{"ngoodhits", "Number of paddle hits (passed tof tolerance and used to determine the focal plane time )",
       //"GetNGoodHits() "},
       {0}};
+
+
+      /*
+      // cluster variables
+      {"NumClus",         "Number of clusters", "fNumberClusters"},
+      {"Clus.Pos",        "Position of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterPosition()"},
+      {"Clus.Size",       "Size of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterSize()"},
+      {"Clus.Flag",       "Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterFlag()"},
+      {"Clus.UsedFlag",   "USed Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterUsedFlag()"},
+      */
 
   return DefineVarsFromList(vars, mode);
 }
@@ -873,19 +873,19 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Top Tdc hits
     THcRawTdcHit &rawTopTdcHit = hit->GetRawTdcHitPos(); // Pos=Top
-    // if (rawTopTdcHit.GetNHits() > 0 && rawTopTdcHit.HasRefTime()) { //Removed RefTime Requirement
-    if (rawTopTdcHit.GetNHits() > 0) {
+    if (rawTopTdcHit.GetNHits() > 0 && rawTopTdcHit.HasRefTime()) {
+    // if (rawTopTdcHit.GetNHits() > 0) {
 
-      // // Assume fTopTdcRefTime is initialized
-      // if (fTopTdcRefTime == kBig) {
-      //   fTopTdcRefTime     = rawTopTdcHit.GetRefTime();
-      //   fTopTdcRefDiffTime = rawTopTdcHit.GetRefDiffTime();
-      // }
+      // Assume fTopTdcRefTime is initialized
+      if (fTopTdcRefTime == kBig) {
+        fTopTdcRefTime     = rawTopTdcHit.GetRefTime();
+        fTopTdcRefDiffTime = rawTopTdcHit.GetRefDiffTime();
+      }
 
-      // // Set problem_flag if the it's not set correctly
-      // if (fTopTdcRefTime != rawTopTdcHit.GetRefTime()) {
-      //   problem_flag = kTRUE;
-      // }
+      // Set problem_flag if the it's not set correctly
+      if (fTopTdcRefTime != rawTopTdcHit.GetRefTime()) {
+        problem_flag = kTRUE;
+      }
     }
 
     // Loop over multiple tdc hits within ihit
@@ -901,17 +901,17 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Now, repeat for the Btm end
     THcRawTdcHit &rawBtmTdcHit = hit->GetRawTdcHitNeg(); // Neg=Btm
-    // if (rawBtmTdcHit.GetNHits() > 0 && rawBtmTdcHit.HasRefTime()) { //Remove RefTime Requirement
-    if (rawBtmTdcHit.GetNHits() > 0) {
+    if (rawBtmTdcHit.GetNHits() > 0 && rawBtmTdcHit.HasRefTime()) {
+    // if (rawBtmTdcHit.GetNHits() > 0) {
 
-      // if (fBtmTdcRefTime == kBig) {
-      //   fBtmTdcRefTime     = rawBtmTdcHit.GetRefTime();
-      //   fBtmTdcRefDiffTime = rawBtmTdcHit.GetRefDiffTime();
-      // }
+      if (fBtmTdcRefTime == kBig) {
+        fBtmTdcRefTime     = rawBtmTdcHit.GetRefTime();
+        fBtmTdcRefDiffTime = rawBtmTdcHit.GetRefDiffTime();
+      }
 
-      // if (fBtmTdcRefTime != rawBtmTdcHit.GetRefTime()) {
-      //   problem_flag = kTRUE;
-      // }
+      if (fBtmTdcRefTime != rawBtmTdcHit.GetRefTime()) {
+        problem_flag = kTRUE;
+      }
     }
 
     for (UInt_t thit = 0; thit < rawBtmTdcHit.GetNHits(); thit++) {
@@ -927,18 +927,17 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     // Top ADC hits
     THcRawAdcHit &rawTopAdcHit = hit->GetRawAdcHitPos(); // Pos=Top
 
-    // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) { //Removed
-    // RefTime Requirement
-    if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0)) {
+    if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) {
+    // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0)) {
 
-      // if (fTopAdcRefTime == kBig) {
-      //   fTopAdcRefTime     = rawTopAdcHit.GetRefTime();
-      //   fTopAdcRefDiffTime = rawTopAdcHit.GetRefDiffTime();
-      // }
+      if (fTopAdcRefTime == kBig) {
+        fTopAdcRefTime     = rawTopAdcHit.GetRefTime();
+        fTopAdcRefDiffTime = rawTopAdcHit.GetRefDiffTime();
+      }
 
-      // if (fTopAdcRefTime != rawTopAdcHit.GetRefTime()) {
-      //   problem_flag = kTRUE;
-      // }
+      if (fTopAdcRefTime != rawTopAdcHit.GetRefTime()) {
+        problem_flag = kTRUE;
+      }
     }
 
     if (fUseSampWaveform == 0) {
@@ -1048,18 +1047,17 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Btm ADC hits
     THcRawAdcHit &rawBtmAdcHit = hit->GetRawAdcHitNeg(); // Neg=Btm
-    // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) { // Remove
-    // RefTime Requirement
-    if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0)) { // Remove RefTime Requirement
+    if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) { 
+    // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0)) { // Remove RefTime Requirement
 
-      // if (fBtmAdcRefTime == kBig) {
-      //   fBtmAdcRefTime     = rawBtmAdcHit.GetRefTime();
-      //   fBtmAdcRefDiffTime = rawBtmAdcHit.GetRefDiffTime();
-      // }
+      if (fBtmAdcRefTime == kBig) {
+        fBtmAdcRefTime     = rawBtmAdcHit.GetRefTime();
+        fBtmAdcRefDiffTime = rawBtmAdcHit.GetRefDiffTime();
+      }
 
-      // if (fBtmAdcRefTime != rawBtmAdcHit.GetRefTime()) {
-      //   problem_flag = kTRUE;
-      // }
+      if (fBtmAdcRefTime != rawBtmAdcHit.GetRefTime()) {
+        problem_flag = kTRUE;
+      }
     }
 
     if (fUseSampWaveform == 0) {
@@ -1471,7 +1469,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         timec_top                   = scin_corrected_time;
         timec_btm                   = scin_corrected_time;
         Double_t adc_time_corrected = 0.5 * (adc_timec_top + adc_timec_btm);
-        //LHE: Need to change this to match LAD
+        // LHE: Need to change this to match LAD
         if (fCosmicFlag) {
           toptime     = timec_top + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
           btmtime     = timec_btm + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
