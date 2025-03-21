@@ -18,6 +18,8 @@ THcLADHodoscope::THcLADHodoscope(const char *name, const char *description, THaA
     : THaNonTrackingDetector(name, description, apparatus) {
   // Constructor
   fNPlanes = 1;
+
+
 }
 
 //_________________________________________________________________
@@ -67,6 +69,30 @@ THcLADHodoscope::~THcLADHodoscope() {
   fHodoTop_c2 = NULL;
   delete[] fHodoBtm_c2;
   fHodoBtm_c2 = NULL;
+
+
+  delete[] goodhit_plane;
+  goodhit_plane = NULL;
+  delete[] goodhit_paddle;
+  goodhit_paddle = NULL;
+  delete[] goodhit_track_id;
+  goodhit_track_id = NULL;
+  delete[] goodhit_beta;
+  goodhit_beta = NULL;
+  delete[] goodhit_delta_pos_trans;
+  goodhit_delta_pos_trans = NULL;
+  delete[] goodhit_delta_pos_long;
+  goodhit_delta_pos_long = NULL;
+  delete[] goodhit_hit_time;
+  goodhit_hit_time = NULL;
+  delete[] goodhit_matching_hit_index;
+  goodhit_matching_hit_index = NULL;
+  delete[] goodhit_hit_theta;
+  goodhit_hit_theta = NULL;
+  delete[] goodhit_hit_phi;
+  goodhit_hit_phi = NULL;
+  delete[] goodhit_hit_edep;
+  goodhit_hit_edep = NULL;
 }
 
 //_________________________________________________________________
@@ -121,17 +147,8 @@ void THcLADHodoscope::Clear(Option_t *opt) {
   fGoodFlags.clear();
 
   // Hodo good hit variables
-  goodhit_plane.clear();
-  goodhit_paddle.clear();
-  goodhit_track_id.clear();
-  goodhit_beta.clear();
-  goodhit_delta_pos_trans.clear();
-  goodhit_delta_pos_long.clear();
-  goodhit_hit_time.clear();
-  goodhit_matching_hit_index.clear();
-  goodhit_hit_theta.clear();
-  goodhit_hit_phi.clear();
-  goodhit_hit_edep.clear();
+  goodhit_n = 0;
+
 }
 //_________________________________________________________________
 
@@ -241,6 +258,18 @@ THaAnalysisObject::EStatus THcLADHodoscope::Init(const TDatime &date) {
   fNPlaneTime    = new Int_t[fNPlanes];
   fSumPlaneTime  = new Double_t[fNPlanes];
 
+  goodhit_plane = new Int_t[fMaxHodoScin];
+  goodhit_paddle = new Int_t[fMaxHodoScin];
+  goodhit_track_id = new Int_t[fMaxHodoScin];
+  goodhit_beta = new Double_t[fMaxHodoScin];
+  goodhit_delta_pos_trans = new Double_t[fMaxHodoScin];
+  goodhit_delta_pos_long = new Double_t[fMaxHodoScin];
+  goodhit_hit_time = new Double_t[fMaxHodoScin];
+  goodhit_matching_hit_index = new Int_t[fMaxHodoScin];
+  goodhit_hit_theta = new Double_t[fMaxHodoScin];
+  goodhit_hit_phi = new Double_t[fMaxHodoScin];
+  goodhit_hit_edep = new Double_t[fMaxHodoScin];
+
   //  Double_t  fHitCnt4 = 0., fHitCnt3 = 0.;
 
   // Int_t m = 0;
@@ -273,7 +302,8 @@ Int_t THcLADHodoscope::End(THaRunBase *run) {
 Int_t THcLADHodoscope::DefineVariables(EMode mode) {
 
   // Initialize variables to read out
-  RVarDef vars[] = {{"goodhit_plane", "Good hit plane", "goodhit_plane"},
+  RVarDef vars[] = {{"goodhit_n", "Number of good hits", "goodhit_n"},
+                    {"goodhit_plane", "Good hit plane", "goodhit_plane"},
                     {"goodhit_paddle", "Good hit paddle", "goodhit_paddle"},
                     {"goodhit_track_id", "Good hit track ID", "goodhit_track_id"},
                     {"goodhit_beta", "Good hit beta", "goodhit_beta"},
@@ -358,8 +388,12 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"ladhodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_BtmAdcTimeWindowMin", fHodoBtmAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_BtmAdcTimeWindowMax", fHodoBtmAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_track_tolerance_long", &fTrackToleranceLong, kDouble},
+                       {"ladhodo_track_tolerance_trans", &fTrackToleranceTrans, kDouble},
                        {0}};
 
+  fTrackToleranceLong = 0.0;
+  fTrackToleranceTrans = 0.0;
   fCosmicFlag        = 0;
   fNumPlanesBetaCalc = 2;
   fTofTolerance      = 3.0;
@@ -379,13 +413,14 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   DBRequest list4[] = {{"ladhodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"lad_c1_Top", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"lad_c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"lad_c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"lad_c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_c1_Top", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"TDC_threshold", &fTdc_Thrs, kDouble, 0, 1},
                        {0}};
 
-  // fTdc_Thrs = 1.0;
+  fTdc_Thrs = 1.0;
   // Set Default Values if NOT defined in param file
   for (int i = 0; i < fMaxHodoScin; i++) {
 
@@ -595,18 +630,19 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
               0; // Todo. FixMe. Set to zero for now.
                  //  theTrack->GetP() / TMath::Sqrt(theTrack->GetP() * theTrack->GetP() + fPartMass * fPartMass);
 
-          if (TMath::Abs(scinCenter - scinTrnsCoord) <
-              (fPlanes[ip]->GetSize() * 0.5 + fPlanes[ip]->GetHodoSlop())) { // Line 293
-
-            goodhit_plane.push_back(ip);
-            goodhit_paddle.push_back(paddle);
-            goodhit_track_id.push_back(itrack);
-            goodhit_delta_pos_trans.push_back(scinCenter - scinTrnsCoord);
-            goodhit_delta_pos_long.push_back(scinLongCoord - hit->GetCalcPosition());
-            goodhit_hit_time.push_back(hit->GetScinCorrectedTime());
-            goodhit_hit_theta.push_back(track_theta);
-            goodhit_hit_phi.push_back(track_phi);
-            goodhit_hit_edep.push_back(TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
+          if ((TMath::Abs(scinCenter - scinTrnsCoord) < (fPlanes[ip]->GetSize() * 0.5 + fTrackToleranceTrans)) &&
+              (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < (fTrackToleranceLong))) {
+              
+            // Good hit
+            goodhit_plane[goodhit_n] = ip;
+            goodhit_paddle[goodhit_n] = paddle;
+            goodhit_track_id[goodhit_n] = itrack;
+            goodhit_delta_pos_trans[goodhit_n] = scinCenter - scinTrnsCoord;
+            goodhit_delta_pos_long[goodhit_n] = scinLongCoord - hit->GetCalcPosition();
+            goodhit_hit_time[goodhit_n] = hit->GetScinCorrectedTime();
+            goodhit_hit_theta[goodhit_n] = track_theta;
+            goodhit_hit_phi[goodhit_n] = track_phi;
+            goodhit_hit_edep[goodhit_n] = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
 
             // Calculate beta
             TVector3 hit_vertex(0, 0, 0);
@@ -620,7 +656,8 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
             double path_length = (hit_vertex - hit_end).Mag();
             double time        = hit->GetScinCorrectedTime(); // todo. Subtract reference time
             double beta        = path_length / (time * 29.9792458);
-            goodhit_beta.push_back(beta);
+            goodhit_beta[goodhit_n] = beta;
+            goodhit_n++;
 
             // LHE. Everything from here can probably be deleted. It's just left over from the spectrometer hodoscope
             // code (keep z-correction?).
