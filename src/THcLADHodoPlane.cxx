@@ -394,6 +394,8 @@ void THcLADHodoPlane::Clear(Option_t *opt) {
 
   for (UInt_t ielem = 0; ielem < fGoodDiffDistTrack.size(); ielem++) {
     fGoodDiffDistTrack.at(ielem) = kBig;
+    fGoodHitTimeDiff.at(ielem)   = kBig;
+    fGoodHitTimeAvg.at(ielem)    = kBig;
   }
 
   fpTime          = -1.e4;
@@ -549,7 +551,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     // fHodoSigma[j] = TMath::Sqrt(topsigma*topsigma+btmsigma*btmsigma)/2.0;
   }
 
-  //  fTdc_Thrs = parent->GetTDCThrs();
+   fTdc_Thrs = parent->GetTDCThrs();
 
   // Create arrays to hold results here
   InitializePedestals();
@@ -590,6 +592,8 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fGoodTopTdcTimeWalkCorr = vector<Double_t>(fNelem, 0.0);
   fGoodBtmTdcTimeWalkCorr = vector<Double_t>(fNelem, 0.0);
   fGoodDiffDistTrack      = vector<Double_t>(fNelem, 0.0);
+  fGoodHitTimeDiff        = vector<Double_t>(fNelem, 0.0);
+  fGoodHitTimeAvg         = vector<Double_t>(fNelem, 0.0);
 
   return 0;
 }
@@ -778,6 +782,10 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
        "fGoodBtmTdcTimeWalkCorr"},
       {"GoodDiffDistTrack", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodDiffDistTrack"},
+      {"GoodHitTimeDiff", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+        "fGoodHitTimeDiff"},
+      {"GoodHitTimeAvg", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
+        "fGoodHitTimeAvg"},
       {"TopTdcRefTime", "Reference time of Top TDC", "fTopTdcRefTime"},
       {"BtmTdcRefTime", "Reference time of Btm TDC", "fBtmTdcRefTime"},
       {"TopAdcRefTime", "Reference time of Top ADC", "fTopAdcRefTime"},
@@ -1452,6 +1460,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         Double_t fHitDistCorr = 0.5 * TWCorrDiff * fHodoVelFit[index];
 
         fGoodDiffDistTrack.at(index) = fHitDistCorr;
+        fGoodHitTimeDiff.at(index)    = TWCorrDiff;
 
         Double_t vellight = fHodoVelLight[index]; // read from hodo_cuts.param, where it is set fixed to 15.0
 
@@ -1470,17 +1479,17 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         timec_btm                   = scin_corrected_time;
         Double_t adc_time_corrected = 0.5 * (adc_timec_top + adc_timec_btm);
         // LHE: Need to change this to match LAD
-        if (fCosmicFlag) {
-          toptime     = timec_top + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-          btmtime     = timec_btm + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-          adc_toptime = adc_time_corrected + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-          adc_btmtime = adc_time_corrected + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-        } else {
-          toptime     = timec_top - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-          btmtime     = timec_btm - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-          adc_toptime = adc_time_corrected - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-          adc_btmtime = adc_time_corrected - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
-        }
+        // if (fCosmicFlag) {
+        //   toptime     = timec_top + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        //   btmtime     = timec_btm + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        //   adc_toptime = adc_time_corrected + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        //   adc_btmtime = adc_time_corrected + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        // } else {
+        //   toptime     = timec_top - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        //   btmtime     = timec_btm - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        //   adc_toptime = adc_time_corrected - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        //   adc_btmtime = adc_time_corrected - (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
+        // }
 
         ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPaddleCenter(fPosCenter[index]);
         ((THcLADHodoHit *)fHodoHits->At(fNScinHits))
@@ -1495,6 +1504,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         fGoodBtmTdcTimeCorr.at(padnum - 1)    = timec_btm;
         fGoodTopTdcTimeTOFCorr.at(padnum - 1) = toptime;
         fGoodBtmTdcTimeTOFCorr.at(padnum - 1) = btmtime;
+        fGoodHitTimeAvg.at(padnum - 1)        = scin_corrected_time;
       } else {
         Double_t timec_top, timec_btm;
         timec_top = tdc_top;

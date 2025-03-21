@@ -477,7 +477,7 @@ Int_t LADSimDecoder::LoadDetector(std::map<Decoder::THaSlotData *, std::vector<U
   // cout << detname.c_str() << endl;
   int row, col;
 
-  if (strcmp(detname.c_str(), "L.hod") == 0) {
+  if (detname.find("hod") != std::string::npos) {
     // cout << " ouh " << detname.c_str() << " " << simev->Tlad->Earm_BBHodoScint_hit_nhits << " " <<
     // simev->Tlad->Earm_BBHodo_dighit_nchan << endl;
     //  cout << simev->Tlad->Earm_BBHodo_dighit_chan->size() << " "

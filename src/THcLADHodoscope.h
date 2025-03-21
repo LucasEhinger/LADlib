@@ -56,6 +56,7 @@ public:
   Double_t GetHodoBtm_c1(Int_t iii) const { return fHodoBtm_c1[iii]; }
   Double_t GetHodoTop_c2(Int_t iii) const { return fHodoTop_c2[iii]; }
   Double_t GetHodoBtm_c2(Int_t iii) const { return fHodoBtm_c2[iii]; }
+  Double_t GetTDCThrs() const {return fTdc_Thrs;}
 
 protected:
   TH1F *hTime;
@@ -73,21 +74,22 @@ protected:
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
   Int_t fIsMC;
+  Double_t fTrackToleranceLong;
+  Double_t fTrackToleranceTrans;
 
   //Output variables
-  vector<Int_t> goodhit_plane;
-  vector<Int_t> goodhit_paddle;
-  vector<Int_t> goodhit_track_id;
-  vector<Double_t> goodhit_beta;
-  vector<Double_t> goodhit_delta_pos_trans;
-  vector<Double_t> goodhit_delta_pos_long;
-  vector<Double_t> goodhit_hit_time;
-  vector<Int_t> goodhit_matching_hit_index;
-  vector<Double_t> goodhit_hit_theta;
-  vector<Double_t> goodhit_hit_phi;
-  vector<Double_t> goodhit_hit_edep;
-
-
+  Int_t goodhit_n;
+  Int_t *goodhit_plane;
+  Int_t *goodhit_paddle;
+  Int_t *goodhit_track_id;
+  Double_t *goodhit_beta;
+  Double_t *goodhit_delta_pos_trans;
+  Double_t *goodhit_delta_pos_long;
+  Double_t *goodhit_hit_time;
+  Int_t *goodhit_matching_hit_index;
+  Double_t *goodhit_hit_theta;
+  Double_t *goodhit_hit_phi;
+  Double_t *goodhit_hit_edep;
 
   Double_t *fHodoVelLight;
 
@@ -161,6 +163,7 @@ protected:
   Double_t *fHodoBtm_c1;
   Double_t *fHodoTop_c2;
   Double_t *fHodoBtm_c2;
+  Double_t fTdc_Thrs;
 
   Int_t fAnalyzePedestals;
 

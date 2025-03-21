@@ -167,6 +167,8 @@ protected:
   vector<Double_t> fGoodTopTdcTimeWalkCorr;
   vector<Double_t> fGoodBtmTdcTimeWalkCorr;
   vector<Double_t> fGoodDiffDistTrack;
+  vector<Double_t> fGoodHitTimeDiff;
+  vector<Double_t> fGoodHitTimeAvg;
 
   TClonesArray *frTopTdcHits;
   TClonesArray *frTopAdcHits;
