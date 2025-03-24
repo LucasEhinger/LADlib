@@ -258,17 +258,17 @@ THaAnalysisObject::EStatus THcLADHodoscope::Init(const TDatime &date) {
   fNPlaneTime    = new Int_t[fNPlanes];
   fSumPlaneTime  = new Double_t[fNPlanes];
 
-  goodhit_plane = new Int_t[fMaxHodoScin];
-  goodhit_paddle = new Int_t[fMaxHodoScin];
-  goodhit_track_id = new Int_t[fMaxHodoScin];
-  goodhit_beta = new Double_t[fMaxHodoScin];
-  goodhit_delta_pos_trans = new Double_t[fMaxHodoScin];
-  goodhit_delta_pos_long = new Double_t[fMaxHodoScin];
-  goodhit_hit_time = new Double_t[fMaxHodoScin];
-  goodhit_matching_hit_index = new Int_t[fMaxHodoScin];
-  goodhit_hit_theta = new Double_t[fMaxHodoScin];
-  goodhit_hit_phi = new Double_t[fMaxHodoScin];
-  goodhit_hit_edep = new Double_t[fMaxHodoScin];
+  goodhit_plane = new Int_t[MAXGOODHITs];
+  goodhit_paddle = new Int_t[MAXGOODHITs];
+  goodhit_track_id = new Int_t[MAXGOODHITs];
+  goodhit_beta = new Double_t[MAXGOODHITs];
+  goodhit_delta_pos_trans = new Double_t[MAXGOODHITs];
+  goodhit_delta_pos_long = new Double_t[MAXGOODHITs];
+  goodhit_hit_time = new Double_t[MAXGOODHITs];
+  goodhit_matching_hit_index = new Int_t[MAXGOODHITs];
+  goodhit_hit_theta = new Double_t[MAXGOODHITs];
+  goodhit_hit_phi = new Double_t[MAXGOODHITs];
+  goodhit_hit_edep = new Double_t[MAXGOODHITs];
 
   //  Double_t  fHitCnt4 = 0., fHitCnt3 = 0.;
 
@@ -631,8 +631,11 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
                  //  theTrack->GetP() / TMath::Sqrt(theTrack->GetP() * theTrack->GetP() + fPartMass * fPartMass);
 
           if ((TMath::Abs(scinCenter - scinTrnsCoord) < (fPlanes[ip]->GetSize() * 0.5 + fTrackToleranceTrans)) &&
-              (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < (fTrackToleranceLong))) {
-              
+              (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < fTrackToleranceLong)) {
+            if(goodhit_n > MAXGOODHITs) {
+              cout << "Error: Too many \"good hits\"" << endl;
+              return -1;
+            }
             // Good hit
             goodhit_plane[goodhit_n] = ip;
             goodhit_paddle[goodhit_n] = paddle;
@@ -661,7 +664,8 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
             // LHE. Everything from here can probably be deleted. It's just left over from the spectrometer hodoscope
             // code (keep z-correction?).
-
+            // continue; // Skip the rest of the loop (should delete later)
+            /*
             fTOFPInfo[ihhit].onTrack = kTRUE;
             Double_t zcor =
                 zposition / (29.979 * betatrack) * TMath::Sqrt(1. + track_theta * track_theta + track_phi * track_phi);
@@ -734,6 +738,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
               //   }
               // } // new fTrackBetaIncludeSinglePmtHits
             } // matches else
+          */
           } // condition for cenetr on a paddle
           ihhit++;
         } // First loop over hits in a plane <---------
@@ -742,6 +747,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
         //------------- First large loop over scintillator hits ends here --------------------
         //-----------------------------------------------------------------------------------------------
       }
+      /*
       Int_t nhits = ihhit;
 
       Double_t TimePeak = DetermineTimePeak(2);
@@ -1016,6 +1022,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
       //  theTrack->SetBetaChi2(betaChiSq);
       //  theTrack->SetNPMT(nPmtHit[itrack]);
 
+      */
     } // Main loop over tracks ends here.
 
   } // If condition for at least one track

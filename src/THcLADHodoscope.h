@@ -78,6 +78,7 @@ protected:
   Double_t fTrackToleranceTrans;
 
   //Output variables
+  static const Int_t MAXGOODHITs = 500;
   Int_t goodhit_n;
   Int_t *goodhit_plane;
   Int_t *goodhit_paddle;
