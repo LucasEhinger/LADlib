@@ -78,18 +78,19 @@ protected:
   Double_t fTrackToleranceTrans;
 
   //Output variables
+  static const Int_t MAXGOODHITs = 500;
   Int_t goodhit_n;
-  Int_t *goodhit_plane;
-  Int_t *goodhit_paddle;
-  Int_t *goodhit_track_id;
-  Double_t *goodhit_beta;
-  Double_t *goodhit_delta_pos_trans;
-  Double_t *goodhit_delta_pos_long;
-  Double_t *goodhit_hit_time;
-  Int_t *goodhit_matching_hit_index;
-  Double_t *goodhit_hit_theta;
-  Double_t *goodhit_hit_phi;
-  Double_t *goodhit_hit_edep;
+  std::vector<Int_t> goodhit_plane;
+  std::vector<Int_t> goodhit_paddle;
+  std::vector<Int_t> goodhit_track_id;
+  std::vector<Double_t> goodhit_beta;
+  std::vector<Double_t> goodhit_delta_pos_trans;
+  std::vector<Double_t> goodhit_delta_pos_long;
+  std::vector<Double_t> goodhit_hit_time;
+  std::vector<Int_t> goodhit_matching_hit_index;
+  std::vector<Double_t> goodhit_hit_theta;
+  std::vector<Double_t> goodhit_hit_phi;
+  std::vector<Double_t> goodhit_hit_edep;
 
   Double_t *fHodoVelLight;
 
