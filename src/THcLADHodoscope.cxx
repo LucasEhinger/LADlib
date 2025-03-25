@@ -71,28 +71,6 @@ THcLADHodoscope::~THcLADHodoscope() {
   fHodoBtm_c2 = NULL;
 
 
-  delete[] goodhit_plane;
-  goodhit_plane = NULL;
-  delete[] goodhit_paddle;
-  goodhit_paddle = NULL;
-  delete[] goodhit_track_id;
-  goodhit_track_id = NULL;
-  delete[] goodhit_beta;
-  goodhit_beta = NULL;
-  delete[] goodhit_delta_pos_trans;
-  goodhit_delta_pos_trans = NULL;
-  delete[] goodhit_delta_pos_long;
-  goodhit_delta_pos_long = NULL;
-  delete[] goodhit_hit_time;
-  goodhit_hit_time = NULL;
-  delete[] goodhit_matching_hit_index;
-  goodhit_matching_hit_index = NULL;
-  delete[] goodhit_hit_theta;
-  goodhit_hit_theta = NULL;
-  delete[] goodhit_hit_phi;
-  goodhit_hit_phi = NULL;
-  delete[] goodhit_hit_edep;
-  goodhit_hit_edep = NULL;
 }
 
 //_________________________________________________________________
@@ -148,6 +126,19 @@ void THcLADHodoscope::Clear(Option_t *opt) {
 
   // Hodo good hit variables
   goodhit_n = 0;
+  for (UInt_t ielem = 0; ielem < goodhit_plane.size(); ielem++){
+    goodhit_plane.at(ielem)=0;
+    goodhit_paddle.at(ielem)=0;
+    goodhit_track_id.at(ielem)=0;
+    goodhit_beta.at(ielem)=0.0;
+    goodhit_delta_pos_trans.at(ielem)=0.0;
+    goodhit_delta_pos_long.at(ielem)=0.0;
+    goodhit_hit_time.at(ielem)=0.0;
+    goodhit_matching_hit_index.at(ielem)=0;
+    goodhit_hit_theta.at(ielem)=0.0;
+    goodhit_hit_phi.at(ielem)=0.0;
+    goodhit_hit_edep.at(ielem)=0.0;
+}
 
 }
 //_________________________________________________________________
@@ -257,18 +248,6 @@ THaAnalysisObject::EStatus THcLADHodoscope::Init(const TDatime &date) {
   fGoodPlaneTime = new Bool_t[fNPlanes];
   fNPlaneTime    = new Int_t[fNPlanes];
   fSumPlaneTime  = new Double_t[fNPlanes];
-
-  goodhit_plane = new Int_t[MAXGOODHITs];
-  goodhit_paddle = new Int_t[MAXGOODHITs];
-  goodhit_track_id = new Int_t[MAXGOODHITs];
-  goodhit_beta = new Double_t[MAXGOODHITs];
-  goodhit_delta_pos_trans = new Double_t[MAXGOODHITs];
-  goodhit_delta_pos_long = new Double_t[MAXGOODHITs];
-  goodhit_hit_time = new Double_t[MAXGOODHITs];
-  goodhit_matching_hit_index = new Int_t[MAXGOODHITs];
-  goodhit_hit_theta = new Double_t[MAXGOODHITs];
-  goodhit_hit_phi = new Double_t[MAXGOODHITs];
-  goodhit_hit_edep = new Double_t[MAXGOODHITs];
 
   //  Double_t  fHitCnt4 = 0., fHitCnt3 = 0.;
 
@@ -439,6 +418,19 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   }
 
   gHcParms->LoadParmValues((DBRequest *)&list4, prefix);
+
+
+  goodhit_plane = vector<Int_t>(MAXGOODHITs, 0.0);
+  goodhit_paddle = vector<Int_t>(MAXGOODHITs, 0.0);
+  goodhit_track_id = vector<Int_t>(MAXGOODHITs, 0.0);
+  goodhit_beta = vector<Double_t>(MAXGOODHITs, 0.0);
+  goodhit_delta_pos_trans = vector<Double_t>(MAXGOODHITs, 0.0);
+  goodhit_delta_pos_long = vector<Double_t>(MAXGOODHITs, 0.0);
+  goodhit_hit_time = vector<Double_t>(MAXGOODHITs, 0.0);
+  goodhit_matching_hit_index = vector<Int_t>(MAXGOODHITs, 0.0);
+  goodhit_hit_theta = vector<Double_t>(MAXGOODHITs, 0.0);
+  goodhit_hit_phi = vector<Double_t>(MAXGOODHITs, 0.0);
+  goodhit_hit_edep = vector<Double_t>(MAXGOODHITs, 0.0);
 
   return kOK;
 }
@@ -632,20 +624,20 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
           if ((TMath::Abs(scinCenter - scinTrnsCoord) < (fPlanes[ip]->GetSize() * 0.5 + fTrackToleranceTrans)) &&
               (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < fTrackToleranceLong)) {
-            if(goodhit_n > MAXGOODHITs) {
+            if(goodhit_n >= MAXGOODHITs) {
               cout << "Error: Too many \"good hits\"" << endl;
               return -1;
             }
             // Good hit
-            goodhit_plane[goodhit_n] = ip;
-            goodhit_paddle[goodhit_n] = paddle;
-            goodhit_track_id[goodhit_n] = itrack;
-            goodhit_delta_pos_trans[goodhit_n] = scinCenter - scinTrnsCoord;
-            goodhit_delta_pos_long[goodhit_n] = scinLongCoord - hit->GetCalcPosition();
-            goodhit_hit_time[goodhit_n] = hit->GetScinCorrectedTime();
-            goodhit_hit_theta[goodhit_n] = track_theta;
-            goodhit_hit_phi[goodhit_n] = track_phi;
-            goodhit_hit_edep[goodhit_n] = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
+            goodhit_plane.at(goodhit_n) = ip;
+            goodhit_paddle.at(goodhit_n) = paddle;
+            goodhit_track_id.at(goodhit_n) = itrack;
+            goodhit_delta_pos_trans.at(goodhit_n) = scinCenter - scinTrnsCoord;
+            goodhit_delta_pos_long.at(goodhit_n) = scinLongCoord - hit->GetCalcPosition();
+            goodhit_hit_time.at(goodhit_n) = hit->GetScinCorrectedTime();
+            goodhit_hit_theta.at(goodhit_n) = track_theta;
+            goodhit_hit_phi.at(goodhit_n) = track_phi;
+            goodhit_hit_edep.at(goodhit_n) = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
 
             // Calculate beta
             TVector3 hit_vertex(0, 0, 0);
