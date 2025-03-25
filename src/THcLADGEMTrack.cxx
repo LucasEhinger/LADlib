@@ -17,7 +17,7 @@ THcLADGEMTrack::~THcLADGEMTrack()
 }
 
 //_________________________________________________________
-void THcLADGEMTrack::AddSpacePoint(GEM2DHits &sp)
+void THcLADGEMTrack::AddSpacePoint(GEM2DHits sp)
 {
   fSp[fNSp] = sp;
   fNSp++;

@@ -161,6 +161,10 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                           {"trk.x2", "Space point2 X", "fGEMTracks.THcLADGEMTrack.GetX2()"},
                           {"trk.y2", "Space point2 Y", "fGEMTracks.THcLADGEMTrack.GetY2()"},
                           {"trk.z2", "Space point2 Z", "fGEMTracks.THcLADGEMTrack.GetZ2()"},
+                          {"trk.x1_local", "Space point1 X Local", "fGEMTracks.THcLADGEMTrack.GetX1_local()"},
+                          {"trk.y1_local", "Space point1 Y Local", "fGEMTracks.THcLADGEMTrack.GetY1_local()"},
+                          {"trk.x2_local", "Space point2 X Local", "fGEMTracks.THcLADGEMTrack.GetX2_local()"},
+                          {"trk.y2_local", "Space point2 Y Local", "fGEMTracks.THcLADGEMTrack.GetY2_local()"},
                           {"trk.t", "Avg time", "fGEMTracks.THcLADGEMTrack.GetT()"},
                           {"trk.dt", "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
                           {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
@@ -297,8 +301,14 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   if (fNLayers < 2)
     return 0;
 
-  for (auto &gemhit1 : f2DHits[fNLayers - 2]) {
-    for (auto &gemhit2 : f2DHits[fNLayers - 1]) {
+  for (auto gemhit1 : f2DHits[fNLayers - 2]) {
+    TVector3 v_hit1(gemhit1.posX, gemhit1.posY, gemhit1.posZ);
+    v_hit1.RotateY(angle);
+    gemhit1.posX = v_hit1[0];
+    gemhit1.posY = v_hit1[1];
+    gemhit1.posZ = v_hit1[2];
+    
+    for (auto gemhit2 : f2DHits[fNLayers - 1]) {
 
       if (!gemhit1.IsGoodHit || !gemhit2.IsGoodHit)
         continue;
@@ -306,7 +316,6 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       double tdiff = gemhit1.TimeMean - gemhit2.TimeMean;         // time difference (TimeMean1 - TimeMean2)
       double tmean = (gemhit1.TimeMean + gemhit2.TimeMean) * 0.5; // average time
 
-      TVector3 v_hit1(gemhit1.posX, gemhit1.posY, gemhit1.posZ);
       TVector3 v_hit2(gemhit2.posX, gemhit2.posY, gemhit2.posZ);
 
       // THaTrack* this_track = nullptr;
@@ -315,13 +324,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       // this_track->SetD(v_hit1.X(), v_hit1.Y(), v_hit1.Theta(), v_hit1.Phi() ); // DCS x, y , theta, phi
 
       // Rotate along y-axis
-      v_hit1.RotateY(angle);
       v_hit2.RotateY(angle);
 
       // Set New position
-      gemhit1.posX = v_hit1[0];
-      gemhit1.posY = v_hit1[1];
-      gemhit1.posZ = v_hit1[2];
       gemhit2.posX = v_hit2[0];
       gemhit2.posY = v_hit2[1];
       gemhit2.posZ = v_hit2[2];
