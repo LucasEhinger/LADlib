@@ -126,19 +126,30 @@ void THcLADHodoscope::Clear(Option_t *opt) {
 
   // Hodo good hit variables
   goodhit_n = 0;
-  for (UInt_t ielem = 0; ielem < goodhit_plane.size(); ielem++){
-    goodhit_plane.at(ielem)=0;
-    goodhit_paddle.at(ielem)=0;
-    goodhit_track_id.at(ielem)=0;
-    goodhit_beta.at(ielem)=0.0;
-    goodhit_delta_pos_trans.at(ielem)=0.0;
-    goodhit_delta_pos_long.at(ielem)=0.0;
-    goodhit_hit_time.at(ielem)=0.0;
-    goodhit_matching_hit_index.at(ielem)=0;
-    goodhit_hit_theta.at(ielem)=0.0;
-    goodhit_hit_phi.at(ielem)=0.0;
-    goodhit_hit_edep.at(ielem)=0.0;
-}
+  goodhit_plane.clear();
+  goodhit_paddle.clear();
+  goodhit_track_id.clear();
+  goodhit_beta.clear();
+  goodhit_delta_pos_trans.clear();
+  goodhit_delta_pos_long.clear();
+  goodhit_hit_time.clear();
+  goodhit_matching_hit_index.clear();
+  goodhit_hit_theta.clear();
+  goodhit_hit_phi.clear();
+  goodhit_hit_edep.clear();
+//   for (UInt_t ielem = 0; ielem < goodhit_plane.size(); ielem++){
+//     goodhit_plane.at(ielem)=0;
+//     goodhit_paddle.at(ielem)=0;
+//     goodhit_track_id.at(ielem)=0;
+//     goodhit_beta.at(ielem)=0.0;
+//     goodhit_delta_pos_trans.at(ielem)=0.0;
+//     goodhit_delta_pos_long.at(ielem)=0.0;
+//     goodhit_hit_time.at(ielem)=0.0;
+//     goodhit_matching_hit_index.at(ielem)=0;
+//     goodhit_hit_theta.at(ielem)=0.0;
+//     goodhit_hit_phi.at(ielem)=0.0;
+//     goodhit_hit_edep.at(ielem)=0.0;
+// }
 
 }
 //_________________________________________________________________
@@ -639,6 +650,17 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
             goodhit_hit_theta.push_back(track_theta);
             goodhit_hit_phi.push_back(track_phi);
             goodhit_hit_edep.push_back(TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
+
+            // goodhit_plane.at(goodhit_n) = ip;
+            // goodhit_paddle.at(goodhit_n) = paddle;
+            // goodhit_track_id.at(goodhit_n) = itrack;
+            // goodhit_delta_pos_trans.at(goodhit_n) = scinCenter - scinTrnsCoord;
+            // goodhit_delta_pos_long.at(goodhit_n) = scinLongCoord - hit->GetCalcPosition();
+            // goodhit_hit_time.at(goodhit_n) = hit->GetScinCorrectedTime();
+            // goodhit_matching_hit_index.at(goodhit_n) = -1;
+            // goodhit_hit_theta.at(goodhit_n) = track_theta;
+            // goodhit_hit_phi.at(goodhit_n) = track_phi;
+            // goodhit_hit_edep.at(goodhit_n) = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
 
             // Calculate beta
             TVector3 hit_vertex(0, 0, 0);
