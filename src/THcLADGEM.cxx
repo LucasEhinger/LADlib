@@ -24,7 +24,8 @@ THcLADGEM::THcLADGEM(const char *name, const char *description, THaApparatus *ap
   fNLayers  = 0;
   fNhits    = 0;
 
-  fGEMTracks = new TClonesArray("THcLADGEMTrack", 20);
+  fGEMTracks    = new TClonesArray("THcLADGEMTrack", 20);
+  fVertexModule = nullptr;
 }
 
 //____________________________________________________________
@@ -302,12 +303,12 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
     return 0;
 
   for (auto gemhit1 : f2DHits[fNLayers - 2]) {
-    TVector3 v_hit1(gemhit1.posX, gemhit1.posY, gemhit1.posZ);
+    TVector3 v_hit1(-gemhit1.posX, gemhit1.posY, gemhit1.posZ);
     v_hit1.RotateY(angle);
     gemhit1.posX = v_hit1[0];
     gemhit1.posY = v_hit1[1];
     gemhit1.posZ = v_hit1[2];
-    
+
     for (auto gemhit2 : f2DHits[fNLayers - 1]) {
 
       if (!gemhit1.IsGoodHit || !gemhit2.IsGoodHit)
@@ -316,7 +317,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       double tdiff = gemhit1.TimeMean - gemhit2.TimeMean;         // time difference (TimeMean1 - TimeMean2)
       double tmean = (gemhit1.TimeMean + gemhit2.TimeMean) * 0.5; // average time
 
-      TVector3 v_hit2(gemhit2.posX, gemhit2.posY, gemhit2.posZ);
+      TVector3 v_hit2(-gemhit2.posX, gemhit2.posY, gemhit2.posZ);
 
       // THaTrack* this_track = nullptr;
       // this_track = AddTrack(tracks, 0.0, 0.0, 0.0, 0.0); // AddTrack is func of THaTrackingDetector
@@ -332,7 +333,21 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       gemhit2.posZ = v_hit2[2];
 
       // d0: DCAr from the primary vertex, assume (0,0,0) for now
-      // we want to get the primary vtx from HMS eventually whenever available
+      // we want to get the prima(0., 0., 0.);
+
+      // LHE: Uncomment the lines below when runtime starts. Curently ok (doesn't cause crash, but throws many errors)
+      // TVector3 v_prim;
+      // TString fVertexModuleName    = TString(GetApparatus()->GetName()) + ".react"; //Name is currently hard-coded to be "react". Probably not worth changing
+   
+      // fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
+
+      // if (fVertexModule && fVertexModule->HasVertex()) {
+      //   v_prim = fVertexModule->GetVertex();
+      // }
+      // else {
+      //   v_prim.SetXYZ(0., 0., 0.);
+      // }
+
       TVector3 v_prim(0., 0., 0.);
       double numer = ((v_prim - v_hit1).Cross((v_prim - v_hit2))).Mag();
       double denom = (v_hit2 - v_hit1).Mag();

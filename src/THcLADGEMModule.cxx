@@ -2141,6 +2141,14 @@ TVector2 THcLADGEMModule::XYtoUV( TVector2 XY ){
 
 Int_t THcLADGEMModule::GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert ){
   Int_t RstripNb = APVMAP[fAPVmapping][rawstrip];
+
+  //LHE: Not sure if this code below should be there, or if the number should be 38 or 42.
+  if(RstripNb & 1)
+    RstripNb = 48 - (RstripNb + 1)/2;
+  else
+    RstripNb = 48 + RstripNb/2;
+  RstripNb &= 0x7f;
+  //LHE: End code change
   RstripNb = RstripNb + (127-2*RstripNb)*invert;
   Int_t RstripPos = RstripNb + 128*pos;
 
@@ -2239,7 +2247,7 @@ double THcLADGEMModule::CalcFitTime( const std::vector<Double_t> &ADC, double RM
 //____________________________________________________________________________________
 void THcLADGEMModule::InitAPVMAP(){
   APVMAP[LADGEM::kINFN].resize(fN_APV25_CHAN);
-  APVMAP[LADGEM::kUVA_XY].resize(fN_APV25_CHAN);
+  APVMAP[LADGEM::kUVA_XY].resize(fN_APV25_CHAN); //LHE: Best I can tell kUVA_XY is the same as PRAD_XY
   APVMAP[LADGEM::kUVA_UV].resize(fN_APV25_CHAN);
   APVMAP[LADGEM::kMC].resize(fN_APV25_CHAN);
 
