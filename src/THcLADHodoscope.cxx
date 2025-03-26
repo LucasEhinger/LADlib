@@ -18,8 +18,6 @@ THcLADHodoscope::THcLADHodoscope(const char *name, const char *description, THaA
     : THaNonTrackingDetector(name, description, apparatus) {
   // Constructor
   fNPlanes = 1;
-
-
 }
 
 //_________________________________________________________________
@@ -69,8 +67,6 @@ THcLADHodoscope::~THcLADHodoscope() {
   fHodoTop_c2 = NULL;
   delete[] fHodoBtm_c2;
   fHodoBtm_c2 = NULL;
-
-
 }
 
 //_________________________________________________________________
@@ -137,20 +133,19 @@ void THcLADHodoscope::Clear(Option_t *opt) {
   goodhit_hit_theta.clear();
   goodhit_hit_phi.clear();
   goodhit_hit_edep.clear();
-//   for (UInt_t ielem = 0; ielem < goodhit_plane.size(); ielem++){
-//     goodhit_plane.at(ielem)=0;
-//     goodhit_paddle.at(ielem)=0;
-//     goodhit_track_id.at(ielem)=0;
-//     goodhit_beta.at(ielem)=0.0;
-//     goodhit_delta_pos_trans.at(ielem)=0.0;
-//     goodhit_delta_pos_long.at(ielem)=0.0;
-//     goodhit_hit_time.at(ielem)=0.0;
-//     goodhit_matching_hit_index.at(ielem)=0;
-//     goodhit_hit_theta.at(ielem)=0.0;
-//     goodhit_hit_phi.at(ielem)=0.0;
-//     goodhit_hit_edep.at(ielem)=0.0;
-// }
-
+  //   for (UInt_t ielem = 0; ielem < goodhit_plane.size(); ielem++){
+  //     goodhit_plane.at(ielem)=0;
+  //     goodhit_paddle.at(ielem)=0;
+  //     goodhit_track_id.at(ielem)=0;
+  //     goodhit_beta.at(ielem)=0.0;
+  //     goodhit_delta_pos_trans.at(ielem)=0.0;
+  //     goodhit_delta_pos_long.at(ielem)=0.0;
+  //     goodhit_hit_time.at(ielem)=0.0;
+  //     goodhit_matching_hit_index.at(ielem)=0;
+  //     goodhit_hit_theta.at(ielem)=0.0;
+  //     goodhit_hit_phi.at(ielem)=0.0;
+  //     goodhit_hit_edep.at(ielem)=0.0;
+  // }
 }
 //_________________________________________________________________
 
@@ -382,14 +377,14 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"ladhodo_track_tolerance_trans", &fTrackToleranceTrans, kDouble},
                        {0}};
 
-  fTrackToleranceLong = 0.0;
+  fTrackToleranceLong  = 0.0;
   fTrackToleranceTrans = 0.0;
-  fCosmicFlag        = 0;
-  fNumPlanesBetaCalc = 2;
-  fTofTolerance      = 3.0;
-  fScinTdcMin        = 0;
-  fScinTdcMax        = 0;
-  fScinTdcToTime     = 0;
+  fCosmicFlag          = 0;
+  fNumPlanesBetaCalc   = 2;
+  fTofTolerance        = 3.0;
+  fScinTdcMin          = 0;
+  fScinTdcMax          = 0;
+  fScinTdcToTime       = 0;
 
   gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
 
@@ -429,7 +424,6 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   }
 
   gHcParms->LoadParmValues((DBRequest *)&list4, prefix);
-
 
   goodhit_plane.reserve(MAXGOODHITs);
   goodhit_paddle.reserve(MAXGOODHITs);
@@ -578,6 +572,9 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
       // Loop over all scintillator planes
       for (Int_t ip = 0; ip < fNPlanes; ip++) {
+        if (strcmp(fPlanes[ip]->GetName(), "REFBAR") == 0) {
+          continue;
+        }
 
         std::vector<GoodFlags> goodflagstmp2;
         goodflagstmp2.reserve(fNScinHits[ip]);
@@ -635,7 +632,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
           if ((TMath::Abs(scinCenter - scinTrnsCoord) < (fPlanes[ip]->GetSize() * 0.5 + fTrackToleranceTrans)) &&
               (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < fTrackToleranceLong)) {
-            if(goodhit_n >= MAXGOODHITs) {
+            if (goodhit_n >= MAXGOODHITs) {
               cout << "Error: Too many \"good hits\"" << endl;
               return -1;
             }

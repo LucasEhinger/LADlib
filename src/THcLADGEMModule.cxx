@@ -2144,9 +2144,9 @@ Int_t THcLADGEMModule::GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t inver
 
   //LHE: Not sure if this code below should be there, or if the number should be 38 or 42.
   if(RstripNb & 1)
-    RstripNb = 32 - (RstripNb + 1)/2;
+    RstripNb = 48 - (RstripNb + 1)/2;
   else
-    RstripNb = 32 + RstripNb/2;
+    RstripNb = 48 + RstripNb/2;
   RstripNb &= 0x7f;
   //LHE: End code change
   RstripNb = RstripNb + (127-2*RstripNb)*invert;

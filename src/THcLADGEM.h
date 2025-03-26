@@ -5,6 +5,7 @@
 #include "THcHitList.h"
 #include "THcLADGEMModule.h"
 #include "THcLADGEMTrack.h"
+#include "THcReactionPoint.h"
 
 class GEM2DHits;
 
@@ -81,6 +82,7 @@ class THcLADGEM : public THaNonTrackingDetector, public THcHitList {
 
   TClonesArray* fGEMTracks;
 
+  THcReactionPoint*     fVertexModule; // Vertex module
   // pointer to global var indicatiing whether this spectrometer is triggered
   // for this event
   Bool_t* fPresentP;
