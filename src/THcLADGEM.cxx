@@ -24,7 +24,7 @@ THcLADGEM::THcLADGEM(const char *name, const char *description, THaApparatus *ap
   fNLayers  = 0;
   fNhits    = 0;
 
-  fGEMTracks    = new TClonesArray("THcLADGEMTrack", 20);
+  fGEMTracks    = new TClonesArray("THcLADGEMTrack", MAXTRACKS);
   fVertexModule = nullptr;
 }
 
@@ -53,6 +53,34 @@ void THcLADGEM::Clear(Option_t *opt) {
 
   for (int i = 0; i < fNLayers; i++)
     f2DHits[i].clear();
+
+  nhits_layer0 = 0;
+  nhits_layer1 = 0;
+  fPosX_layer0.clear();
+  fPosY_layer0.clear();
+  fPosZ_layer0.clear();
+  fTimeMean_layer0.clear();
+  fADCMean_layer0.clear();
+  fADCAsym_layer0.clear();
+  fTimeDiff_layer0.clear();
+  fTimeCorr_layer0.clear();
+  fIsGoodHit_layer0.clear();
+  fClusID0_layer0.clear();
+  fClusID1_layer0.clear();
+  fTrackID_layer0.clear();
+
+  fPosX_layer1.clear();
+  fPosY_layer1.clear();
+  fPosZ_layer1.clear();
+  fTimeMean_layer1.clear();
+  fADCMean_layer1.clear();
+  fADCAsym_layer1.clear();
+  fTimeDiff_layer1.clear();
+  fTimeCorr_layer1.clear();
+  fIsGoodHit_layer1.clear();
+  fClusID0_layer1.clear();
+  fClusID1_layer1.clear();
+  fTrackID_layer1.clear();
 }
 
 //____________________________________________________________
@@ -127,6 +155,35 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                         {0}};
   DefineVarsFromList(vars_hit, mode);
 
+  RVarDef vars_sp[] = {{"sp.nhits_layer0", "Number of hits in GEM layer 0", "nhits_layer0"},
+                       {"sp.posX_layer0", "X position of GEM hit in layer 0", "fPosX_layer0"},
+                       {"sp.posY_layer0", "Y position of GEM hit in layer 0", "fPosY_layer0"},
+                       {"sp.posZ_layer0", "Z position of GEM hit in layer 0", "fPosZ_layer0"},
+                       {"sp.time_layer0", "Time mean of GEM hit in layer 0", "fTimeMean_layer0"},
+                       {"sp.adc_layer0", "ADC mean of GEM hit in layer 0", "fADCMean_layer0"},
+                       {"sp.asym_layer0", "ADC asym of GEM hit in layer 0", "fADCAsym_layer0"},
+                       {"sp.dt_layer0", "Time difference of GEM hit in layer 0", "fTimeDiff_layer0"},
+                       {"sp.ct_layer0", "Corrected time of GEM hit in layer 0", "fTimeCorr_layer0"},
+                       {"sp.isgoodhit_layer0", "Good hit flag of GEM hit in layer 0", "fIsGoodHit_layer0"},
+                       {"sp.clusID1_layer0", "Cluster ID1 of GEM hit in layer 0", "fClusID0_layer0"},
+                       {"sp.clusID2_layer0", "Cluster ID2 of GEM hit in layer 0", "fClusID1_layer0"},
+                       {"sp.trackID_layer0", "Track ID of GEM hit in layer 0", "fTrackID_layer0"},
+                       {"sp.nhits_layer1", "Number of hits in GEM layer 1", "nhits_layer1"},
+                       {"sp.posX_layer1", "X position of GEM hit in layer 1", "fPosX_layer1"},
+                       {"sp.posY_layer1", "Y position of GEM hit in layer 1", "fPosY_layer1"},
+                       {"sp.posZ_layer1", "Z position of GEM hit in layer 1", "fPosZ_layer1"},
+                       {"sp.time_layer1", "Time mean of GEM hit in layer 1", "fTimeMean_layer1"},
+                       {"sp.adc_layer1", "ADC mean of GEM hit in layer 1", "fADCMean_layer1"},
+                       {"sp.asym_layer1", "ADC asym of GEM hit in layer 1", "fADCAsym_layer1"},
+                       {"sp.dt_layer1", "Time difference of GEM hit in layer 1", "fTimeDiff_layer1"},
+                       {"sp.ct_layer1", "Corrected time of GEM hit in layer 1", "fTimeCorr_layer1"},
+                       {"sp.isgoodhit_layer1", "Good hit flag of GEM hit in layer 1", "fIsGoodHit_layer1"},
+                       {"sp.clusID1_layer1", "Cluster ID1 of GEM hit in layer 1", "fClusID0_layer1"},
+                       {"sp.clusID2_layer1", "Cluster ID2 of GEM hit in layer 1", "fClusID1_layer1"},
+                       {"sp.trackID_layer1", "Track ID of GEM hit in layer 1", "fTrackID_layer1"},
+                       {0}};
+  DefineVarsFromList(vars_sp, mode);
+
   //  Place holder for space point output
   /*
     RVarDef vars_sp[] = {
@@ -170,6 +227,8 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                           {"trk.dt", "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
                           {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
                           {"trk.projz", "Projected z-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
+                          // {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},
+                          // {"trk.phi", "Track phi", "fGEMTracks.THcLADGEMTrack.GetPhi()"},
                           {0}};
     DefineVarsFromList(vars_trk, mode);
   }
@@ -191,7 +250,7 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   prefix[1] = '\0';
 
   // initial values
-  fGEMAngle = 123.5;
+  fGEMAngle = 127.0;
 
   fPedFilename = "";
   fCMFilename  = "";
@@ -296,6 +355,65 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   // Using only two layers to define a track candidate
   // LAD has only two layers...If more than two layers, use the outer two
 
+  nhits_layer0 = f2DHits[0].size();
+  nhits_layer1 = f2DHits[1].size();
+  // Loop through f2DHits and fill the vectors
+  fPosX_layer0.reserve(f2DHits[0].size());
+  fPosY_layer0.reserve(f2DHits[0].size());
+  fPosZ_layer0.reserve(f2DHits[0].size());
+  fTimeMean_layer0.reserve(f2DHits[0].size());
+  fADCMean_layer0.reserve(f2DHits[0].size());
+  fADCAsym_layer0.reserve(f2DHits[0].size());
+  fTimeDiff_layer0.reserve(f2DHits[0].size());
+  fTimeCorr_layer0.reserve(f2DHits[0].size());
+  fIsGoodHit_layer0.reserve(f2DHits[0].size());
+  fClusID0_layer0.reserve(f2DHits[0].size());
+  fClusID1_layer0.reserve(f2DHits[0].size());
+  fTrackID_layer0.reserve(f2DHits[0].size());
+
+  fPosX_layer1.reserve(f2DHits[1].size());
+  fPosY_layer1.reserve(f2DHits[1].size());
+  fPosZ_layer1.reserve(f2DHits[1].size());
+  fTimeMean_layer1.reserve(f2DHits[1].size());
+  fADCMean_layer1.reserve(f2DHits[1].size());
+  fADCAsym_layer1.reserve(f2DHits[1].size());
+  fTimeDiff_layer1.reserve(f2DHits[1].size());
+  fTimeCorr_layer1.reserve(f2DHits[1].size());
+  fIsGoodHit_layer1.reserve(f2DHits[1].size());
+  fClusID0_layer1.reserve(f2DHits[1].size());
+  fClusID1_layer1.reserve(f2DHits[1].size());
+  fTrackID_layer1.reserve(f2DHits[1].size());
+
+  for (const auto &hit : f2DHits[0]) {
+    fPosX_layer0.push_back(hit.posX);
+    fPosY_layer0.push_back(hit.posY);
+    fPosZ_layer0.push_back(hit.posZ);
+    fTimeMean_layer0.push_back(hit.TimeMean);
+    fADCMean_layer0.push_back(hit.ADCMean);
+    fADCAsym_layer0.push_back(hit.ADCasym);
+    fTimeDiff_layer0.push_back(hit.TimeDiff);
+    fTimeCorr_layer0.push_back(hit.TimeCorr);
+    fIsGoodHit_layer0.push_back(hit.IsGoodHit);
+    fClusID0_layer0.push_back(hit.clusID[0]);
+    fClusID1_layer0.push_back(hit.clusID[1]);
+    fTrackID_layer0.push_back(hit.trackID);
+  }
+
+  for (const auto &hit : f2DHits[1]) {
+    fPosX_layer1.push_back(hit.posX);
+    fPosY_layer1.push_back(hit.posY);
+    fPosZ_layer1.push_back(hit.posZ);
+    fTimeMean_layer1.push_back(hit.TimeMean);
+    fADCMean_layer1.push_back(hit.ADCMean);
+    fADCAsym_layer1.push_back(hit.ADCasym);
+    fTimeDiff_layer1.push_back(hit.TimeDiff);
+    fTimeCorr_layer1.push_back(hit.TimeCorr);
+    fIsGoodHit_layer1.push_back(hit.IsGoodHit);
+    fClusID0_layer1.push_back(hit.clusID[0]);
+    fClusID1_layer1.push_back(hit.clusID[1]);
+    fTrackID_layer1.push_back(hit.trackID);
+  }
+
   double angle = fGEMAngle * TMath::DegToRad();
 
   // if we have less than two layers, no tracking can be done
@@ -303,6 +421,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
     return 0;
 
   for (auto gemhit1 : f2DHits[fNLayers - 2]) {
+    // LHE. The -X is a hard-coded fix to get the right coordinate system. This should be really easy to fix in the
+    // param file instead, but we're currently trying to debug low-level gem issues, and doing this is one less moving
+    // part.
     TVector3 v_hit1(-gemhit1.posX, gemhit1.posY, gemhit1.posZ);
     v_hit1.RotateY(angle);
     gemhit1.posX = v_hit1[0];
@@ -337,8 +458,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
 
       // LHE: Uncomment the lines below when runtime starts. Curently ok (doesn't cause crash, but throws many errors)
       // TVector3 v_prim;
-      // TString fVertexModuleName    = TString(GetApparatus()->GetName()) + ".react"; //Name is currently hard-coded to be "react". Probably not worth changing
-   
+      // TString fVertexModuleName    = TString(GetApparatus()->GetName()) + ".react"; //Name is currently hard-coded to
+      // be "react". Probably not worth changing
+
       // fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
 
       // if (fVertexModule && fVertexModule->HasVertex()) {

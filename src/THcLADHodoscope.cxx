@@ -299,6 +299,8 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
                     {"goodhit_hit_theta", "Good hit theta", "goodhit_hit_theta"},
                     {"goodhit_hit_phi", "Good hit phi", "goodhit_hit_phi"},
                     {"goodhit_hit_edep", "Good hit energy deposition", "goodhit_hit_edep"},
+                    {"good_hit_n_unique", "Number of unique good hits", "num_unique_good_hits"},
+                    {"all_hits_n_unique", "Number of all hits, not just with tracks", "num_unique_hits"},
                     {0}};
 
   return DefineVarsFromList(vars, mode);
@@ -515,6 +517,25 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
     fGoodFlags.reserve(ntracks);
     // Loop over all tracks and get corrected time, tof, beta...
     // TODO: initialize fNumPlanesBetaCalc
+    num_unique_hits = 0;
+    for (Int_t ip = 0; ip < fNPlanes; ip++) {
+      if (strcmp(fPlanes[ip]->GetName(), "REFBAR") == 0) {
+        continue;
+      }
+      num_unique_hits += fPlanes[ip]->GetNScinHits();
+    }
+    num_unique_good_hits = 0;
+    std::map<std::pair<int, int>, bool> hitUsedMap;
+
+    // Initialize the map for all hits
+    for (Int_t ip = 0; ip < fNPlanes; ip++) {
+      for (Int_t iphit = 0; iphit < fPlanes[ip]->GetNScinHits(); iphit++) {
+        THcLADHodoHit *hit                     = (THcLADHodoHit *)fPlanes[ip]->GetHits()->At(iphit);
+        int paddle                             = hit->GetPaddleNumber() - 1;
+        hitUsedMap[std::make_pair(ip, paddle)] = false;
+      }
+    }
+    // Loop over all tracks
     for (Int_t itrack = 0; itrack < ntracks; itrack++) { // Line 133
       nPmtHit[itrack]  = 0;
       timeAtFP[itrack] = 0;
@@ -608,7 +629,9 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
           Double_t zposition = zPos; // TODO: fix this (lad won't have this offset)
 
           Double_t track_TrnsCoord, track_LongCoord;
-          track_TrnsCoord = track_x0 * TMath::Cos(planeTheta - TMath::Pi() / 2);
+          // track_TrnsCoord = - track_x0 * TMath::Sin(planeTheta - TMath::Pi() / 2);
+          track_TrnsCoord = track_x0 * TMath::Sin(track_theta - TMath::Pi() / 2) /
+                            TMath::Sin(TMath::Pi() / 2 - track_theta + planeTheta);
           track_LongCoord = track_y0;
 
           Double_t scinTrnsCoord, scinLongCoord;
@@ -636,6 +659,9 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
               cout << "Error: Too many \"good hits\"" << endl;
               return -1;
             }
+            // Check if the hit has already been used
+            if ((TMath::Abs(scinCenter - scinTrnsCoord) < 100)) // Hardcoded tolerance. Fix later
+              hitUsedMap[std::make_pair(ip, paddle)] = true;    // Mark this hit as used
             // Good hit
             goodhit_plane.push_back(ip);
             goodhit_paddle.push_back(paddle);
@@ -1036,7 +1062,12 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
       */
     } // Main loop over tracks ends here.
-
+    num_unique_good_hits = 0;
+    for (const auto &hit : hitUsedMap) {
+      if (hit.second) {
+        num_unique_good_hits++;
+      }
+    }
   } // If condition for at least one track
 
   // OriginalTrackEffTest();

@@ -10,7 +10,7 @@
 class GEM2DHits;
 
 struct ClusterOutputData {
-  // handle 1d cluster output variables  
+  // handle 1d cluster output variables
   std::vector<Int_t> layer;
   std::vector<Int_t> imodule;
   std::vector<Int_t> mpdid;
@@ -18,14 +18,14 @@ struct ClusterOutputData {
   std::vector<Int_t> nstrip;
   std::vector<Int_t> maxstrip;
   std::vector<Int_t> clindex;
-  std::vector<Double_t> adc;  // adc sum
+  std::vector<Double_t> adc; // adc sum
   std::vector<Double_t> time;
   std::vector<Double_t> pos;
-  std::vector<Double_t> mpos; // max strip pos
+  std::vector<Double_t> mpos;    // max strip pos
   std::vector<Double_t> maxsamp; // max time sample
-  std::vector<Double_t> maxadc; // max adc
+  std::vector<Double_t> maxadc;  // max adc
 
-  void clear(){
+  void clear() {
     layer.clear();
     imodule.clear();
     mpdid.clear();
@@ -43,34 +43,31 @@ struct ClusterOutputData {
 };
 
 class THcLADGEM : public THaNonTrackingDetector, public THcHitList {
- public:
-
-  THcLADGEM( const char* name, const char* description = "",
-	     THaApparatus* apparatus = nullptr );
+public:
+  THcLADGEM(const char *name, const char *description = "", THaApparatus *apparatus = nullptr);
   virtual ~THcLADGEM();
 
-  virtual Int_t   Decode( const THaEvData& );
-  virtual EStatus Init( const TDatime& date );
-  virtual Int_t   CoarseProcess( TClonesArray& tracks );
-  virtual Int_t   FineProcess( TClonesArray& tracks );
-  virtual void    Clear( Option_t* opt="" );
+  virtual Int_t Decode(const THaEvData &);
+  virtual EStatus Init(const TDatime &date);
+  virtual Int_t CoarseProcess(TClonesArray &tracks);
+  virtual Int_t FineProcess(TClonesArray &tracks);
+  virtual void Clear(Option_t *opt = "");
 
-  Int_t           GetNTracks() const { return fNTracks; }
-  TClonesArray*   GetTracks() const { return fGEMTracks; }
+  Int_t GetNTracks() const { return fNTracks; }
+  TClonesArray *GetTracks() const { return fGEMTracks; }
 
- protected:
+protected:
+  virtual Int_t DefineVariables(EMode mode = kDefine);
+  virtual Int_t ReadDatabase(const TDatime &date);
 
-  virtual Int_t   DefineVariables( EMode mode = kDefine );
-  virtual Int_t   ReadDatabase( const TDatime& date );
-  
   void LoadPedestals();
   void LoadCM();
-  void RotateToLab(Double_t angle, TVector3& vect);
+  void RotateToLab(Double_t angle, TVector3 &vect);
 
   static const Int_t MAXTRACKS = 100;
 
-  Int_t fNModules;  // total number of modules
-  Int_t fNLayers;   // total number of GEM layers
+  Int_t fNModules; // total number of modules
+  Int_t fNLayers;  // total number of GEM layers
   Int_t fNhits;
   Int_t fNClusters;
   Int_t fNTracks;
@@ -80,14 +77,14 @@ class THcLADGEM : public THaNonTrackingDetector, public THcHitList {
 
   Double_t fGEMAngle;
 
-  TClonesArray* fGEMTracks;
+  TClonesArray *fGEMTracks;
 
-  THcReactionPoint*     fVertexModule; // Vertex module
+  THcReactionPoint *fVertexModule; // Vertex module
   // pointer to global var indicatiing whether this spectrometer is triggered
   // for this event
-  Bool_t* fPresentP;
+  Bool_t *fPresentP;
 
-  vector<THcLADGEMModule*> fModules;
+  vector<THcLADGEMModule *> fModules;
 
   bool fModulesInitialized;
 
@@ -107,13 +104,44 @@ class THcLADGEM : public THaNonTrackingDetector, public THcHitList {
   std::vector<Int_t> fNclustU_layer;
   std::vector<Int_t> fNclustV_layer;
 
- public:
-  void Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z,
-		 Double_t t, Double_t dt, Double_t tc, Bool_t goodhit,
-		 Double_t adc, Double_t adcasy);
+  // spacepoint data vectors (for writing out only)
+  // LHE: It's dumb to have separate vector for both layers, but def file cut based on hit wasn't working
+  // Layer 0 spacepoint data
+  int nhits_layer0;
+  std::vector<Double_t> fPosX_layer0;
+  std::vector<Double_t> fPosY_layer0;
+  std::vector<Double_t> fPosZ_layer0;
+  std::vector<Double_t> fTimeMean_layer0;
+  std::vector<Double_t> fADCMean_layer0;
+  std::vector<Double_t> fADCAsym_layer0;
+  std::vector<Double_t> fTimeDiff_layer0;
+  std::vector<Double_t> fTimeCorr_layer0;
+  std::vector<Int_t> fIsGoodHit_layer0;
+  std::vector<Int_t> fClusID0_layer0;
+  std::vector<Int_t> fClusID1_layer0;
+  std::vector<Int_t> fTrackID_layer0;
+
+  // Layer 1 spacepoint data
+  int nhits_layer1;
+  std::vector<Double_t> fPosX_layer1;
+  std::vector<Double_t> fPosY_layer1;
+  std::vector<Double_t> fPosZ_layer1;
+  std::vector<Double_t> fTimeMean_layer1;
+  std::vector<Double_t> fADCMean_layer1;
+  std::vector<Double_t> fADCAsym_layer1;
+  std::vector<Double_t> fTimeDiff_layer1;
+  std::vector<Double_t> fTimeCorr_layer1;
+  std::vector<Int_t> fIsGoodHit_layer1;
+  std::vector<Int_t> fClusID0_layer1;
+  std::vector<Int_t> fClusID1_layer1;
+  std::vector<Int_t> fTrackID_layer1;
+
+public:
+  void Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z, Double_t t, Double_t dt, Double_t tc, Bool_t goodhit,
+                 Double_t adc, Double_t adcasy);
   std::vector<GEM2DHits> Get2DHits(int layer) { return f2DHits[layer]; }
 
-  ClassDef(THcLADGEM,0)
+  ClassDef(THcLADGEM, 0)
 };
 
 #endif /* THcLADGEM_h */
