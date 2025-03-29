@@ -43,7 +43,6 @@ THcLADGEM::~THcLADGEM() {
 void THcLADGEM::Clear(Option_t *opt) {
 
   //  cout << "THcLADGEM::Clear" << endl;
-  fNhits = 0;
   fClusOutData.clear();
   fNClusters = 0;
   fNTracks   = 0;
@@ -54,33 +53,20 @@ void THcLADGEM::Clear(Option_t *opt) {
   for (int i = 0; i < fNLayers; i++)
     f2DHits[i].clear();
 
-  nhits_layer0 = 0;
-  nhits_layer1 = 0;
-  fPosX_layer0.clear();
-  fPosY_layer0.clear();
-  fPosZ_layer0.clear();
-  fTimeMean_layer0.clear();
-  fADCMean_layer0.clear();
-  fADCAsym_layer0.clear();
-  fTimeDiff_layer0.clear();
-  fTimeCorr_layer0.clear();
-  fIsGoodHit_layer0.clear();
-  fClusID0_layer0.clear();
-  fClusID1_layer0.clear();
-  fTrackID_layer0.clear();
-
-  fPosX_layer1.clear();
-  fPosY_layer1.clear();
-  fPosZ_layer1.clear();
-  fTimeMean_layer1.clear();
-  fADCMean_layer1.clear();
-  fADCAsym_layer1.clear();
-  fTimeDiff_layer1.clear();
-  fTimeCorr_layer1.clear();
-  fIsGoodHit_layer1.clear();
-  fClusID0_layer1.clear();
-  fClusID1_layer1.clear();
-  fTrackID_layer1.clear();
+  fNhits = 0;
+  fPosX.clear();
+  fPosY.clear();
+  fPosZ.clear();
+  fTimeMean.clear();
+  fADCMean.clear();
+  fADCAsym.clear();
+  fTimeDiff.clear();
+  fTimeCorr.clear();
+  fIsGoodHit.clear();
+  fClusID0.clear();
+  fClusID1.clear();
+  fTrackID.clear();
+  fLayer.clear();
 }
 
 //____________________________________________________________
@@ -155,32 +141,20 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                         {0}};
   DefineVarsFromList(vars_hit, mode);
 
-  RVarDef vars_sp[] = {{"sp.nhits_layer0", "Number of hits in GEM layer 0", "nhits_layer0"},
-                       {"sp.posX_layer0", "X position of GEM hit in layer 0", "fPosX_layer0"},
-                       {"sp.posY_layer0", "Y position of GEM hit in layer 0", "fPosY_layer0"},
-                       {"sp.posZ_layer0", "Z position of GEM hit in layer 0", "fPosZ_layer0"},
-                       {"sp.time_layer0", "Time mean of GEM hit in layer 0", "fTimeMean_layer0"},
-                       {"sp.adc_layer0", "ADC mean of GEM hit in layer 0", "fADCMean_layer0"},
-                       {"sp.asym_layer0", "ADC asym of GEM hit in layer 0", "fADCAsym_layer0"},
-                       {"sp.dt_layer0", "Time difference of GEM hit in layer 0", "fTimeDiff_layer0"},
-                       {"sp.ct_layer0", "Corrected time of GEM hit in layer 0", "fTimeCorr_layer0"},
-                       {"sp.isgoodhit_layer0", "Good hit flag of GEM hit in layer 0", "fIsGoodHit_layer0"},
-                       {"sp.clusID1_layer0", "Cluster ID1 of GEM hit in layer 0", "fClusID0_layer0"},
-                       {"sp.clusID2_layer0", "Cluster ID2 of GEM hit in layer 0", "fClusID1_layer0"},
-                       {"sp.trackID_layer0", "Track ID of GEM hit in layer 0", "fTrackID_layer0"},
-                       {"sp.nhits_layer1", "Number of hits in GEM layer 1", "nhits_layer1"},
-                       {"sp.posX_layer1", "X position of GEM hit in layer 1", "fPosX_layer1"},
-                       {"sp.posY_layer1", "Y position of GEM hit in layer 1", "fPosY_layer1"},
-                       {"sp.posZ_layer1", "Z position of GEM hit in layer 1", "fPosZ_layer1"},
-                       {"sp.time_layer1", "Time mean of GEM hit in layer 1", "fTimeMean_layer1"},
-                       {"sp.adc_layer1", "ADC mean of GEM hit in layer 1", "fADCMean_layer1"},
-                       {"sp.asym_layer1", "ADC asym of GEM hit in layer 1", "fADCAsym_layer1"},
-                       {"sp.dt_layer1", "Time difference of GEM hit in layer 1", "fTimeDiff_layer1"},
-                       {"sp.ct_layer1", "Corrected time of GEM hit in layer 1", "fTimeCorr_layer1"},
-                       {"sp.isgoodhit_layer1", "Good hit flag of GEM hit in layer 1", "fIsGoodHit_layer1"},
-                       {"sp.clusID1_layer1", "Cluster ID1 of GEM hit in layer 1", "fClusID0_layer1"},
-                       {"sp.clusID2_layer1", "Cluster ID2 of GEM hit in layer 1", "fClusID1_layer1"},
-                       {"sp.trackID_layer1", "Track ID of GEM hit in layer 1", "fTrackID_layer1"},
+  RVarDef vars_sp[] = {{"sp.nhits", "Number of hits in GEM layer 0", "nhits"},
+                       {"sp.posX", "X position of GEM hit in layer 0", "fPosX"},
+                       {"sp.posY", "Y position of GEM hit in layer 0", "fPosY"},
+                       {"sp.posZ", "Z position of GEM hit in layer 0", "fPosZ"},
+                       {"sp.time", "Time mean of GEM hit in layer 0", "fTimeMean"},
+                       {"sp.adc", "ADC mean of GEM hit in layer 0", "fADCMean"},
+                       {"sp.asym", "ADC asym of GEM hit in layer 0", "fADCAsym"},
+                       {"sp.dt", "Time difference of GEM hit in layer 0", "fTimeDiff"},
+                       {"sp.ct", "Corrected time of GEM hit in layer 0", "fTimeCorr"},
+                       {"sp.isgoodhit", "Good hit flag of GEM hit in layer 0", "fIsGoodHit"},
+                       {"sp.clusID1", "Cluster ID1 of GEM hit in layer 0", "fClusID0"},
+                       {"sp.clusID2", "Cluster ID2 of GEM hit in layer 0", "fClusID1"},
+                       {"sp.trackID", "Track ID of GEM hit in layer 0", "fTrackID"},
+                       {"sp.layer", "2D hit layer", "fLayer"},
                        {0}};
   DefineVarsFromList(vars_sp, mode);
 
@@ -296,6 +270,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   //  cout << "THcLADGEM::CoarseProcess" << endl;
 
   fNTracks = 0;
+  fGEMTracks->Clear();
   fGEMTracks->Delete();
 
   fNlayers_hit   = 0;
@@ -355,63 +330,42 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   // Using only two layers to define a track candidate
   // LAD has only two layers...If more than two layers, use the outer two
 
-  nhits_layer0 = f2DHits[0].size();
-  nhits_layer1 = f2DHits[1].size();
-  // Loop through f2DHits and fill the vectors
-  fPosX_layer0.reserve(f2DHits[0].size());
-  fPosY_layer0.reserve(f2DHits[0].size());
-  fPosZ_layer0.reserve(f2DHits[0].size());
-  fTimeMean_layer0.reserve(f2DHits[0].size());
-  fADCMean_layer0.reserve(f2DHits[0].size());
-  fADCAsym_layer0.reserve(f2DHits[0].size());
-  fTimeDiff_layer0.reserve(f2DHits[0].size());
-  fTimeCorr_layer0.reserve(f2DHits[0].size());
-  fIsGoodHit_layer0.reserve(f2DHits[0].size());
-  fClusID0_layer0.reserve(f2DHits[0].size());
-  fClusID1_layer0.reserve(f2DHits[0].size());
-  fTrackID_layer0.reserve(f2DHits[0].size());
-
-  fPosX_layer1.reserve(f2DHits[1].size());
-  fPosY_layer1.reserve(f2DHits[1].size());
-  fPosZ_layer1.reserve(f2DHits[1].size());
-  fTimeMean_layer1.reserve(f2DHits[1].size());
-  fADCMean_layer1.reserve(f2DHits[1].size());
-  fADCAsym_layer1.reserve(f2DHits[1].size());
-  fTimeDiff_layer1.reserve(f2DHits[1].size());
-  fTimeCorr_layer1.reserve(f2DHits[1].size());
-  fIsGoodHit_layer1.reserve(f2DHits[1].size());
-  fClusID0_layer1.reserve(f2DHits[1].size());
-  fClusID1_layer1.reserve(f2DHits[1].size());
-  fTrackID_layer1.reserve(f2DHits[1].size());
-
-  for (const auto &hit : f2DHits[0]) {
-    fPosX_layer0.push_back(hit.posX);
-    fPosY_layer0.push_back(hit.posY);
-    fPosZ_layer0.push_back(hit.posZ);
-    fTimeMean_layer0.push_back(hit.TimeMean);
-    fADCMean_layer0.push_back(hit.ADCMean);
-    fADCAsym_layer0.push_back(hit.ADCasym);
-    fTimeDiff_layer0.push_back(hit.TimeDiff);
-    fTimeCorr_layer0.push_back(hit.TimeCorr);
-    fIsGoodHit_layer0.push_back(hit.IsGoodHit);
-    fClusID0_layer0.push_back(hit.clusID[0]);
-    fClusID1_layer0.push_back(hit.clusID[1]);
-    fTrackID_layer0.push_back(hit.trackID);
+  nhits = 0;
+  for (int layer = 0; layer < fNLayers; ++layer) {
+    nhits += f2DHits[layer].size();
   }
+  // Loop through f2DHits and fill the vectors for all layers
 
-  for (const auto &hit : f2DHits[1]) {
-    fPosX_layer1.push_back(hit.posX);
-    fPosY_layer1.push_back(hit.posY);
-    fPosZ_layer1.push_back(hit.posZ);
-    fTimeMean_layer1.push_back(hit.TimeMean);
-    fADCMean_layer1.push_back(hit.ADCMean);
-    fADCAsym_layer1.push_back(hit.ADCasym);
-    fTimeDiff_layer1.push_back(hit.TimeDiff);
-    fTimeCorr_layer1.push_back(hit.TimeCorr);
-    fIsGoodHit_layer1.push_back(hit.IsGoodHit);
-    fClusID0_layer1.push_back(hit.clusID[0]);
-    fClusID1_layer1.push_back(hit.clusID[1]);
-    fTrackID_layer1.push_back(hit.trackID);
+  fPosX.reserve(nhits);
+  fPosY.reserve(nhits);
+  fPosZ.reserve(nhits);
+  fTimeMean.reserve(nhits);
+  fADCMean.reserve(nhits);
+  fADCAsym.reserve(nhits);
+  fTimeDiff.reserve(nhits);
+  fTimeCorr.reserve(nhits);
+  fIsGoodHit.reserve(nhits);
+  fClusID0.reserve(nhits);
+  fClusID1.reserve(nhits);
+  fTrackID.reserve(nhits);
+  fLayer.reserve(nhits);
+
+  for (int layer = 0; layer < fNLayers; ++layer) {
+    for (const auto &hit : f2DHits[layer]) {
+      fPosX.push_back(hit.posX);
+      fPosY.push_back(hit.posY);
+      fPosZ.push_back(hit.posZ);
+      fTimeMean.push_back(hit.TimeMean);
+      fADCMean.push_back(hit.ADCMean);
+      fADCAsym.push_back(hit.ADCasym);
+      fTimeDiff.push_back(hit.TimeDiff);
+      fTimeCorr.push_back(hit.TimeCorr);
+      fIsGoodHit.push_back(hit.IsGoodHit);
+      fClusID0.push_back(hit.clusID[0]);
+      fClusID1.push_back(hit.clusID[1]);
+      fTrackID.push_back(hit.trackID);
+      fLayer.push_back(layer);
+    }
   }
 
   double angle = fGEMAngle * TMath::DegToRad();
@@ -535,6 +489,11 @@ void THcLADGEM::Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z, Doub
 //____________________________________________________________
 Int_t THcLADGEM::FineProcess(TClonesArray &tracks) {
   //  cout << "THcLADGEM::FineProcess" << endl;
+
+  // for (Int_t i = 0; i < std::min(fNTracks, MAXTRACKS); i++) {
+  //   delete fGEMTracks->At(i);
+  // }
+
   return 0;
 }
 

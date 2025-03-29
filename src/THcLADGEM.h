@@ -107,34 +107,21 @@ protected:
   // spacepoint data vectors (for writing out only)
   // LHE: It's dumb to have separate vector for both layers, but def file cut based on hit wasn't working
   // Layer 0 spacepoint data
-  int nhits_layer0;
-  std::vector<Double_t> fPosX_layer0;
-  std::vector<Double_t> fPosY_layer0;
-  std::vector<Double_t> fPosZ_layer0;
-  std::vector<Double_t> fTimeMean_layer0;
-  std::vector<Double_t> fADCMean_layer0;
-  std::vector<Double_t> fADCAsym_layer0;
-  std::vector<Double_t> fTimeDiff_layer0;
-  std::vector<Double_t> fTimeCorr_layer0;
-  std::vector<Int_t> fIsGoodHit_layer0;
-  std::vector<Int_t> fClusID0_layer0;
-  std::vector<Int_t> fClusID1_layer0;
-  std::vector<Int_t> fTrackID_layer0;
+  int nhits;
+  std::vector<Double_t> fPosX;
+  std::vector<Double_t> fPosY;
+  std::vector<Double_t> fPosZ;
+  std::vector<Double_t> fTimeMean;
+  std::vector<Double_t> fADCMean;
+  std::vector<Double_t> fADCAsym;
+  std::vector<Double_t> fTimeDiff;
+  std::vector<Double_t> fTimeCorr;
+  std::vector<Int_t> fIsGoodHit;
+  std::vector<Int_t> fClusID0;
+  std::vector<Int_t> fClusID1;
+  std::vector<Int_t> fTrackID;
+  std::vector<Int_t> fLayer;
 
-  // Layer 1 spacepoint data
-  int nhits_layer1;
-  std::vector<Double_t> fPosX_layer1;
-  std::vector<Double_t> fPosY_layer1;
-  std::vector<Double_t> fPosZ_layer1;
-  std::vector<Double_t> fTimeMean_layer1;
-  std::vector<Double_t> fADCMean_layer1;
-  std::vector<Double_t> fADCAsym_layer1;
-  std::vector<Double_t> fTimeDiff_layer1;
-  std::vector<Double_t> fTimeCorr_layer1;
-  std::vector<Int_t> fIsGoodHit_layer1;
-  std::vector<Int_t> fClusID0_layer1;
-  std::vector<Int_t> fClusID1_layer1;
-  std::vector<Int_t> fTrackID_layer1;
 
 public:
   void Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z, Double_t t, Double_t dt, Double_t tc, Bool_t goodhit,
