@@ -121,7 +121,9 @@ void THcLADHodoscope::Clear(Option_t *opt) {
   fGoodFlags.clear();
 
   // Hodo good hit variables
-  goodhit_n = 0;
+  goodhit_n            = 0;
+  num_unique_good_hits = 0;
+  num_unique_hits      = 0;
   goodhit_plane.clear();
   goodhit_paddle.clear();
   goodhit_track_id.clear();
@@ -299,6 +301,8 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
                     {"goodhit_hit_theta", "Good hit theta", "goodhit_hit_theta"},
                     {"goodhit_hit_phi", "Good hit phi", "goodhit_hit_phi"},
                     {"goodhit_hit_edep", "Good hit energy deposition", "goodhit_hit_edep"},
+                    {"good_hit_n_unique", "Number of unique good hits", "num_unique_good_hits"},
+                    {"all_hits_n_unique", "Number of all hits, not just with tracks", "num_unique_hits"},
                     {0}};
 
   return DefineVarsFromList(vars, mode);
@@ -425,17 +429,17 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   gHcParms->LoadParmValues((DBRequest *)&list4, prefix);
 
-  goodhit_plane.reserve(MAXGOODHITs);
-  goodhit_paddle.reserve(MAXGOODHITs);
-  goodhit_track_id.reserve(MAXGOODHITs);
-  goodhit_beta.reserve(MAXGOODHITs);
-  goodhit_delta_pos_trans.reserve(MAXGOODHITs);
-  goodhit_delta_pos_long.reserve(MAXGOODHITs);
-  goodhit_hit_time.reserve(MAXGOODHITs);
-  goodhit_matching_hit_index.reserve(MAXGOODHITs);
-  goodhit_hit_theta.reserve(MAXGOODHITs);
-  goodhit_hit_phi.reserve(MAXGOODHITs);
-  goodhit_hit_edep.reserve(MAXGOODHITs);
+  goodhit_plane              = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_paddle             = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_track_id           = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_beta               = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_delta_pos_trans    = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_delta_pos_long     = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_time           = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_matching_hit_index = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_hit_theta          = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_phi            = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_edep           = std::vector<double>(MAXGOODHITs, kBig);
 
   return kOK;
 }
@@ -446,6 +450,15 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
   // Decode raw data and pass it to hitlist
   // Read raw data -- THcHitList::DecodeToHitList
   // Processing hitlist for each plane -- THcLADHodoPlane::ProcessHits
+
+  // If one spectrometer triggers, don't process anything related to LAD in the other spectrometer. Regular spectrometer
+  // values will still be processed.
+  // Get the spectrometer prefix
+  TString prefix = GetApparatus()->GetName();
+  prefix.ToLower();
+  if ((gHaCuts->Result("SHMS_event") && prefix == "h") || (gHaCuts->Result("HMS_event") && prefix == "p")) {
+    return 0;
+  }
 
   Bool_t present = kTRUE;
   if (fPresentP) {
@@ -515,6 +528,25 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
     fGoodFlags.reserve(ntracks);
     // Loop over all tracks and get corrected time, tof, beta...
     // TODO: initialize fNumPlanesBetaCalc
+    num_unique_hits = 0;
+    for (Int_t ip = 0; ip < fNPlanes; ip++) {
+      if (strcmp(fPlanes[ip]->GetName(), "REFBAR") == 0) {
+        continue;
+      }
+      num_unique_hits += fPlanes[ip]->GetNScinHits();
+    }
+    num_unique_good_hits = 0;
+    std::map<std::pair<int, int>, bool> hitUsedMap;
+
+    // Initialize the map for all hits
+    for (Int_t ip = 0; ip < fNPlanes; ip++) {
+      for (Int_t iphit = 0; iphit < fPlanes[ip]->GetNScinHits(); iphit++) {
+        THcLADHodoHit *hit                     = (THcLADHodoHit *)fPlanes[ip]->GetHits()->At(iphit);
+        int paddle                             = hit->GetPaddleNumber() - 1;
+        hitUsedMap[std::make_pair(ip, paddle)] = false;
+      }
+    }
+    // Loop over all tracks
     for (Int_t itrack = 0; itrack < ntracks; itrack++) { // Line 133
       nPmtHit[itrack]  = 0;
       timeAtFP[itrack] = 0;
@@ -608,7 +640,9 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
           Double_t zposition = zPos; // TODO: fix this (lad won't have this offset)
 
           Double_t track_TrnsCoord, track_LongCoord;
-          track_TrnsCoord = track_x0 * TMath::Cos(planeTheta - TMath::Pi() / 2);
+          // track_TrnsCoord = - track_x0 * TMath::Sin(planeTheta - TMath::Pi() / 2);
+          track_TrnsCoord = track_x0 * TMath::Sin(track_theta - TMath::Pi() / 2) /
+                            TMath::Sin(TMath::Pi() / 2 - track_theta + planeTheta);
           track_LongCoord = track_y0;
 
           Double_t scinTrnsCoord, scinLongCoord;
@@ -636,28 +670,31 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
               cout << "Error: Too many \"good hits\"" << endl;
               return -1;
             }
+            // Check if the hit has already been used
+            if ((TMath::Abs(scinCenter - scinTrnsCoord) < 100)) // Hardcoded tolerance. Fix later
+              hitUsedMap[std::make_pair(ip, paddle)] = true;    // Mark this hit as used
             // Good hit
-            goodhit_plane.push_back(ip);
-            goodhit_paddle.push_back(paddle);
-            goodhit_track_id.push_back(itrack);
-            goodhit_delta_pos_trans.push_back(scinCenter - scinTrnsCoord);
-            goodhit_delta_pos_long.push_back(scinLongCoord - hit->GetCalcPosition());
-            goodhit_hit_time.push_back(hit->GetScinCorrectedTime());
-            goodhit_matching_hit_index.push_back(-1);
-            goodhit_hit_theta.push_back(track_theta);
-            goodhit_hit_phi.push_back(track_phi);
-            goodhit_hit_edep.push_back(TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
+            // goodhit_plane.push_back(ip);
+            // goodhit_paddle.push_back(paddle);
+            // goodhit_track_id.push_back(itrack);
+            // goodhit_delta_pos_trans.push_back(scinCenter - scinTrnsCoord);
+            // goodhit_delta_pos_long.push_back(scinLongCoord - hit->GetCalcPosition());
+            // goodhit_hit_time.push_back(hit->GetScinCorrectedTime());
+            // goodhit_matching_hit_index.push_back(-1);
+            // goodhit_hit_theta.push_back(track_theta);
+            // goodhit_hit_phi.push_back(track_phi);
+            // goodhit_hit_edep.push_back(TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
 
-            // goodhit_plane.at(goodhit_n) = ip;
-            // goodhit_paddle.at(goodhit_n) = paddle;
-            // goodhit_track_id.at(goodhit_n) = itrack;
-            // goodhit_delta_pos_trans.at(goodhit_n) = scinCenter - scinTrnsCoord;
-            // goodhit_delta_pos_long.at(goodhit_n) = scinLongCoord - hit->GetCalcPosition();
-            // goodhit_hit_time.at(goodhit_n) = hit->GetScinCorrectedTime();
-            // goodhit_matching_hit_index.at(goodhit_n) = -1;
-            // goodhit_hit_theta.at(goodhit_n) = track_theta;
-            // goodhit_hit_phi.at(goodhit_n) = track_phi;
-            // goodhit_hit_edep.at(goodhit_n) = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
+            goodhit_plane.at(goodhit_n)              = ip;
+            goodhit_paddle.at(goodhit_n)             = paddle;
+            goodhit_track_id.at(goodhit_n)           = itrack;
+            goodhit_delta_pos_trans.at(goodhit_n)    = scinCenter - scinTrnsCoord;
+            goodhit_delta_pos_long.at(goodhit_n)     = scinLongCoord - hit->GetCalcPosition();
+            goodhit_hit_time.at(goodhit_n)           = hit->GetScinCorrectedTime();
+            goodhit_matching_hit_index.at(goodhit_n) = -1;
+            goodhit_hit_theta.at(goodhit_n)          = track_theta;
+            goodhit_hit_phi.at(goodhit_n)            = track_phi;
+            goodhit_hit_edep.at(goodhit_n)           = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
 
             // Calculate beta
             TVector3 hit_vertex(0, 0, 0);
@@ -1036,14 +1073,19 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
 
       */
     } // Main loop over tracks ends here.
-
+    num_unique_good_hits = 0;
+    for (const auto &hit : hitUsedMap) {
+      if (hit.second) {
+        num_unique_good_hits++;
+      }
+    }
   } // If condition for at least one track
 
   // OriginalTrackEffTest();
   // TrackEffTest();
   // //
   // CalcCluster();
-
+  // fGEMTracks->Delete();
   return 0;
 }
 

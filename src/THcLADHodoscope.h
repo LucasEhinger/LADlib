@@ -91,7 +91,8 @@ protected:
   std::vector<Double_t> goodhit_hit_theta;
   std::vector<Double_t> goodhit_hit_phi;
   std::vector<Double_t> goodhit_hit_edep;
-
+  Int_t num_unique_hits;
+  Int_t num_unique_good_hits;
   Double_t *fHodoVelLight;
 
   Double_t fStartTime;

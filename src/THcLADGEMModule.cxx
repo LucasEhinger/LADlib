@@ -890,6 +890,7 @@ Int_t THcLADGEMModule::Decode( const THaEvData& evdata )
 	UInt_t decoded_rawADC = evdata.GetData( it->crate, it->slot, effChan, iraw );
 	
 	int isamp = iraw%fN_MPD_TIME_SAMP;
+
 	
 	Int_t ADC = Int_t( decoded_rawADC );
 	
