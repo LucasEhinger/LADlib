@@ -28,6 +28,7 @@ set(src
   lad_tree_digitized.cxx
   THcLADGEMCluster.cxx
   THcLADGEMTrack.cxx
+  LADFilteredStreamBuf.cxx
   )
 
 # Headers
