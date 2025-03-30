@@ -256,6 +256,13 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
 
 //____________________________________________________________
 Int_t THcLADGEM::Decode(const THaEvData &evdata) {
+  // If one spectrometer triggers, don't process anything related to LAD in the other spectrometer. Regular spectrometer
+  // values will still be processed.
+  TString prefix = GetApparatus()->GetName();
+  prefix.ToLower();
+  if ((gHaCuts->Result("SHMS_event") && prefix == "h") || (gHaCuts->Result("HMS_event") && prefix == "p")) {
+    return 0;
+  }
 
   // Decode MPD data
   for (auto &module : fModules) {

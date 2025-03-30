@@ -121,9 +121,9 @@ void THcLADHodoscope::Clear(Option_t *opt) {
   fGoodFlags.clear();
 
   // Hodo good hit variables
-  goodhit_n = 0;
+  goodhit_n            = 0;
   num_unique_good_hits = 0;
-  num_unique_hits = 0;
+  num_unique_hits      = 0;
   goodhit_plane.clear();
   goodhit_paddle.clear();
   goodhit_track_id.clear();
@@ -429,17 +429,17 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
 
   gHcParms->LoadParmValues((DBRequest *)&list4, prefix);
 
-  goodhit_plane = std::vector<int>(MAXGOODHITs, kBig);
-  goodhit_paddle = std::vector<int>(MAXGOODHITs, kBig);
-  goodhit_track_id = std::vector<int>(MAXGOODHITs, kBig);
-  goodhit_beta = std::vector<double>(MAXGOODHITs, kBig);
-  goodhit_delta_pos_trans = std::vector<double>(MAXGOODHITs, kBig);
-  goodhit_delta_pos_long = std::vector<double>(MAXGOODHITs, kBig);
-  goodhit_hit_time = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_plane              = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_paddle             = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_track_id           = std::vector<int>(MAXGOODHITs, kBig);
+  goodhit_beta               = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_delta_pos_trans    = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_delta_pos_long     = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_time           = std::vector<double>(MAXGOODHITs, kBig);
   goodhit_matching_hit_index = std::vector<int>(MAXGOODHITs, kBig);
-  goodhit_hit_theta = std::vector<double>(MAXGOODHITs, kBig);
-  goodhit_hit_phi = std::vector<double>(MAXGOODHITs, kBig);
-  goodhit_hit_edep = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_theta          = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_phi            = std::vector<double>(MAXGOODHITs, kBig);
+  goodhit_hit_edep           = std::vector<double>(MAXGOODHITs, kBig);
 
   return kOK;
 }
@@ -450,6 +450,15 @@ Int_t THcLADHodoscope::Decode(const THaEvData &evdata) {
   // Decode raw data and pass it to hitlist
   // Read raw data -- THcHitList::DecodeToHitList
   // Processing hitlist for each plane -- THcLADHodoPlane::ProcessHits
+
+  // If one spectrometer triggers, don't process anything related to LAD in the other spectrometer. Regular spectrometer
+  // values will still be processed.
+  // Get the spectrometer prefix
+  TString prefix = GetApparatus()->GetName();
+  prefix.ToLower();
+  if ((gHaCuts->Result("SHMS_event") && prefix == "h") || (gHaCuts->Result("HMS_event") && prefix == "p")) {
+    return 0;
+  }
 
   Bool_t present = kTRUE;
   if (fPresentP) {
@@ -676,16 +685,16 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) {
             // goodhit_hit_phi.push_back(track_phi);
             // goodhit_hit_edep.push_back(TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
 
-            goodhit_plane.at(goodhit_n) = ip;
-            goodhit_paddle.at(goodhit_n) = paddle;
-            goodhit_track_id.at(goodhit_n) = itrack;
-            goodhit_delta_pos_trans.at(goodhit_n) = scinCenter - scinTrnsCoord;
-            goodhit_delta_pos_long.at(goodhit_n) = scinLongCoord - hit->GetCalcPosition();
-            goodhit_hit_time.at(goodhit_n) = hit->GetScinCorrectedTime();
+            goodhit_plane.at(goodhit_n)              = ip;
+            goodhit_paddle.at(goodhit_n)             = paddle;
+            goodhit_track_id.at(goodhit_n)           = itrack;
+            goodhit_delta_pos_trans.at(goodhit_n)    = scinCenter - scinTrnsCoord;
+            goodhit_delta_pos_long.at(goodhit_n)     = scinLongCoord - hit->GetCalcPosition();
+            goodhit_hit_time.at(goodhit_n)           = hit->GetScinCorrectedTime();
             goodhit_matching_hit_index.at(goodhit_n) = -1;
-            goodhit_hit_theta.at(goodhit_n) = track_theta;
-            goodhit_hit_phi.at(goodhit_n) = track_phi;
-            goodhit_hit_edep.at(goodhit_n) = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
+            goodhit_hit_theta.at(goodhit_n)          = track_theta;
+            goodhit_hit_phi.at(goodhit_n)            = track_phi;
+            goodhit_hit_edep.at(goodhit_n)           = TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC()));
 
             // Calculate beta
             TVector3 hit_vertex(0, 0, 0);
