@@ -224,8 +224,8 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   prefix[1] = '\0';
 
   // initial values
-  fGEMAngle = 127.0;
-
+  fGEMAngle    = 127.0; // GEM angle in degrees
+  fD0Cut       = 100.0; // DCA cut in cm
   fPedFilename = "";
   fCMFilename  = "";
 
@@ -234,6 +234,7 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
                       {"gem_angle", &fGEMAngle, kDouble, 0, 1},
                       {"gem_pedfile", &fPedFilename, kString, 0, 1},
                       {"gem_cmfile", &fCMFilename, kString, 0, 1},
+                      {"gem_d0_cut", &fD0Cut, kDouble, 0, 1},
                       {0}
 
   };
@@ -385,7 +386,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
     // LHE. The -X is a hard-coded fix to get the right coordinate system. This should be really easy to fix in the
     // param file instead, but we're currently trying to debug low-level gem issues, and doing this is one less moving
     // part.
-    TVector3 v_hit1(-gemhit1.posX, gemhit1.posY, gemhit1.posZ);
+    TVector3 v_hit1(gemhit1.posX, gemhit1.posY, gemhit1.posZ);
     v_hit1.RotateY(angle);
     gemhit1.posX = v_hit1[0];
     gemhit1.posY = v_hit1[1];
@@ -399,7 +400,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       double tdiff = gemhit1.TimeMean - gemhit2.TimeMean;         // time difference (TimeMean1 - TimeMean2)
       double tmean = (gemhit1.TimeMean + gemhit2.TimeMean) * 0.5; // average time
 
-      TVector3 v_hit2(-gemhit2.posX, gemhit2.posY, gemhit2.posZ);
+      TVector3 v_hit2(gemhit2.posX, gemhit2.posY, gemhit2.posZ);
 
       // THaTrack* this_track = nullptr;
       // this_track = AddTrack(tracks, 0.0, 0.0, 0.0, 0.0); // AddTrack is func of THaTrackingDetector
@@ -418,25 +419,32 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       // we want to get the prima(0., 0., 0.);
 
       // LHE: Uncomment the lines below when runtime starts. Curently ok (doesn't cause crash, but throws many errors)
-      // TVector3 v_prim;
-      // TString fVertexModuleName    = TString(GetApparatus()->GetName()) + ".react"; //Name is currently hard-coded to
+      TVector3 v_prim;
+      TString fVertexModuleName = TString(GetApparatus()->GetName()) + ".react"; // Name is currently hard-coded to
       // be "react". Probably not worth changing
 
-      // fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
+      if (std::tolower(GetApparatus()->GetName()[0]) == 'l') {
+        v_prim.SetXYZ(0., 0., 0.);
+      } else {
+        fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
 
-      // if (fVertexModule && fVertexModule->HasVertex()) {
-      //   v_prim = fVertexModule->GetVertex();
-      // }
-      // else {
-      //   v_prim.SetXYZ(0., 0., 0.);
-      // }
+        if (fVertexModule && fVertexModule->HasVertex()) {
+          v_prim = fVertexModule->GetVertex();
+        } else {
+          // Need to be carful that 0,0,0 doesn't get called during the run (or doesn't make it into the data)
+          v_prim.SetXYZ(0., 0., 0.);
+        }
+      }
 
-      TVector3 v_prim(0., 0., 0.);
       double numer = ((v_prim - v_hit1).Cross((v_prim - v_hit2))).Mag();
       double denom = (v_hit2 - v_hit1).Mag();
       // here we can put a range/fiducial cut on d0 taking into account the target size
       double d0 = numer / denom;
 
+      if (d0 > fD0Cut) {
+        // cout << "d0 too large: " << d0 << endl;
+        continue;
+      }
       // DCAz, projected z-vertex
       // First check if it intercepts with z-axis?
       double vpz;

@@ -22,11 +22,16 @@ public:
   void addFilterString(const std::string &filterString);
   const std::unordered_map<std::string, int> &getFilterCounts() const; // New method to get filter counts
   void printFilterCounts() const {
-    std::cout << "The following strings were filtered out so many times:" << std::endl;
+    std::cout << "--------------------------------------------" << std::endl;
+    std::cout << "LADFilteredStreamBuf: Filtered strings count" << std::endl;
+    // std::cout << "The following strings were filtered out of the buffer (original stream: " 
+    //       << (originalStream == std::cout ? "std::cout" : (originalStream == std::cerr ? "std::cerr" : "custom stream")) 
+    //       << ") so many times:" << std::endl;
     for (const auto &pair : filterCounts) {
       // Print the filtered strings and their counts
-      std::cout << "Filtered string: " << pair.first << ", Count: " << pair.second << std::endl;
+      std::cout << "Filtered string: \"" << pair.first << "\",    Count: " << pair.second << std::endl;
     }
+    std::cout << "--------------------------------------------" << std::endl;
   }
 
 private:
