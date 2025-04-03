@@ -423,17 +423,13 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       TString fVertexModuleName = TString(GetApparatus()->GetName()) + ".react"; // Name is currently hard-coded to
       // be "react". Probably not worth changing
 
-      if (std::tolower(GetApparatus()->GetName()[0]) == 'l') {
-        v_prim.SetXYZ(0., 0., 0.);
-      } else {
-        fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
+      fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
 
-        if (fVertexModule && fVertexModule->HasVertex()) {
-          v_prim = fVertexModule->GetVertex();
-        } else {
-          // Need to be carful that 0,0,0 doesn't get called during the run (or doesn't make it into the data)
-          v_prim.SetXYZ(0., 0., 0.);
-        }
+      if (fVertexModule && fVertexModule->HasVertex()) {
+        v_prim = fVertexModule->GetVertex();
+      } else {
+        // Need to be carful that 0,0,0 doesn't get called during the run (or doesn't make it into the data)
+        v_prim.SetXYZ(0., 0., 0.);
       }
 
       double numer = ((v_prim - v_hit1).Cross((v_prim - v_hit2))).Mag();
