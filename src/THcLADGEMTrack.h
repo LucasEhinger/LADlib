@@ -89,7 +89,9 @@ public:
   Double_t GetD0() const { return fD0; }
   Double_t GetT() const { return fT; }
   Double_t GetdT() const { return fTdiff; }
-
+  bool GetHasHodoHit() const { return fHasHodoHit; }
+  
+  void SetHasHodoHit(bool hasHodoHit) { fHasHodoHit = hasHodoHit; }
   void SetTrackID(int itrk) { fTrackID = itrk; }
   void SetD0(Double_t d0) { fD0 = d0; }
   void SetZVertex(Double_t vz) { fProjVz = vz; }
@@ -108,6 +110,7 @@ protected:
   Int_t fTrackID;
   Double_t fT;
   Double_t fTdiff;
+  bool fHasHodoHit;
 
   GEM2DHits *fSp;
 
