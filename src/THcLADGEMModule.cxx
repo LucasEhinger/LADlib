@@ -685,7 +685,15 @@ Int_t THcLADGEMModule::DefineVariables( EMode mode )
     { nullptr }
   };
 
-  return DefineVarsFromList( vars, mode );
+  DefineVarsFromList( vars, mode );
+
+  // Add variable for number of 2D hits
+  VarDef vars2D[] = {
+    {"n2Dhits", "Number of 2D hits", kUInt, 0, &fN2Dhits},
+    {nullptr}
+  };
+
+  return DefineVarsFromList(vars2D, mode);
 }
 
 //____________________________________________________________________________________

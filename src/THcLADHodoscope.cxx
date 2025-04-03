@@ -683,6 +683,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
               cout << "Error: Too many \"good hits\"" << endl;
               return -1;
             }
+            theTrack->SetHasHodoHit(true);
             // Check if the hit has already been used
             if ((TMath::Abs(scinCenter - scinTrnsCoord) < 100)) // Hardcoded tolerance. Fix later
               hitUsedMap[std::make_pair(ip, paddle)] = true;    // Mark this hit as used

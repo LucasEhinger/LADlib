@@ -551,7 +551,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     // fHodoSigma[j] = TMath::Sqrt(topsigma*topsigma+btmsigma*btmsigma)/2.0;
   }
 
-   fTdc_Thrs = parent->GetTDCThrs();
+  fTdc_Thrs = parent->GetTDCThrs();
 
   // Create arrays to hold results here
   InitializePedestals();
@@ -783,9 +783,9 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"GoodDiffDistTrack", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodDiffDistTrack"},
       {"GoodHitTimeDiff", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
-        "fGoodHitTimeDiff"},
+       "fGoodHitTimeDiff"},
       {"GoodHitTimeAvg", "List of top-bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
-        "fGoodHitTimeAvg"},
+       "fGoodHitTimeAvg"},
       {"TopTdcRefTime", "Reference time of Top TDC", "fTopTdcRefTime"},
       {"BtmTdcRefTime", "Reference time of Btm TDC", "fBtmTdcRefTime"},
       {"TopAdcRefTime", "Reference time of Top ADC", "fTopAdcRefTime"},
@@ -798,18 +798,26 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       //{"ngoodhits", "Number of paddle hits (passed tof tolerance and used to determine the focal plane time )",
       //"GetNGoodHits() "},
       {0}};
+  DefineVarsFromList(vars, mode);
 
+  // Full Hodohit variables
+  RVarDef vars2[] = {
+      {"nFullHodoHits", "List of HodoHit objects", "fNScinHits"},
+      {"HodoHitTime", "List of HodoHit times", "fHodoHits.THcLADHodoHit.GetScinCorrectedTime()"},
+      {"HodoHitPaddleNum", "List of HodoHit paddle numbers", "fHodoHits.THcLADHodoHit.GetPaddleNumber()"},
+      {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
+      {0}};
 
-      /*
-      // cluster variables
-      {"NumClus",         "Number of clusters", "fNumberClusters"},
-      {"Clus.Pos",        "Position of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterPosition()"},
-      {"Clus.Size",       "Size of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterSize()"},
-      {"Clus.Flag",       "Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterFlag()"},
-      {"Clus.UsedFlag",   "USed Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterUsedFlag()"},
-      */
+  /*
+  // cluster variables
+  {"NumClus",         "Number of clusters", "fNumberClusters"},
+  {"Clus.Pos",        "Position of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterPosition()"},
+  {"Clus.Size",       "Size of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterSize()"},
+  {"Clus.Flag",       "Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterFlag()"},
+  {"Clus.UsedFlag",   "USed Flag of each paddle clusters", "fCluster.THcScintPlaneCluster.GetClusterUsedFlag()"},
+  */
 
-  return DefineVarsFromList(vars, mode);
+  return DefineVarsFromList(vars2, mode);
 }
 
 //_______________________________________________________________________________________
@@ -882,7 +890,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     // Top Tdc hits
     THcRawTdcHit &rawTopTdcHit = hit->GetRawTdcHitPos(); // Pos=Top
     if (rawTopTdcHit.GetNHits() > 0 && rawTopTdcHit.HasRefTime()) {
-    // if (rawTopTdcHit.GetNHits() > 0) {
+      // if (rawTopTdcHit.GetNHits() > 0) {
 
       // Assume fTopTdcRefTime is initialized
       if (fTopTdcRefTime == kBig) {
@@ -910,7 +918,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     // Now, repeat for the Btm end
     THcRawTdcHit &rawBtmTdcHit = hit->GetRawTdcHitNeg(); // Neg=Btm
     if (rawBtmTdcHit.GetNHits() > 0 && rawBtmTdcHit.HasRefTime()) {
-    // if (rawBtmTdcHit.GetNHits() > 0) {
+      // if (rawBtmTdcHit.GetNHits() > 0) {
 
       if (fBtmTdcRefTime == kBig) {
         fBtmTdcRefTime     = rawBtmTdcHit.GetRefTime();
@@ -936,7 +944,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     THcRawAdcHit &rawTopAdcHit = hit->GetRawAdcHitPos(); // Pos=Top
 
     if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0) && rawTopAdcHit.HasRefTime()) {
-    // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0)) {
+      // if ((rawTopAdcHit.GetNPulses() > 0 || rawTopAdcHit.GetNSamples() > 0)) {
 
       if (fTopAdcRefTime == kBig) {
         fTopAdcRefTime     = rawTopAdcHit.GetRefTime();
@@ -1055,8 +1063,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
     // Btm ADC hits
     THcRawAdcHit &rawBtmAdcHit = hit->GetRawAdcHitNeg(); // Neg=Btm
-    if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) { 
-    // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0)) { // Remove RefTime Requirement
+    if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0) && rawBtmAdcHit.HasRefTime()) {
+      // if ((rawBtmAdcHit.GetNPulses() > 0 || rawBtmAdcHit.GetNSamples() > 0)) { // Remove RefTime Requirement
 
       if (fBtmAdcRefTime == kBig) {
         fBtmAdcRefTime     = rawBtmAdcHit.GetRefTime();
@@ -1460,7 +1468,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         Double_t fHitDistCorr = 0.5 * TWCorrDiff * fHodoVelFit[index];
 
         fGoodDiffDistTrack.at(index) = fHitDistCorr;
-        fGoodHitTimeDiff.at(index)    = TWCorrDiff;
+        fGoodHitTimeDiff.at(index)   = TWCorrDiff;
 
         Double_t vellight = fHodoVelLight[index]; // read from hodo_cuts.param, where it is set fixed to 15.0
 
