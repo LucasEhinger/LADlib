@@ -806,6 +806,7 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"HodoHitTime", "List of HodoHit times", "fHodoHits.THcLADHodoHit.GetScinCorrectedTime()"},
       {"HodoHitPaddleNum", "List of HodoHit paddle numbers", "fHodoHits.THcLADHodoHit.GetPaddleNumber()"},
       {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
+      {"HodoHitEdep", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC()"},
       {0}};
 
   /*
