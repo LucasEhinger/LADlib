@@ -21,15 +21,16 @@ public:
   Double_t GetCalcPosition() const { return fCalcPosition; }
   Int_t GetTopTDC() const { return fTopTDC; }
   Int_t GetBtmTDC() const { return fBtmTDC; }
-  Double_t GetTopCorrectedTime() const { return fTopCorrectedTime;}
-  Double_t GetBtmCorrectedTime() const { return fBtmCorrectedTime;}
-  Double_t GetTopTOFCorrectedTime() const { return fTopTOFCorrectedTime;}
-  Double_t GetBtmTOFCorrectedTime() const { return fBtmTOFCorrectedTime;}
-  Double_t GetScinCorrectedTime() const { return fScinCorrectedTime;}
-  Bool_t GetTwoGoodTimes() const { return fTwoGoodTimes;}
-  Bool_t GetHasCorrectedTimes() const { return fHasCorrectedTimes;}
+  Double_t GetTopCorrectedTime() const { return fTopCorrectedTime; }
+  Double_t GetBtmCorrectedTime() const { return fBtmCorrectedTime; }
+  Double_t GetTopTOFCorrectedTime() const { return fTopTOFCorrectedTime; }
+  Double_t GetBtmTOFCorrectedTime() const { return fBtmTOFCorrectedTime; }
+  Double_t GetScinCorrectedTime() const { return fScinCorrectedTime; }
+  Bool_t GetTwoGoodTimes() const { return fTwoGoodTimes; }
+  Bool_t GetHasCorrectedTimes() const { return fHasCorrectedTimes; }
   Int_t GetPaddleNumber() const { return fPaddleNumber; }
   Int_t GetPaddleCenter() const { return fPaddleCenter; }
+  Int_t GetPaddleADC() const { return sqrt(fTopADC_Ped * fBtmADC_Ped); }
 
   void SetPaddleCenter(Double_t padcenter) { fPaddleCenter = padcenter; }
   void SetTopADCpeak(Double_t adc) { fTopADC_Peak = adc; }

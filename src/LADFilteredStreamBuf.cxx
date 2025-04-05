@@ -20,7 +20,7 @@ LADFilteredStreamBuf::LADFilteredStreamBuf(std::ostream &originalStream, const s
   // Redirect the stream to this custom buffer
   originalStream.rdbuf(this);
 
-  SetErrorHandler(&LADFilteredStreamBuf::StaticCustomErrorHandler); // Use a static member function
+  // SetErrorHandler(&LADFilteredStreamBuf::StaticCustomErrorHandler); // Use a static member function
 }
 
 LADFilteredStreamBuf::LADFilteredStreamBuf(std::ostream &originalStream)
@@ -29,7 +29,7 @@ LADFilteredStreamBuf::LADFilteredStreamBuf(std::ostream &originalStream)
   currentInstance = this; // Set current instance
   originalStream.rdbuf(this);
 
-  SetErrorHandler(&LADFilteredStreamBuf::StaticCustomErrorHandler); // Use a static member function
+  // SetErrorHandler(&LADFilteredStreamBuf::StaticCustomErrorHandler); // Use a static member function
 }
 
 LADFilteredStreamBuf::~LADFilteredStreamBuf() {
@@ -83,7 +83,7 @@ int LADFilteredStreamBuf::overflow(int c) {
   buffer += static_cast<char>(c);
 
   // If a newline is encountered, process the buffer
-  if (c == '\n') {
+  if (c == '\n' || c == '\r') {
     flushBuffer();
   }
 
@@ -105,6 +105,7 @@ void LADFilteredStreamBuf::flushBuffer() {
     // If no filter string is found, write the buffer to the original stream
     if (!shouldFilter) {
       originalBuffer->sputn(buffer.c_str(), buffer.size());
+      originalBuffer->pubsync(); // Ensure the buffer is flushed to the original stream
     }
 
     // Clear the buffer
