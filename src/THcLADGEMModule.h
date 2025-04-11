@@ -117,6 +117,10 @@ class THcLADGEMModule : public THaSubDetector {
   Double_t fZeroSuppressRMS;
   Bool_t   fZeroSuppress;
   Bool_t   fNegSignalStudy;
+  Int_t   fmin_strip_per_clust;
+  Int_t   fmax_strip_per_clust;
+  Int_t   fMinTimeSamp;
+  Int_t   fMaxTimeSamp;
 
   Bool_t fOnlineZeroSuppression; //this MIGHT be redundant with fZeroSuppress (or not)
   Int_t fCODA_BUILD_ALL_SAMPLES;
