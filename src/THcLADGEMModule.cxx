@@ -2097,6 +2097,17 @@ void THcLADGEMModule::Find2DHits() {
         if ((fabs(tmean - t0) > tcut) && !fIsMC)
           isgoodhit = false;
 
+        if (nstripU < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripU > fmax_strip_per_clust) ||
+          nstripV < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripV > fmax_strip_per_clust)) {
+            isgoodhit = false;
+        }
+
+        if (fMinTimeSamp >= 0 && fMaxTimeSamp >= 0) {
+          if (fClustersU[iu].GetSampMax() < fMinTimeSamp || fClustersU[iu].GetSampMax() > fMaxTimeSamp ||
+            fClustersV[iv].GetSampMax() < fMinTimeSamp || fClustersV[iv].GetSampMax() > fMaxTimeSamp) {
+              isgoodhit = false;
+          }
+        }
         tcorr = tmean - t0;
 
         // filter for 2D hits apply tdiff, adcasym, corrcoeff cuts based on
@@ -2105,21 +2116,9 @@ void THcLADGEMModule::Find2DHits() {
         fN2Dhits++;
 
         if (fN2Dhits < fMAX2DHITS) {
-          bool good_hit=true;
-            if (nstripU < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripU > fmax_strip_per_clust) ||
-              nstripV < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripV > fmax_strip_per_clust)) {
-            good_hit = false;
-            }
-
-            if (fMinTimeSamp >= 0 && fMaxTimeSamp >= 0) {
-              if (fClustersU[iu].GetSampMax() < fMinTimeSamp || fClustersU[iu].GetSampMax() > fMaxTimeSamp ||
-                  fClustersV[iv].GetSampMax() < fMinTimeSamp || fClustersV[iv].GetSampMax() > fMaxTimeSamp) {
-                good_hit = false;
-              }
-            }
 
           // Add to 2Dhit list
-          if (good_hit) {
+          if (nstripU > 1 && nstripV > 1) {
             static_cast<THcLADGEM *>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos, tmean, tdiff, tcorr, isgoodhit,
                                                          emean, adcasym);
           }

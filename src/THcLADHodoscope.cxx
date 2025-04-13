@@ -680,7 +680,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
           if ((TMath::Abs(scinCenter - scinTrnsCoord) < (fPlanes[ip]->GetSize() * 0.5 + fTrackToleranceTrans)) &&
               (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < fTrackToleranceLong)) {
             if (goodhit_n >= MAXGOODHITs) {
-              cout << "Error: Too many \"good hits\"" << endl;
+              // cout << "Error: Too many \"good hits\"" << endl;
               return -1;
             }
             theTrack->SetHasHodoHit(true);
