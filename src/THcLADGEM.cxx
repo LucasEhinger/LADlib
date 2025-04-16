@@ -438,16 +438,23 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       // here we can put a range/fiducial cut on d0 taking into account the target size
       double d0 = numer / denom;
 
+      // Calculate d0 in the x-z plane (y=0)
+      // double numer_xz = std::abs((v_prim.X() - v_hit1.X()) * (v_prim.Z() - v_hit2.Z()) - 
+      //            (v_prim.Z() - v_hit1.Z()) * (v_prim.X() - v_hit2.X()));
+      // double denom_xz = std::sqrt(std::pow(v_hit2.X() - v_hit1.X(), 2) + 
+      //             std::pow(v_hit2.Z() - v_hit1.Z(), 2));
+      // double d0 = numer_xz / denom_xz;
+
       if (d0 > fD0Cut) {
         // cout << "d0 too large: " << d0 << endl;
         continue;
       }
       // DCAz, projected z-vertex
-      // First check if it intercepts with z-axis?
+      // First check if it intercepts with z-axis (within 1 cm)?
       double vpz;
       double t1 = -v_hit1[0] / (v_hit2[0] - v_hit1[0]);
       double t2 = -v_hit1[1] / (v_hit2[1] - v_hit1[1]);
-      if (abs(t1 - t2) > 1.e-3)
+      if (abs(t1 - t2) > 200000)
         vpz = -999999.;
       else
         vpz = -v_hit1[0] * (v_hit2[2] - v_hit1[2]) / (v_hit2[0] - v_hit1[0]) + v_hit1[2];
