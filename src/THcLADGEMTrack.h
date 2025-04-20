@@ -94,6 +94,7 @@ public:
   void SetHasHodoHit(bool hasHodoHit) { fHasHodoHit = hasHodoHit; }
   void SetTrackID(int itrk) { fTrackID = itrk; }
   void SetD0(Double_t d0) { fD0 = d0; }
+  void SetGoodD0(Bool_t good) { fhasGoodD0 = good; }
   void SetZVertex(Double_t vz) { fProjVz = vz; }
   void SetTime(Double_t t, Double_t dt) {
     fT     = t;
@@ -107,6 +108,7 @@ protected:
   Int_t fNSp;
   Double_t fProjVz;
   Double_t fD0;
+  Bool_t fhasGoodD0;
   Int_t fTrackID;
   Double_t fT;
   Double_t fTdiff;

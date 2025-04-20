@@ -104,8 +104,10 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     TVector3 v_hit2(track->GetX2(), track->GetY2(), track->GetZ2());
 
     TVector3 vertex;
-    if (fVertexModule->HasVertex())
+    if (fVertexModule->HasVertex()) {
       vertex = fVertexModule->GetVertex();
+      track->SetGoodD0(kTRUE);
+    }
     else
       vertex.SetXYZ(0, 0, 0);
 
@@ -113,7 +115,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     double denom = (v_hit2 - v_hit1).Mag();
     // here we can put a range/fiducial cut on d0 taking into account the target size
     double d0 = numer / denom;
-
+    track->SetD0(d0);
     if (d0 < fD0Cut) {
       isGoodTrack[i] = true;
     }
@@ -189,8 +191,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
         goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
       }
-    }
-    else if (partner_hit_index != -1) {
+    } else if (partner_hit_index != -1) {
       THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(partner_hit_index));
       if (abs(hit->GetDeltaPosTransHit0()) <
           (plane_loc ? abs(goodhit->GetDeltaPosTransHit0()) : abs(goodhit->GetDeltaPosTransHit1()))) {
