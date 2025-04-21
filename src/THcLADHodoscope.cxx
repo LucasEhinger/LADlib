@@ -339,8 +339,9 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   char prefix[2];
   prefix[0] = tolower(GetApparatus()->GetName()[0]); // "lad"
   // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
-  prefix[0] = 'l';
-  prefix[1] = '\0';
+  char prefix_lad[2];
+  prefix_lad[0] = 'l';
+  prefix_lad[1] = '\0';
 
   // since we define each hodoscope as a separate detector
   // we will need to use the detector name to load parameters
@@ -351,7 +352,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
     string parname    = "ladhodo_" + string(fPlanes[ip]->GetName()) + "_nr";
     DBRequest list2[] = {{parname.c_str(), &fNPaddle[ip], kInt}, {0}};
 
-    gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
+    gHcParms->LoadParmValues((DBRequest *)&list2, prefix_lad);
   }
 
   // for all planes
@@ -394,8 +395,6 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"ladhodo_tdc_min", &fScinTdcMin, kDouble},
                        {"ladhodo_tdc_max", &fScinTdcMax, kDouble},
                        {"ladtof_tolerance", &fTofTolerance, kDouble, 0, 1},
-                       {"ladhodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
-                       {"ladhodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
                        {"ladhodo_tdc_to_time", &fScinTdcToTime, kDouble},
                        {"ladhodo_TopAdcTimeWindowMin", fHodoTopAdcTimeWindowMin, kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_TopAdcTimeWindowMax", fHodoTopAdcTimeWindowMax, kDouble, (UInt_t)fMaxHodoScin, 1},
@@ -414,14 +413,19 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fScinTdcMax          = 0;
   fScinTdcToTime       = 0;
 
-  gHcParms->LoadParmValues((DBRequest *)&list3, prefix);
+  gHcParms->LoadParmValues((DBRequest *)&list3, prefix_lad);
+
+  DBRequest list6[] = {{"ladhodo_adc_tdc_offset", fAdcTdcOffset, kDouble, (UInt_t)fNPlanes, 1},
+                       {"ladhodo_tdc_offset", fTdcOffset, kInt, (UInt_t)fNPlanes, 1},
+                       {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list6, prefix);
 
   DBRequest list5[] = {{"is_mc", &fIsMC, kInt, 0, 1}, {0}};
   fIsMC             = 0;
   gHcParms->LoadParmValues((DBRequest *)&list5, "");
 
   DBRequest list[] = {{"ladhodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
-  gHcParms->LoadParmValues((DBRequest *)&list, prefix);
+  gHcParms->LoadParmValues((DBRequest *)&list, prefix_lad);
 
   DBRequest list4[] = {{"ladhodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
@@ -451,7 +455,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
     fHodo_LCoeff[i] = 0.0;
   }
 
-  gHcParms->LoadParmValues((DBRequest *)&list4, prefix);
+  gHcParms->LoadParmValues((DBRequest *)&list4, prefix_lad);
 
   // goodhit_plane              = std::vector<int>(MAXGOODHITs, kBig);
   // goodhit_paddle             = std::vector<int>(MAXGOODHITs, kBig);
