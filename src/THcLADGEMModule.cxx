@@ -72,6 +72,8 @@ void THcLADGEMModule::Clear(Option_t *opt) {
   fClustersU.clear();
   fClustersV.clear();
 
+  fBadStrips.clear();
+
   fNClus = 0;
 
   fN2Dhits = 0;
@@ -539,6 +541,21 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
     fZeroSuppress          = false;
     fOnlineZeroSuppression = false;
     // fPedSubFlag = 0;
+  }
+
+  // Hard coded. Should fix later
+  // axis: 0=x, 1=y
+  int n_badstrips        = 0;
+  int bad_pos_lo[]       = {50, 0, -40, 30, 27};
+  int bad_pos_hi[]       = {55, 5, -33, 35, 30};
+  int bad_strips_modid[] = {0, 0, 1, 1, 1};
+  int bad_strips_axis[]  = {0, 1, 0, 0, 1};
+  fBadStrips.resize(n_badstrips);
+  for (int i = 0; i < n_badstrips; i++) {
+    fBadStrips[i].pos_lo    = bad_pos_lo[i];
+    fBadStrips[i].pos_hi    = bad_pos_hi[i];
+    fBadStrips[i].module_id = bad_strips_modid[i];
+    fBadStrips[i].axis      = bad_strips_axis[i];
   }
 
   return 0;
@@ -1104,7 +1121,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
 
             // bias is DEFINED as Online common-mode MINUS correction MINUS "true" common-mode:
             //"correction" is DEFINED as Online common-mode MINUS "corrected common-mode" and is to be ADDED to the ADC
-            //values:
+            // values:
 
             // bias = online CM - (online CM - corrected CM) - true CM = corrected CM - true CM
             // --> true CM = corrected CM - bias
@@ -1182,7 +1199,8 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
           }
 
           //	  cout << "nstrip,correctCM: " << nstrips << " " << fCorrectCommonMode << " " << pedsubADC[iraw] << " "
-          //<< commonMode[adc_samp] << endl; 	  cout << "istrip, iraw, samp, rawADC, ADC: " << istrip << " " << iraw << " "
+          //<< commonMode[adc_samp] << endl; 	  cout << "istrip, iraw, samp, rawADC, ADC: " << istrip << " " << iraw
+          //<< " "
           //<< adc_samp << " " << RawADC << " " << ADCvalue << endl;
 
           // for crude strip timing, just take simple time bins at the center of each sample (we'll worry about trigger
@@ -1449,7 +1467,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
         /////// Negative pulse study, This is an exact copy of the loop above but instead stores the negative ADC info.
         ///"Keep" is set
         /////// to false regardless so these strips will not be used for any of the normal clustering and tracking
-        ///algorithms. They
+        /// algorithms. They
         /////// are differentiated from positive strips by fStripIsNeg.
         if (ADCsum_temp / double(fN_MPD_TIME_SAMP) < -1.0 * fZeroSuppressRMS * rmstemp && BUILD_ALL_SAMPLES &&
             !CM_ENABLED && fNegSignalStudy) {
@@ -2098,14 +2116,27 @@ void THcLADGEMModule::Find2DHits() {
           isgoodhit = false;
 
         if (nstripU < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripU > fmax_strip_per_clust) ||
-          nstripV < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripV > fmax_strip_per_clust)) {
-            isgoodhit = false;
+            nstripV < fmin_strip_per_clust || (fmax_strip_per_clust > 0 && nstripV > fmax_strip_per_clust)) {
+          isgoodhit = false;
         }
 
         if (fMinTimeSamp >= 0 && fMaxTimeSamp >= 0) {
           if (fClustersU[iu].GetSampMax() < fMinTimeSamp || fClustersU[iu].GetSampMax() > fMaxTimeSamp ||
-            fClustersV[iv].GetSampMax() < fMinTimeSamp || fClustersV[iv].GetSampMax() > fMaxTimeSamp) {
-              isgoodhit = false;
+              fClustersV[iv].GetSampMax() < fMinTimeSamp || fClustersV[iv].GetSampMax() > fMaxTimeSamp) {
+            isgoodhit = false;
+          }
+        }
+
+        for (const auto &badStrip : fBadStrips) {
+          if (badStrip.module_id == fModuleID && badStrip.axis == LADGEM::kUaxis && xpos >= badStrip.pos_lo &&
+              xpos <= badStrip.pos_hi) {
+            isgoodhit = false;
+            break;
+          }
+          if (badStrip.module_id == fModuleID && badStrip.axis == LADGEM::kVaxis && ypos >= badStrip.pos_lo &&
+              ypos <= badStrip.pos_hi) {
+            isgoodhit = false;
+            break;
           }
         }
         tcorr = tmean - t0;

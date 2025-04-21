@@ -4,12 +4,89 @@
 #include "TClonesArray.h"
 #include "TH1F.h"
 #include "THaNonTrackingDetector.h"
+#include "THaSpectrometer.h"
 #include "THcHitList.h"
+#include "THcLADGEM.h"
 #include "THcLADHodoHit.h"
 #include "THcLADHodoPlane.h"
 #include "THcRawHodoHit.h"
-#include "THaSpectrometer.h"
-#include "THcLADGEM.h"
+
+class THcGoodLADHit : public TObject {
+public:
+  Int_t plane[2];
+  Int_t paddle[2];
+  Int_t track_id[2];
+  Double_t beta[2];
+  Double_t delta_pos_trans[2];
+  Double_t delta_pos_long[2];
+  Double_t hit_time[2];
+  Double_t hit_theta[2];
+  Double_t hit_phi[2];
+  Double_t hit_edep[2];
+
+
+  THcGoodLADHit() {
+    for (int i = 0; i < 2; ++i) {
+      plane[i] = paddle[i] = track_id[i] =-1;
+      beta[i] = delta_pos_trans[i] = delta_pos_long[i] = hit_time[i] = kBig;
+      hit_theta[i] = hit_phi[i] = hit_edep[i] = kBig;
+    }
+  }
+  virtual ~THcGoodLADHit() = default;
+
+  void SetPlane(Int_t hit, Int_t value) { plane[hit] = value; }
+  void SetPaddle(Int_t hit, Int_t value) { paddle[hit] = value; }
+  void SetTrackID(Int_t hit, Int_t value) { track_id[hit] = value; }
+  void SetBeta(Int_t hit, Double_t value) { beta[hit] = value; }
+  void SetDeltaPosTrans(Int_t hit, Double_t value) { delta_pos_trans[hit] = value; }
+  void SetDeltaPosLong(Int_t hit, Double_t value) { delta_pos_long[hit] = value; }
+  void SetHitTime(Int_t hit, Double_t value) { hit_time[hit] = value; }
+  void SetHitTheta(Int_t hit, Double_t value) { hit_theta[hit] = value; }
+  void SetHitPhi(Int_t hit, Double_t value) { hit_phi[hit] = value; }
+  void SetHitEdep(Int_t hit, Double_t value) { hit_edep[hit] = value; }
+
+  // Int_t GetPlane(Int_t hit) const { return plane[hit]; }
+  // Int_t GetPaddle(Int_t hit) const { return paddle[hit]; }
+  // Int_t GetTrackID(Int_t hit) const { return track_id[hit]; }
+  // Double_t GetBeta(Int_t hit) const { return beta[hit]; }
+  // Double_t GetDeltaPosTrans(Int_t hit) const { return delta_pos_trans[hit]; }
+  // Double_t GetDeltaPosLong(Int_t hit) const { return delta_pos_long[hit]; }
+  // Double_t GetHitTime(Int_t hit) const { return hit_time[hit]; }
+  // Double_t GetHitTheta(Int_t hit) const { return hit_theta[hit]; }
+  // Double_t GetHitPhi(Int_t hit) const { return hit_phi[hit]; }
+  // Double_t GetHitEdep(Int_t hit) const { return hit_edep[hit]; }
+
+  Int_t GetPlaneHit0() const { return plane[0]; }
+  Int_t GetPlaneHit1() const { return plane[1]; }
+
+  Int_t GetPaddleHit0() const { return paddle[0]; }
+  Int_t GetPaddleHit1() const { return paddle[1]; }
+
+  Int_t GetTrackIDHit0() const { return track_id[0]; }
+  Int_t GetTrackIDHit1() const { return track_id[1]; }
+
+  Double_t GetBetaHit0() const { return beta[0]; }
+  Double_t GetBetaHit1() const { return beta[1]; }
+
+  Double_t GetDeltaPosTransHit0() const { return delta_pos_trans[0]; }
+  Double_t GetDeltaPosTransHit1() const { return delta_pos_trans[1]; }
+
+  Double_t GetDeltaPosLongHit0() const { return delta_pos_long[0]; }
+  Double_t GetDeltaPosLongHit1() const { return delta_pos_long[1]; }
+
+  Double_t GetHitTimeHit0() const { return hit_time[0]; }
+  Double_t GetHitTimeHit1() const { return hit_time[1]; }
+
+  Double_t GetHitThetaHit0() const { return hit_theta[0]; }
+  Double_t GetHitThetaHit1() const { return hit_theta[1]; }
+
+  Double_t GetHitPhiHit0() const { return hit_phi[0]; }
+  Double_t GetHitPhiHit1() const { return hit_phi[1]; }
+
+  Double_t GetHitEdepHit0() const { return hit_edep[0]; }
+  Double_t GetHitEdepHit1() const { return hit_edep[1]; }
+  ClassDef(THcGoodLADHit, 1)
+};
 
 class THcLADHodoscope : public THaNonTrackingDetector, public THcHitList {
 public:
@@ -24,7 +101,7 @@ public:
   virtual Int_t CoarseProcess(TClonesArray &tracks);
   virtual Int_t FineProcess(TClonesArray &tracks);
 
-  Double_t DetermineTimePeak(Int_t FillFlag){return 0.0;};//TODO: Implement this function
+  Double_t DetermineTimePeak(Int_t FillFlag) { return 0.0; }; // TODO: Implement this function
 
   Int_t GetScinIndex(Int_t nPlane, Int_t nPaddle) { return fNPlanes * nPaddle + nPlane; }
   Int_t GetScinIndex(Int_t nSide, Int_t nPlane, Int_t nPaddle) {
@@ -56,7 +133,9 @@ public:
   Double_t GetHodoBtm_c1(Int_t iii) const { return fHodoBtm_c1[iii]; }
   Double_t GetHodoTop_c2(Int_t iii) const { return fHodoTop_c2[iii]; }
   Double_t GetHodoBtm_c2(Int_t iii) const { return fHodoBtm_c2[iii]; }
-  Double_t GetTDCThrs() const {return fTdc_Thrs;}
+  Double_t GetTDCThrs() const { return fTdc_Thrs; }
+
+  TClonesArray *GetLADGoodHits() { return fGoodLADHits; }
 
 protected:
   TH1F *hTime;
@@ -77,20 +156,10 @@ protected:
   Double_t fTrackToleranceLong;
   Double_t fTrackToleranceTrans;
 
-  //Output variables
-  static const Int_t MAXGOODHITs = 500;
+  // Output variables
+  static const Int_t MAXGOODHITS = 500;
   Int_t goodhit_n;
-  std::vector<Int_t> goodhit_plane;
-  std::vector<Int_t> goodhit_paddle;
-  std::vector<Int_t> goodhit_track_id;
-  std::vector<Double_t> goodhit_beta;
-  std::vector<Double_t> goodhit_delta_pos_trans;
-  std::vector<Double_t> goodhit_delta_pos_long;
-  std::vector<Double_t> goodhit_hit_time;
-  std::vector<Int_t> goodhit_matching_hit_index;
-  std::vector<Double_t> goodhit_hit_theta;
-  std::vector<Double_t> goodhit_hit_phi;
-  std::vector<Double_t> goodhit_hit_edep;
+  TClonesArray *fGoodLADHits;
   Int_t num_unique_hits;
   Int_t num_unique_good_hits;
   Double_t *fHodoVelLight;
@@ -99,8 +168,8 @@ protected:
   Double_t fFPTimeAll;
   Double_t *fFPTime; // [fNPlanes] Array
 
-  THaApparatus* fSpectro;
-  THcLADGEM* fGEM;
+  THaApparatus *fSpectro;
+  THcLADGEM *fGEM;
 
   struct TOFPInfo {
     Bool_t onTrack;
@@ -174,7 +243,7 @@ protected:
   Double_t *fHodoTopAdcTimeWindowMin;
   Double_t *fHodoTopAdcTimeWindowMax;
 
-  //FIXME. Neither of these are used or initialized.
+  // FIXME. Neither of these are used or initialized.
   Double_t fPartMass;    // Nominal particle mass
   Double_t fBetaNominal; // Beta for central ray of nominal particle type
 

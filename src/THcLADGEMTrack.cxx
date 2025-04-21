@@ -6,6 +6,7 @@ THcLADGEMTrack::THcLADGEMTrack(Int_t nlayers)
   fProjVz = -999.;
   fNSp = 0;
   fD0 = -999;
+  fhasGoodD0 = kFALSE;
   fSp = new GEM2DHits[nlayers];
 
 }
