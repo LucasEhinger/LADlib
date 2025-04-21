@@ -87,6 +87,7 @@ public:
   // Track quantities
   Double_t GetProjVz() const { return fProjVz; } // projected z-vertex
   Double_t GetD0() const { return fD0; }
+  Bool_t GetGoodD0() const { return fhasGoodD0; }
   Double_t GetT() const { return fT; }
   Double_t GetdT() const { return fTdiff; }
   bool GetHasHodoHit() const { return fHasHodoHit; }

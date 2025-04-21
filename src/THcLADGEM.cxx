@@ -200,6 +200,7 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                           {"trk.t", "Avg time", "fGEMTracks.THcLADGEMTrack.GetT()"},
                           {"trk.dt", "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
                           {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
+                          {"trk.d0_good", "Track dist from true vertex", "fGEMTracks.THcLADGEMTrack.GetGoodD0()"},
                           {"trk.projz", "Projected z-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
                           {"trk.has_hodo_hit", "Track has hodoscope hit", "fGEMTracks.THcLADGEMTrack.GetHasHodoHit()"},
                           // {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},

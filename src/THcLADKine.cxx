@@ -107,9 +107,9 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     if (fVertexModule->HasVertex()) {
       vertex = fVertexModule->GetVertex();
       track->SetGoodD0(kTRUE);
-    }
-    else
+    } else {
       vertex.SetXYZ(0, 0, 0);
+    }
 
     double numer = ((vertex - v_hit1).Cross((vertex - v_hit2))).Mag();
     double denom = (v_hit2 - v_hit1).Mag();
@@ -191,23 +191,78 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
         goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
       }
-    } else if (partner_hit_index != -1) {
-      THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(partner_hit_index));
-      if (abs(hit->GetDeltaPosTransHit0()) <
-          (plane_loc ? abs(goodhit->GetDeltaPosTransHit0()) : abs(goodhit->GetDeltaPosTransHit1()))) {
-        goodhit->SetTrackID(plane_loc, track_id);
-        goodhit->SetBeta(plane_loc, hit->GetBetaHit0());
-        goodhit->SetDeltaPosTrans(plane_loc, hit->GetDeltaPosTransHit0());
-        goodhit->SetDeltaPosLong(plane_loc, hit->GetDeltaPosLongHit0());
-        goodhit->SetHitTime(plane_loc, hit->GetHitTimeHit0());
-        goodhit->SetHitTheta(plane_loc, hit->GetHitThetaHit0());
-        goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
-        goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
-      }
     }
     // Todo: Calculate beta, alpha, etc. for the hit
     // FIXME. One track can still have multiple (distinct) hodo hits that are counted as good
   }
+
+  // Create a vector of pairs to store matching hits for each track
+  std::vector<std::pair<Int_t, Int_t>> matchingHits(ntracks, {-1, -1});
+  // Create a vector to store delta_pos_trans for each hit
+  std::vector<double> deltaPosTransValues;
+
+  for (Int_t i = 0; i < goodhit_n; i++) {
+    THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(i));
+    if (goodhit == nullptr)
+      continue;
+
+    // Add delta_pos_trans values for both planes (if valid) to the vector
+    if (goodhit->GetDeltaPosTransHit0() != 0) {
+      deltaPosTransValues.push_back(goodhit->GetDeltaPosTransHit0());
+    }
+    if (goodhit->GetDeltaPosTransHit1() != 0) {
+      deltaPosTransValues.push_back(goodhit->GetDeltaPosTransHit1());
+    }
+
+    Int_t trackID0 = goodhit->GetTrackIDHit0();
+    Int_t trackID1 = goodhit->GetTrackIDHit1();
+
+    if (trackID0 >= 0 && trackID0 < ntracks) {
+      // Check if the track ID is already in the vector
+      if (matchingHits[trackID0].first == -1) {
+        // If it is, set the second hit index to the current index
+        matchingHits[trackID0].first = i;
+      } else if (deltaPosTransValues[matchingHits[trackID0].first] > goodhit->GetDeltaPosTransHit0()) {
+        matchingHits[trackID0].first = i;
+      }
+    }
+    if (trackID1 >= 0 && trackID1 < ntracks) {
+      // Check if the track ID is already in the vector
+      if (matchingHits[trackID1].second == -1) {
+        // If it is, set the second hit index to the current index
+        matchingHits[trackID1].second = i;
+      } else if (deltaPosTransValues[matchingHits[trackID1].second] > goodhit->GetDeltaPosTransHit1()) {
+        matchingHits[trackID1].second = i;
+      }
+    }
+  }
+
+  // Loop over the matching hits and set the partner hit index
+  for (auto &match : matchingHits) {
+    if (match.first != -1 && match.second != -1) {
+      THcGoodLADHit *firstHit  = static_cast<THcGoodLADHit *>(fGoodLADHits->At(match.first));
+      THcGoodLADHit *secondHit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(match.second));
+      if (firstHit && secondHit) {
+        // Fill the second hit into the first for plane 1
+        firstHit->SetPlane(1, secondHit->GetPlaneHit1());
+        firstHit->SetPaddle(1, secondHit->GetPaddleHit1());
+        firstHit->SetTrackID(1, secondHit->GetTrackIDHit1());
+        firstHit->SetBeta(1, secondHit->GetBetaHit1());
+        firstHit->SetDeltaPosTrans(1, secondHit->GetDeltaPosTransHit1());
+        firstHit->SetDeltaPosLong(1, secondHit->GetDeltaPosLongHit1());
+        firstHit->SetHitTime(1, secondHit->GetHitTimeHit1());
+        firstHit->SetHitTheta(1, secondHit->GetHitThetaHit1());
+        firstHit->SetHitPhi(1, secondHit->GetHitPhiHit1());
+        firstHit->SetHitEdep(1, secondHit->GetHitEdepHit1());
+
+        // Remove the second hit from the good hits array
+        fGoodLADHits->RemoveAt(match.second);
+        goodhit_n--;
+      }
+    }
+  }
+  fGoodLADHits->Compress(); // Compress the array to remove null entries
+
   // LADHits_unfiltered->Clear(); // Clear the unfiltered hits
   // fGEMTracks->Clear();      // Clear the tracks
   return kOK;

@@ -24,13 +24,12 @@ public:
   Double_t hit_phi[2];
   Double_t hit_edep[2];
 
-  static constexpr Double_t kbig = 1.0e38;
 
   THcGoodLADHit() {
     for (int i = 0; i < 2; ++i) {
       plane[i] = paddle[i] = track_id[i] =-1;
-      beta[i] = delta_pos_trans[i] = delta_pos_long[i] = hit_time[i] = kbig;
-      hit_theta[i] = hit_phi[i] = hit_edep[i] = kbig;
+      beta[i] = delta_pos_trans[i] = delta_pos_long[i] = hit_time[i] = kBig;
+      hit_theta[i] = hit_phi[i] = hit_edep[i] = kBig;
     }
   }
   virtual ~THcGoodLADHit() = default;
