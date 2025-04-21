@@ -102,6 +102,8 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
 
   fmin_strip_per_clust = 1;
   fmax_strip_per_clust = -1;
+  fMinTimeSamp        = 0;
+  fMaxTimeSamp        = fN_MPD_TIME_SAMP - 1;
   fNegSignalStudy      = kFALSE;
 
   fPedestalMode                = kFALSE;
