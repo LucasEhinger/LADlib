@@ -29,6 +29,7 @@ set(src
   THcLADGEMCluster.cxx
   THcLADGEMTrack.cxx
   LADFilteredStreamBuf.cxx
+  THcLADKine.cxx
   )
 
 # Headers

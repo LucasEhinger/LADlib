@@ -29,6 +29,13 @@ struct mpdmap_t {
   UInt_t index;
 };
 
+struct stripSet{
+  UInt_t pos_lo;
+  UInt_t pos_hi;
+  UInt_t module_id;
+  UInt_t axis;
+};
+
 class THcLADGEMModule : public THaSubDetector {
  public:
 
@@ -110,6 +117,7 @@ class THcLADGEMModule : public THaSubDetector {
   std::vector<UInt_t> fTfine_by_APV; //"Fine time stamp" by APV:
   std::vector<UInt_t> fEventCount_by_APV; //MPD event counter by APV:
   std::vector<double> fTimeStamp_ns_by_APV; //Coarse time stamp - T0 + fine time stamp % 6
+  std::vector<stripSet> fBadStrips; //Set of bad strips to be excluded from analysis
 
   // Flags
   Bool_t   fPedestalMode;
@@ -117,6 +125,10 @@ class THcLADGEMModule : public THaSubDetector {
   Double_t fZeroSuppressRMS;
   Bool_t   fZeroSuppress;
   Bool_t   fNegSignalStudy;
+  Int_t   fmin_strip_per_clust;
+  Int_t   fmax_strip_per_clust;
+  Int_t   fMinTimeSamp;
+  Int_t   fMaxTimeSamp;
 
   Bool_t fOnlineZeroSuppression; //this MIGHT be redundant with fZeroSuppress (or not)
   Int_t fCODA_BUILD_ALL_SAMPLES;
