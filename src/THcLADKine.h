@@ -38,7 +38,13 @@ protected:
   Int_t goodhit_n;
   TClonesArray *fGoodLADHits;
   TClonesArray *fGEMTracks;
-  Double_t fD0Cut;
+  Double_t fD0Cut_wVertex;
+  Double_t fD0Cut_noVertex;
+  Double_t fmax_dTrans_match;
+  Double_t fmax_dLong_match;
+  Int_t fNfixed_z;
+  Double_t *fFixed_z;
+  Double_t fglobal_time_offset;
   virtual Int_t DefineVariables(EMode mode = kDefine);
 
   ClassDef(THcLADKine, 0)

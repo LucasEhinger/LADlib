@@ -729,7 +729,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
             goodhit->SetHitTime(0, hit->GetScinCorrectedTime());
             goodhit->SetHitTheta(0, track_theta);
             goodhit->SetHitPhi(0, track_phi);
-            goodhit->SetHitEdep(0, TMath::Sqrt(TMath::Max(0., hit->GetTopADC() * hit->GetBtmADC())));
+            goodhit->SetHitEdep(0, hit->GetPaddleADC());
 
             // Good hit
             // goodhit_plane.push_back(ip);
