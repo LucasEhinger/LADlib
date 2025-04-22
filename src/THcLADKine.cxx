@@ -20,12 +20,14 @@ ClassImp(THcLADKine)
   // Constructor
   fGoodLADHits = new TClonesArray("THcLADHodoHit", MAXGOODHITS);
   goodhit_n    = 0;
+  fFixed_z     = nullptr;
 }
 //_____________________________________________________________________________
 THcLADKine::~THcLADKine() {
   // Destructor
   DefineVariables(kDelete);
   delete fGoodLADHits;
+  delete[] fFixed_z;
 }
 //_____________________________________________________________________________
 void THcLADKine::Clear(Option_t *opt) {
@@ -82,9 +84,35 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   if (err)
     return err;
 
-  fD0Cut = 2000.0; // Hard coded. Fix later
+  char prefix[2];
+  prefix[0] = 'l';
+  prefix[1] = '\0';
 
-  // Can read thing in later if need be
+  fD0Cut_wVertex      = 0.0;
+  fD0Cut_noVertex     = 0.0;
+  fmax_dTrans_match   = 0.0;
+  fmax_dLong_match    = 0.0;
+  fNfixed_z           = 0;
+  fglobal_time_offset = 0.0;
+
+  DBRequest list[] = {{"d0_cut_wVertex", &fD0Cut_wVertex, kDouble, 0, 1},
+                      {"d0_cut_noVertex", &fD0Cut_noVertex, kDouble, 0, 1},
+                      {"max_dTrans_hitMatch", &fmax_dTrans_match, kDouble, 0, 1},
+                      {"max_dLong_hitMatch", &fmax_dLong_match, kDouble, 0, 1},
+                      {"nfixed_z", &fNfixed_z, kInt, 0, 1},
+                      {"global_time_offset", &fglobal_time_offset, kDouble, 0, 1},
+                      {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list, prefix);
+
+  delete[] fFixed_z;
+  if (fNfixed_z > 0) {
+    fFixed_z          = new Double_t[fNfixed_z];
+    DBRequest list2[] = {{"fixed_z_pos", fFixed_z, kDouble, fNfixed_z}, {0}};
+    gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
+  } else {
+    fFixed_z = nullptr;
+  }
+
   return err;
 }
 //_____________________________________________________________________________
@@ -111,17 +139,37 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       vertex.SetXYZ(0, 0, 0);
     }
 
+    // Fix track vertex (for improved resolution on multifoils)
+    if (fNfixed_z > 0 && track->GetGoodD0()) {
+      std::vector<double> distances;
+      for (Int_t j = 0; j < fNfixed_z; j++) {
+        distances.push_back(abs(vertex.Z() - fFixed_z[j]));
+      }
+      auto min_it     = std::min_element(distances.begin(), distances.end());
+      Int_t min_index = std::distance(distances.begin(), min_it);
+      vertex.SetZ(fFixed_z[min_index]);
+    }
+
+    // Calculate d0
     double numer = ((vertex - v_hit1).Cross((vertex - v_hit2))).Mag();
     double denom = (v_hit2 - v_hit1).Mag();
     // here we can put a range/fiducial cut on d0 taking into account the target size
     double d0 = numer / denom;
     track->SetD0(d0);
-    if (d0 < fD0Cut) {
-      isGoodTrack[i] = true;
+
+    if (track->GetGoodD0()) {
+      if (d0 > fD0Cut_wVertex) {
+        track->SetGoodD0(kFALSE);
+      }
+    } else {
+      if (d0 > fD0Cut_noVertex) {
+        track->SetGoodD0(kFALSE);
+      }
     }
   }
 
-  // Get the hodo hits
+  //////////////////////////////////////////////////////////////////////////////
+  // Remove hits with bad tracks and duplicate hits
   TClonesArray *LADHits_unfiltered = fHodoscope->GetLADGoodHits();
   Int_t nHits                      = LADHits_unfiltered->GetLast() + 1;
   for (Int_t i = 0; i < nHits; i++) {
@@ -177,6 +225,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       goodhit->SetHitTheta(plane_loc, hit->GetHitThetaHit0());
       goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
       goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
+      // Could probably overload an operator to do this, but that's too much work...
     }
     if (matching_hit_index != -1) {
       THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(matching_hit_index));
@@ -196,11 +245,13 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     // FIXME. One track can still have multiple (distinct) hodo hits that are counted as good
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Find matching front + back plane hits
   // Create a vector of pairs to store matching hits for each track
   std::vector<std::pair<Int_t, Int_t>> matchingHits(ntracks, {-1, -1});
-  // Create a vector to store delta_pos_trans for each hit
   std::vector<double> deltaPosTransValues;
 
+  //TODO: This can probably be incorporated into the loop above
   for (Int_t i = 0; i < goodhit_n; i++) {
     THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(i));
     if (goodhit == nullptr)
