@@ -346,8 +346,8 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
                              {"lgem_maxnv_pos", &fMaxNeighborsV_hitpos, kInt, 0, 1},
                              {"lgem_min_strip_per_clust", &fmin_strip_per_clust, kInt, 0, 1},
                              {"lgem_max_strip_per_clust", &fmax_strip_per_clust, kInt, 0, 1},
-                             {"lgem_lgem_min_time_samp", &fMinTimeSamp, kInt, 0, 1},
-                             {"lgem_lgem_max_time_samp", &fMaxTimeSamp, kInt, 0, 1},
+                             {"lgem_min_time_samp", &fMinTimeSamp, kInt, 0, 1},
+                             {"lgem_max_time_samp", &fMaxTimeSamp, kInt, 0, 1},
                              {0}};
   gHcParms->LoadParmValues((DBRequest *)&list2, "");
 

@@ -150,20 +150,28 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       vertex.SetZ(fFixed_z[min_index]);
     }
 
-    // Calculate d0
+    // Re-calculate d0
     double numer = ((vertex - v_hit1).Cross((vertex - v_hit2))).Mag();
     double denom = (v_hit2 - v_hit1).Mag();
     // here we can put a range/fiducial cut on d0 taking into account the target size
     double d0 = numer / denom;
     track->SetD0(d0);
 
+    // Re-calculate vpz
+    double vpz = v_hit1.Z() + (vertex.X() - v_hit1.X()) * (v_hit2.Z() - v_hit1.Z()) / (v_hit2.X() - v_hit1.X());
+    track->SetZVertex(vpz);
+
+    // Re-calculate vpy
+    double vpy = v_hit1.Y() + (vertex.X() - v_hit1.X()) * (v_hit2.Y() - v_hit1.Y()) / (v_hit2.X() - v_hit1.X());
+    track->SetYVertex(vpy);
+
     if (track->GetGoodD0()) {
-      if (d0 > fD0Cut_wVertex) {
-        track->SetGoodD0(kFALSE);
+      if (d0 < fD0Cut_wVertex) {
+        isGoodTrack[i] = true;
       }
     } else {
-      if (d0 > fD0Cut_noVertex) {
-        track->SetGoodD0(kFALSE);
+      if (d0 < fD0Cut_noVertex) {
+        isGoodTrack[i] = true;
       }
     }
   }
@@ -200,8 +208,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         continue;
 
       // Check if the hit is already in the list
-      Int_t good_hit_plane  = plane_loc ? goodhit->GetPlaneHit0() : goodhit->GetPlaneHit1();
-      Int_t good_hit_paddle = plane_loc ? goodhit->GetPaddleHit0() : goodhit->GetPaddleHit1();
+      Int_t good_hit_plane  = plane_loc ? goodhit->GetPlaneHit1() : goodhit->GetPlaneHit0();
+      Int_t good_hit_paddle = plane_loc ? goodhit->GetPaddleHit1() : goodhit->GetPaddleHit0();
       if (good_hit_plane == plane && good_hit_paddle == paddle) {
         matching_hit_index = j;
         break;
@@ -225,12 +233,15 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       goodhit->SetHitTheta(plane_loc, hit->GetHitThetaHit0());
       goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
       goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
+      goodhit->SetHitYPos(plane_loc, hit->GetHitYPosHit0());
+      // goodhit->SetHitAlpha(plane_loc, ???); // Need to define & calculate this
+      // goodhit->SetHitTOF(plane_loc, ???); // Need to define & calculate this
       // Could probably overload an operator to do this, but that's too much work...
     }
     if (matching_hit_index != -1) {
       THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(matching_hit_index));
       if (abs(hit->GetDeltaPosTransHit0()) <
-          (plane_loc ? abs(goodhit->GetDeltaPosTransHit0()) : abs(goodhit->GetDeltaPosTransHit1()))) {
+          (plane_loc ? abs(goodhit->GetDeltaPosTransHit1()) : abs(goodhit->GetDeltaPosTransHit0()))) {
         goodhit->SetTrackID(plane_loc, track_id);
         goodhit->SetBeta(plane_loc, hit->GetBetaHit0());
         goodhit->SetDeltaPosTrans(plane_loc, hit->GetDeltaPosTransHit0());
@@ -239,6 +250,9 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         goodhit->SetHitTheta(plane_loc, hit->GetHitThetaHit0());
         goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
         goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
+        goodhit->SetHitYPos(plane_loc, hit->GetHitYPosHit0());
+        // goodhit->SetHitAlpha(plane_loc, ???); // Need to define & calculate this
+        // goodhit->SetHitTOF(plane_loc, ???); // Need to define & calculate this
       }
     }
     // Todo: Calculate beta, alpha, etc. for the hit
@@ -251,7 +265,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
   std::vector<std::pair<Int_t, Int_t>> matchingHits(ntracks, {-1, -1});
   std::vector<double> deltaPosTransValues;
 
-  //TODO: This can probably be incorporated into the loop above
+  // TODO: This can probably be incorporated into the loop above
   for (Int_t i = 0; i < goodhit_n; i++) {
     THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(i));
     if (goodhit == nullptr)
@@ -305,6 +319,9 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         firstHit->SetHitTheta(1, secondHit->GetHitThetaHit1());
         firstHit->SetHitPhi(1, secondHit->GetHitPhiHit1());
         firstHit->SetHitEdep(1, secondHit->GetHitEdepHit1());
+        firstHit->SetHitYPos(1, secondHit->GetHitYPosHit1());
+        // goodhit->SetHitAlpha(1, ???); // Need to define & calculate this
+        // goodhit->SetHitTOF(1, ???); // Need to define & calculate this
 
         // Remove the second hit from the good hits array
         fGoodLADHits->RemoveAt(match.second);
@@ -351,6 +368,12 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
         {"goodhit_hitphi_1", "Good hit phi (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit1()"},
         {"goodhit_hitedep_1", "Good hit energy deposition (second plane)",
          "fGoodLADHits.THcGoodLADHit.GetHitEdepHit1()"},
+        {"goodhit_ypos_0", "Good hit y position", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit0()"},
+        {"goodhit_ypos_1", "Good hit y position (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit1()"},
+        // {"goodhit_tof_0", "Good hit time of flight", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit0()"},
+        // {"goodhit_tof_1", "Good hit time of flight (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit1()"},
+        // {"goodhit_alpha_0", "Good hit alpha", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit0()"},
+        // {"goodhit_alpha_1", "Good hit alpha (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit1()"},
         {0}};
     return DefineVarsFromList(vars, mode);
   }

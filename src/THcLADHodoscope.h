@@ -12,7 +12,7 @@
 #include "THcRawHodoHit.h"
 
 class THcGoodLADHit : public TObject {
-public:
+protected:
   Int_t plane[2];
   Int_t paddle[2];
   Int_t track_id[2];
@@ -23,13 +23,17 @@ public:
   Double_t hit_theta[2];
   Double_t hit_phi[2];
   Double_t hit_edep[2];
+  // Double_t hit_tof[2];
+  // Double_t hit_alpha[2];
+  Double_t hit_yPos[2]; // Something really weird is happening here. Declaring tof & alpha causes malloc errors
 
-
+public:
   THcGoodLADHit() {
     for (int i = 0; i < 2; ++i) {
-      plane[i] = paddle[i] = track_id[i] =-1;
+      plane[i] = paddle[i] = track_id[i] = -1;
       beta[i] = delta_pos_trans[i] = delta_pos_long[i] = hit_time[i] = kBig;
-      hit_theta[i] = hit_phi[i] = hit_edep[i] = kBig;
+      hit_theta[i] = hit_phi[i] = hit_edep[i] = hit_yPos[i] = kBig;
+      // hit_yPos[i] = hit_alpha[i] = hit_tof[i] = -999;
     }
   }
   virtual ~THcGoodLADHit() = default;
@@ -44,18 +48,13 @@ public:
   void SetHitTheta(Int_t hit, Double_t value) { hit_theta[hit] = value; }
   void SetHitPhi(Int_t hit, Double_t value) { hit_phi[hit] = value; }
   void SetHitEdep(Int_t hit, Double_t value) { hit_edep[hit] = value; }
+  // void SetHitAlpha(Int_t hit, Double_t value) { hit_alpha[hit] = value; }
+  void SetHitYPos(Int_t hit, Double_t value) { hit_yPos[hit] = value; }
+  // void SetHitTOF(Int_t hit, Double_t value) { hit_tof[hit] = value; }
 
-  // Int_t GetPlane(Int_t hit) const { return plane[hit]; }
-  // Int_t GetPaddle(Int_t hit) const { return paddle[hit]; }
-  // Int_t GetTrackID(Int_t hit) const { return track_id[hit]; }
-  // Double_t GetBeta(Int_t hit) const { return beta[hit]; }
-  // Double_t GetDeltaPosTrans(Int_t hit) const { return delta_pos_trans[hit]; }
-  // Double_t GetDeltaPosLong(Int_t hit) const { return delta_pos_long[hit]; }
-  // Double_t GetHitTime(Int_t hit) const { return hit_time[hit]; }
-  // Double_t GetHitTheta(Int_t hit) const { return hit_theta[hit]; }
-  // Double_t GetHitPhi(Int_t hit) const { return hit_phi[hit]; }
-  // Double_t GetHitEdep(Int_t hit) const { return hit_edep[hit]; }
-
+  // Declaring two different methods for each hit is dumb, but RDefVars can't take TClonesArray
+  //  objects calling a method with a parameter (or I haven't been able to figure it out)
+  //  so we have to do this
   Int_t GetPlaneHit0() const { return plane[0]; }
   Int_t GetPlaneHit1() const { return plane[1]; }
 
@@ -85,6 +84,16 @@ public:
 
   Double_t GetHitEdepHit0() const { return hit_edep[0]; }
   Double_t GetHitEdepHit1() const { return hit_edep[1]; }
+
+  // Double_t GetHitAlphaHit0() const { return hit_alpha[0]; }
+  // Double_t GetHitAlphaHit1() const { return hit_alpha[1]; }
+
+  Double_t GetHitYPosHit0() const { return hit_yPos[0]; }
+  Double_t GetHitYPosHit1() const { return hit_yPos[1]; }
+
+  // Double_t GetHitTOFHit0() const { return hit_tof[0]; }
+  // Double_t GetHitTOFHit1() const { return hit_tof[1]; }
+
   ClassDef(THcGoodLADHit, 1)
 };
 
