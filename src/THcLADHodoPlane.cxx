@@ -807,6 +807,7 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"HodoHitPaddleNum", "List of HodoHit paddle numbers", "fHodoHits.THcLADHodoHit.GetPaddleNumber()"},
       {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
       {"HodoHitEdep", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC()"},
+      {"HodoHitisFull" ,"List of Bool's specifing if hit has top and btm hodo hits", "fHodoHits.THcLADHodoHit.GetHasCorrectedTimes()"},
       {0}};
 
   /*
@@ -1484,8 +1485,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
         // Removed fTofUsingInvAdc
         scin_corrected_time         = 0.5 * (timec_btm + timec_top);
-        timec_top                   = scin_corrected_time;
-        timec_btm                   = scin_corrected_time;
+        // timec_top                   = scin_corrected_time;
+        // timec_btm                   = scin_corrected_time;
         Double_t adc_time_corrected = 0.5 * (adc_timec_top + adc_timec_btm);
         // LHE: Need to change this to match LAD
         // if (fCosmicFlag) {
