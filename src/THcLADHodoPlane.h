@@ -73,6 +73,7 @@ protected:
   Double_t fTopAdcRefDiffTime;
   Double_t fBtmAdcRefDiffTime;
 
+  Double_t fTDC_match_window;
   // Counters
   Int_t fTotNumTdcHits;
   Int_t fTotNumTopTdcHits;

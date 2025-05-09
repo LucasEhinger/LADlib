@@ -455,6 +455,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
                       {"ladhodo_SampNSB", &fSampNSB, kInt, 0, 1},
                       {"ladhodo_OutputSampWaveform", &fOutputSampWaveform, kInt, 0, 1},
                       {"ladhodo_UseSampWaveform", &fUseSampWaveform, kInt, 0, 1},
+                      {"ladhodo_TDC_match_window", &fTDC_match_window, kDouble, 0, 1},
                       {0}};
 
   // Set Default values
@@ -464,11 +465,12 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fADCDiagCut         = 50.0;
   fCosmicFlag         = 0;
   fSampThreshold      = 5.;
-  fSampNSA            = 0; // use value stored in event 125 info
-  fSampNSB            = 0; // use value stored in event 125 info
-  fSampNSAT           = 2; // default value in THcRawHit::SetF250Params
-  fOutputSampWaveform = 0; // 0= no output , 1 = output Sample Waveform
-  fUseSampWaveform    = 0; // 0= do not use , 1 = use Sample Waveform
+  fSampNSA            = 0;  // use value stored in event 125 info
+  fSampNSB            = 0;  // use value stored in event 125 info
+  fSampNSAT           = 2;  // default value in THcRawHit::SetF250Params
+  fOutputSampWaveform = 0;  // 0= no output , 1 = output Sample Waveform
+  fUseSampWaveform    = 0;  // 0= do not use , 1 = use Sample Waveform
+  fTDC_match_window   = 50; //
 
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
@@ -1490,7 +1492,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
             continue;
           }
           double dt = tdc_top[i_top_hit] * fScinTdcToTime - tdc_btm[i_btm_hit] * fScinTdcToTime;
-          if (abs(dt) < 50) { // Hard coded to 50ns
+          if (abs(dt) < fTDC_match_window) { // Hard coded to 50ns
             good_ielem_Top_Tdc_Full[n_top_hit_full] = good_ielem_TopTdc[i_top_hit];
             good_ielem_Btm_Tdc_Full[n_top_hit_full] = good_ielem_BtmTdc[i_btm_hit];
             // good_ielem_Top_Adc_Full[n_top_hit_full] = good_ielem_TopAdc[i_top_hit];
@@ -1553,8 +1555,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           Double_t timec_top, timec_btm;
           // FADC style. Removed fTofUsingInvAdc
           timec_top = tdc_top[i_good_top_tdc_elem] * fScinTdcToTime - tw_corr_top + fHodo_LCoeff[index];
-          timec_btm =
-              tdc_btm[i_good_btm_tdc_elem] * fScinTdcToTime - tw_corr_btm - 2 * fHodoCableFit[index] + fHodo_LCoeff[index];
+          timec_btm = tdc_btm[i_good_btm_tdc_elem] * fScinTdcToTime - tw_corr_btm - 2 * fHodoCableFit[index] +
+                      fHodo_LCoeff[index];
           adc_timec_top = adc_timec_top - tw_corr_top + fHodo_LCoeff[index];
           adc_timec_btm = adc_timec_btm - tw_corr_btm - 2 * fHodoCableFit[index] + fHodo_LCoeff[index];
 

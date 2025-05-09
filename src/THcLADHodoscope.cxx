@@ -18,7 +18,7 @@ THcLADHodoscope::THcLADHodoscope(const char *name, const char *description, THaA
     : THaNonTrackingDetector(name, description, apparatus) {
   // Constructor
   fNPlanes     = 1;
-  fGoodLADHits = new TClonesArray("THcLADHodoHit", MAXGOODHITS);
+  fGoodLADHits = new TClonesArray("THcGoodLADHit", MAXGOODHITS);
 }
 
 //_________________________________________________________________
@@ -69,6 +69,7 @@ THcLADHodoscope::~THcLADHodoscope() {
   delete[] fHodoBtm_c2;
   fHodoBtm_c2 = NULL;
 
+  fGoodLADHits->Delete();
   delete fGoodLADHits;
 }
 
@@ -546,9 +547,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) { return 0; }
 //_________________________________________________________________
 Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
 
-  fGoodLADHits->Clear();
   fGoodLADHits->Delete();
-  // fGoodLADHits = new TClonesArray("THcLADHodoHit", MAXGOODHITS);
   // Hodo tracking coes in FineProcess, to ensure it comes after GEM Coarse Process tracking, no matter what.
 
   fSpectro = dynamic_cast<THaApparatus *>(GetApparatus());
@@ -711,7 +710,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
             goodhit->SetPlane(0, ip);
             goodhit->SetPaddle(0, paddle);
             goodhit->SetTrackID(0, itrack);
-            goodhit->SetBeta(0, betatrack);
+            // goodhit->SetBeta(0, betatrack);
             goodhit->SetDeltaPosTrans(0, scinCenter - scinTrnsCoord);
             goodhit->SetDeltaPosLong(0, scinLongCoord - hit->GetCalcPosition());
             goodhit->SetHitTime(0, hit->GetScinCorrectedTime());

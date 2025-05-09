@@ -41,8 +41,8 @@ string(REPLACE .cxx .h headers "${src}")
 
 # If you have other headers NOT needed for the ROOT dictionary but needed for
 # the library, add them here as shown in the line commented out below.
-set(allheaders ${headers})
-#set(allheaders ${headers} StandaloneHeader1.h StandaloneHeader2.h)
+# set(allheaders ${headers})
+set(allheaders ${headers} THcGoodLADHit.h)
 
 #------------------------------------------------------------------------------
 # Do not change anything below here unless you know what you are doing

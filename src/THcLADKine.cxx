@@ -16,9 +16,9 @@ ClassImp(THcLADKine)
     THcLADKine::THcLADKine(const char *name, const char *description, const char *spectro, const char *primary_kine,
                            const char *vertex_module)
     : THcPrimaryKine(name, description, spectro, primary_kine, 0.938), fSpecName(spectro), fGEM(nullptr),
-      fHodoscope(nullptr), fVertexModuleName(vertex_module), fVertexModule(nullptr) {
+      fHodoscope(nullptr), fVertexModuleName(vertex_module), fVertexModule(nullptr), fTrack(nullptr) {
   // Constructor
-  fGoodLADHits = new TClonesArray("THcLADHodoHit", MAXGOODHITS);
+  fGoodLADHits = new TClonesArray("THcGoodLADHit", MAXGOODHITS);
   goodhit_n    = 0;
   fFixed_z     = nullptr;
 }
@@ -26,6 +26,7 @@ ClassImp(THcLADKine)
 THcLADKine::~THcLADKine() {
   // Destructor
   DefineVariables(kDelete);
+  fGoodLADHits->Delete();
   delete fGoodLADHits;
   delete[] fFixed_z;
 }
@@ -33,7 +34,7 @@ THcLADKine::~THcLADKine() {
 void THcLADKine::Clear(Option_t *opt) {
   // Clear the object
   THcPrimaryKine::Clear(opt);
-  fGoodLADHits->Clear();
+  fGoodLADHits->Delete();
   goodhit_n = 0;
 }
 //_____________________________________________________________________________
@@ -73,6 +74,27 @@ THaAnalysisObject::EStatus THcLADKine::Init(const TDatime &run_time) {
       Error("Init", "No Vertex module found");
       return kInitError;
     }
+  }
+
+  TString fTrigDetName;
+  // Get the apparatus prefix
+  char aparatus_prefix[2];
+  aparatus_prefix[0] = tolower(fSpecName[0]);
+  aparatus_prefix[1] = '\0';
+  if (aparatus_prefix[0] == 'h') {
+    fTrigDetName = "T.hms";
+  } else if (aparatus_prefix[0] == 'p') {
+    fTrigDetName = "T.shms";
+  } else {
+    Error("Init", "Invalid apparatus prefix: %s", aparatus_prefix);
+    return kInitError;
+  }
+
+  fTrigDet = dynamic_cast<THcTrigDet *>(FindModule(fTrigDetName.Data(), "THcTrigDet"));
+  if (!fTrigDet) {
+    cout << "THcCoinTime module  Cannnot find TrigDet = " << fTrigDetName.Data() << endl;
+    fStatus = kInitError;
+    return fStatus;
   }
 
   return THaPhysicsModule::Init(run_time);
@@ -117,6 +139,8 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
 }
 //_____________________________________________________________________________
 Int_t THcLADKine::Process(const THaEvData &evdata) {
+  // Get Golden Track (for tof calculation later)
+  fTrack = fSpectro->GetGoldenTrack();
 
   // Check track projection to vertex
   fGEMTracks    = fGEM->GetTracks();
@@ -223,36 +247,16 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     if (matching_hit_index == -1 && partner_hit_index == -1) {
       THcGoodLADHit *goodhit = new ((*fGoodLADHits)[goodhit_n]) THcGoodLADHit();
       goodhit_n++;
-      goodhit->SetPlane(plane_loc, plane);
-      goodhit->SetPaddle(plane_loc, paddle);
+      goodhit->CopyHit(plane_loc, 0, hit); // Copy the new hit into the good hit
       goodhit->SetTrackID(plane_loc, track_id);
-      goodhit->SetBeta(plane_loc, hit->GetBetaHit0());
-      goodhit->SetDeltaPosTrans(plane_loc, hit->GetDeltaPosTransHit0());
-      goodhit->SetDeltaPosLong(plane_loc, hit->GetDeltaPosLongHit0());
-      goodhit->SetHitTime(plane_loc, hit->GetHitTimeHit0());
-      goodhit->SetHitTheta(plane_loc, hit->GetHitThetaHit0());
-      goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
-      goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
-      goodhit->SetHitYPos(plane_loc, hit->GetHitYPosHit0());
-      // goodhit->SetHitAlpha(plane_loc, ???); // Need to define & calculate this
-      // goodhit->SetHitTOF(plane_loc, ???); // Need to define & calculate this
-      // Could probably overload an operator to do this, but that's too much work...
     }
     if (matching_hit_index != -1) {
       THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(matching_hit_index));
       if (abs(hit->GetDeltaPosTransHit0()) <
           (plane_loc ? abs(goodhit->GetDeltaPosTransHit1()) : abs(goodhit->GetDeltaPosTransHit0()))) {
+
+        goodhit->CopyHit(plane_loc, 0, hit); // Copy the new hit into the good hit
         goodhit->SetTrackID(plane_loc, track_id);
-        goodhit->SetBeta(plane_loc, hit->GetBetaHit0());
-        goodhit->SetDeltaPosTrans(plane_loc, hit->GetDeltaPosTransHit0());
-        goodhit->SetDeltaPosLong(plane_loc, hit->GetDeltaPosLongHit0());
-        goodhit->SetHitTime(plane_loc, hit->GetHitTimeHit0());
-        goodhit->SetHitTheta(plane_loc, hit->GetHitThetaHit0());
-        goodhit->SetHitPhi(plane_loc, hit->GetHitPhiHit0());
-        goodhit->SetHitEdep(plane_loc, hit->GetHitEdepHit0());
-        goodhit->SetHitYPos(plane_loc, hit->GetHitYPosHit0());
-        // goodhit->SetHitAlpha(plane_loc, ???); // Need to define & calculate this
-        // goodhit->SetHitTOF(plane_loc, ???); // Need to define & calculate this
       }
     }
     // Todo: Calculate beta, alpha, etc. for the hit
@@ -308,20 +312,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       THcGoodLADHit *firstHit  = static_cast<THcGoodLADHit *>(fGoodLADHits->At(match.first));
       THcGoodLADHit *secondHit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(match.second));
       if (firstHit && secondHit) {
-        // Fill the second hit into the first for plane 1
-        firstHit->SetPlane(1, secondHit->GetPlaneHit1());
-        firstHit->SetPaddle(1, secondHit->GetPaddleHit1());
-        firstHit->SetTrackID(1, secondHit->GetTrackIDHit1());
-        firstHit->SetBeta(1, secondHit->GetBetaHit1());
-        firstHit->SetDeltaPosTrans(1, secondHit->GetDeltaPosTransHit1());
-        firstHit->SetDeltaPosLong(1, secondHit->GetDeltaPosLongHit1());
-        firstHit->SetHitTime(1, secondHit->GetHitTimeHit1());
-        firstHit->SetHitTheta(1, secondHit->GetHitThetaHit1());
-        firstHit->SetHitPhi(1, secondHit->GetHitPhiHit1());
-        firstHit->SetHitEdep(1, secondHit->GetHitEdepHit1());
-        firstHit->SetHitYPos(1, secondHit->GetHitYPosHit1());
-        // goodhit->SetHitAlpha(1, ???); // Need to define & calculate this
-        // goodhit->SetHitTOF(1, ???); // Need to define & calculate this
+        firstHit->CopyHit(1, 0, secondHit); // Copy the back (1) plane of the second hit into the first hit (0)
 
         // Remove the second hit from the good hits array
         fGoodLADHits->RemoveAt(match.second);
@@ -331,9 +322,80 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
   }
   fGoodLADHits->Compress(); // Compress the array to remove null entries
 
+  // Calculate beta, alpha, tof, etc. for the hits
+  for (Int_t i = 0; i < goodhit_n; i++) {
+    THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(i));
+    if (goodhit == nullptr)
+      continue;
+
+    Double_t tof, beta, alpha;
+    if (goodhit->GetPlaneHit0() >= 0 && goodhit->GetPlaneHit0() < 999) {
+      tof = CalculateToF(goodhit->GetHitTimeHit0());
+      goodhit->SetHitTOF(0, tof);
+      // Calculate beta, alpha, etc. for the first plane
+    }
+    if (goodhit->GetPlaneHit1() >= 0 && goodhit->GetPlaneHit1() < 999) {
+      tof = CalculateToF(goodhit->GetHitTimeHit1());
+      goodhit->SetHitTOF(1, tof);
+      // Calculate beta, alpha, etc. for the second plane
+    }
+  }
+
   // LADHits_unfiltered->Clear(); // Clear the unfiltered hits
   // fGEMTracks->Clear();      // Clear the tracks
   return kOK;
+}
+//_____________________________________________________________________________
+Double_t THcLADKine::CalculateToF(Double_t t_raw) {
+  // Calculate the time of flight
+  if(fTrack == nullptr) {
+    // Error("CalculateToF", "No track found");
+    return kBig;
+  }
+
+  Double_t HMScentralPathLen = 22.0*100.;
+  Double_t SHMScentralPathLen = 18.1*100.;
+  Double_t elecMass =  0.510998/1000.0; // electron mass in GeV/c^2
+  Double_t lightSpeed = 29.9792; // in cm/ns
+
+  Double_t fPtime = fTrack->GetFPTime();
+  Double_t xptar = fTrack->GetTTheta();     
+  Double_t dP = fTrack->GetDp();  
+  Double_t elec_P = fTrack->GetP();
+  if (fPtime == -2000 || fPtime == -1000) {
+    return kBig;
+  }
+
+  // Leave these here for now, but don't think I need them
+  // Double_t pSHMS_TdcTime_ROC1 = fTrigDet->Get_CT_Trigtime(0); // SHMS
+  // Double_t pHMS_TdcTime_ROC1  = fTrigDet->Get_CT_Trigtime(1); // HMS
+  // Double_t pSHMS_TdcTime_ROC2 = fTrigDet->Get_CT_Trigtime(2); // SHMS pTrig1
+  // Double_t pHMS_TdcTime_ROC2  = fTrigDet->Get_CT_Trigtime(3); // HMS pTrig3
+
+  char aparatus_prefix[2];
+  aparatus_prefix[0] = tolower(fSpecName[0]);
+  aparatus_prefix[1] = '\0';
+  
+  Double_t DeltaPathLength;
+  if (aparatus_prefix[0] == 'h') {
+    DeltaPathLength = (.12*xptar*1000 +0.17*dP/100.);
+    DeltaPathLength += HMScentralPathLen;
+  } else if (aparatus_prefix[0] == 'p') {
+    DeltaPathLength = (.11*xptar*1000 +0.057*dP/100.);
+    DeltaPathLength += SHMScentralPathLen;
+  } else {
+    Error("CalculateToF", "Invalid apparatus prefix: %s", aparatus_prefix);
+    return kBig;
+  }  
+
+  Double_t beta_calc = elec_P / sqrt(elec_P*elec_P + elecMass*elecMass);
+  Double_t PathLengthCorr = DeltaPathLength / (lightSpeed * beta_calc);
+
+  Double_t vertex_time = fPtime - PathLengthCorr;
+
+  Double_t tof = t_raw - vertex_time + fglobal_time_offset;
+
+  return tof;
 }
 //_____________________________________________________________________________
 Int_t THcLADKine::DefineVariables(EMode mode) {
@@ -370,10 +432,10 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
          "fGoodLADHits.THcGoodLADHit.GetHitEdepHit1()"},
         {"goodhit_ypos_0", "Good hit y position", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit0()"},
         {"goodhit_ypos_1", "Good hit y position (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit1()"},
-        // {"goodhit_tof_0", "Good hit time of flight", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit0()"},
-        // {"goodhit_tof_1", "Good hit time of flight (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit1()"},
-        // {"goodhit_alpha_0", "Good hit alpha", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit0()"},
-        // {"goodhit_alpha_1", "Good hit alpha (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit1()"},
+        {"goodhit_tof_0", "Good hit time of flight", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit0()"},
+        {"goodhit_tof_1", "Good hit time of flight (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit1()"},
+        {"goodhit_alpha_0", "Good hit alpha", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit0()"},
+        {"goodhit_alpha_1", "Good hit alpha (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit1()"},
         {0}};
     return DefineVarsFromList(vars, mode);
   }
