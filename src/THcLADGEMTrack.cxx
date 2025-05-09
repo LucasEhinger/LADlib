@@ -4,6 +4,7 @@
 THcLADGEMTrack::THcLADGEMTrack(Int_t nlayers)
 {
   fProjVz = -999.;
+  fProjVy = -999.;
   fNSp = 0;
   fD0 = -999;
   fhasGoodD0 = kFALSE;

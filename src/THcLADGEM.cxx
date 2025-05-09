@@ -202,6 +202,7 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                           {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
                           {"trk.d0_good", "Track dist from true vertex", "fGEMTracks.THcLADGEMTrack.GetGoodD0()"},
                           {"trk.projz", "Projected z-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
+                          {"trk.projy", "Projected y-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVy()"},
                           {"trk.has_hodo_hit", "Track has hodoscope hit", "fGEMTracks.THcLADGEMTrack.GetHasHodoHit()"},
                           // {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},
                           // {"trk.phi", "Track phi", "fGEMTracks.THcLADGEMTrack.GetPhi()"},
@@ -440,9 +441,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       double d0 = numer / denom;
 
       // Calculate d0 in the x-z plane (y=0)
-      // double numer_xz = std::abs((v_prim.X() - v_hit1.X()) * (v_prim.Z() - v_hit2.Z()) - 
+      // double numer_xz = std::abs((v_prim.X() - v_hit1.X()) * (v_prim.Z() - v_hit2.Z()) -
       //            (v_prim.Z() - v_hit1.Z()) * (v_prim.X() - v_hit2.X()));
-      // double denom_xz = std::sqrt(std::pow(v_hit2.X() - v_hit1.X(), 2) + 
+      // double denom_xz = std::sqrt(std::pow(v_hit2.X() - v_hit1.X(), 2) +
       //             std::pow(v_hit2.Z() - v_hit1.Z(), 2));
       // double d0 = numer_xz / denom_xz;
 
@@ -453,12 +454,16 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       // DCAz, projected z-vertex
       // First check if it intercepts with z-axis (within 1 cm)?
       double vpz;
+      double vpy;
       double t1 = -v_hit1[0] / (v_hit2[0] - v_hit1[0]);
       double t2 = -v_hit1[1] / (v_hit2[1] - v_hit1[1]);
-      if (abs(t1 - t2) > 200000)
+      if (abs(t1 - t2) > 200000) {
         vpz = -999999.;
-      else
+        vpy = -999999.;
+      } else {
         vpz = -v_hit1[0] * (v_hit2[2] - v_hit1[2]) / (v_hit2[0] - v_hit1[0]) + v_hit1[2];
+        vpy = -v_hit1[0] * (v_hit2[1] - v_hit1[1]) / (v_hit2[0] - v_hit1[0]) + v_hit1[1];
+      }
 
       gemhit1.trackID = fNTracks;
       gemhit2.trackID = fNTracks;
@@ -472,6 +477,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         theGEMTrack->SetTime(tmean, tdiff);
         theGEMTrack->SetD0(d0);
         theGEMTrack->SetZVertex(vpz);
+        theGEMTrack->SetYVertex(vpy);
       }
       fNTracks++;
     }

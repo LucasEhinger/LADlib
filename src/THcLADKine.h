@@ -2,15 +2,17 @@
 #define ROOT_THcLADKine
 //////////////////////////////////////////////////////////////////////////
 
-#include "THaSpectrometer.h" // Include for THaSpectrometer
-#include "THcLADGEM.h"       // Include for THcLADGEM
-#include "THcLADHodoscope.h" // Include for THcLADHodoscope
+#include "THaSpectrometer.h"
+#include "THaTrack.h"
+#include "THcLADGEM.h"
+#include "THcLADHodoscope.h"
 #include "THcPrimaryKine.h"
-#include "THcReactionPoint.h" // Include for THcReactionPoint
+#include "THcReactionPoint.h"
+#include "THcTrigDet.h"
 
 class THcReactionPoint;
 class THcLADHodoscope;
-class THCLADGEM;
+class THcLADGEM;
 
 class THcLADKine : public THcPrimaryKine {
 public:
@@ -28,11 +30,12 @@ public:
 
 protected:
   TString fSpecName;
-  THaSpectrometer *fSpec;
   THcLADGEM *fGEM;
   THcLADHodoscope *fHodoscope;
   TString fVertexModuleName;
   THcReactionPoint *fVertexModule;
+  THaTrack *fTrack; // Golden Track
+  THcTrigDet *fTrigDet;
 
   Int_t MAXGOODHITS = 500;
   Int_t goodhit_n;
@@ -46,6 +49,7 @@ protected:
   Double_t *fFixed_z;
   Double_t fglobal_time_offset;
   virtual Int_t DefineVariables(EMode mode = kDefine);
+  Double_t CalculateToF(Double_t t_raw);
 
   ClassDef(THcLADKine, 0)
 };

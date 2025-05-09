@@ -53,6 +53,9 @@ public:
   TClonesArray *GetHits() { return fHodoHits; }
 
 protected:
+  const Int_t NUM_PADDLES = 11; // number of paddles in a plane
+  const Int_t MAX_HITS = 20; // maximum number of paddles in a plane
+
   TClonesArray *fHodoHits;
 
   TClonesArray *frTopTdcTimeRaw;
@@ -70,6 +73,7 @@ protected:
   Double_t fTopAdcRefDiffTime;
   Double_t fBtmAdcRefDiffTime;
 
+  Double_t fTDC_match_window;
   // Counters
   Int_t fTotNumTdcHits;
   Int_t fTotNumTopTdcHits;
