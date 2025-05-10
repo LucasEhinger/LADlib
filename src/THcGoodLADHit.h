@@ -8,8 +8,8 @@ public:
   THcGoodLADHit() {
     for (int i = 0; i < 2; ++i) {
       plane[i] = paddle[i] = track_id[i] = -1;
-      hit_tof[i] = delta_pos_trans[i] = delta_pos_long[i] = hit_time[i] = hit_theta[i] = hit_phi[i] = hit_edep[i] =
-          hit_yPos[i] = hit_yPos[i] = hit_alpha[i] = hit_tof[i] = 1e30;
+      hit_tof[i] = dTrk_horiz[i] = dTrk_vert[i] = hit_time[i] = hit_theta[i] = hit_phi[i] = hit_edep[i] =
+          hit_yPos[i] = hit_alpha[i] = hit_beta[i] = 1e30;
     }
   };
   virtual ~THcGoodLADHit() = default;
@@ -32,13 +32,13 @@ public:
     CheckHitIndex(hit);
     track_id[hit] = value;
   }
-  void SetDeltaPosTrans(Int_t hit, Double_t value) {
+  void SetdTrkHoriz(Int_t hit, Double_t value) {
     CheckHitIndex(hit);
-    delta_pos_trans[hit] = value;
+    dTrk_horiz[hit] = value;
   }
-  void SetDeltaPosLong(Int_t hit, Double_t value) {
+  void SetdTrkVert(Int_t hit, Double_t value) {
     CheckHitIndex(hit);
-    delta_pos_long[hit] = value;
+    dTrk_vert[hit] = value;
   }
   void SetHitTime(Int_t hit, Double_t value) {
     CheckHitIndex(hit);
@@ -79,8 +79,8 @@ public:
       SetPlane(this_plane, copyhit->GetPlaneHit0());
       SetPaddle(this_plane, copyhit->GetPaddleHit0());
       SetTrackID(this_plane, copyhit->GetTrackIDHit0());
-      SetDeltaPosTrans(this_plane, copyhit->GetDeltaPosTransHit0());
-      SetDeltaPosLong(this_plane, copyhit->GetDeltaPosLongHit0());
+      SetdTrkHoriz(this_plane, copyhit->GetdTrkHorizHit0());
+      SetdTrkVert(this_plane, copyhit->GetdTrkVertHit0());
       SetHitTime(this_plane, copyhit->GetHitTimeHit0());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit0());
       SetHitPhi(this_plane, copyhit->GetHitPhiHit0());
@@ -92,8 +92,8 @@ public:
       SetPlane(this_plane, copyhit->GetPlaneHit1());
       SetPaddle(this_plane, copyhit->GetPaddleHit1());
       SetTrackID(this_plane, copyhit->GetTrackIDHit1());
-      SetDeltaPosTrans(this_plane, copyhit->GetDeltaPosTransHit1());
-      SetDeltaPosLong(this_plane, copyhit->GetDeltaPosLongHit1());
+      SetdTrkHoriz(this_plane, copyhit->GetdTrkHorizHit1());
+      SetdTrkVert(this_plane, copyhit->GetdTrkVertHit1());
       SetHitTime(this_plane, copyhit->GetHitTimeHit1());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit1());
       SetHitPhi(this_plane, copyhit->GetHitPhiHit1());
@@ -121,11 +121,11 @@ public:
   Double_t GetBetaHit0() const { return hit_beta[0]; }
   Double_t GetBetaHit1() const { return hit_beta[1]; }
 
-  Double_t GetDeltaPosTransHit0() const { return delta_pos_trans[0]; }
-  Double_t GetDeltaPosTransHit1() const { return delta_pos_trans[1]; }
+  Double_t GetdTrkHorizHit0() const { return dTrk_horiz[0]; }
+  Double_t GetdTrkHorizHit1() const { return dTrk_horiz[1]; }
 
-  Double_t GetDeltaPosLongHit0() const { return delta_pos_long[0]; }
-  Double_t GetDeltaPosLongHit1() const { return delta_pos_long[1]; }
+  Double_t GetdTrkVertHit0() const { return dTrk_vert[0]; }
+  Double_t GetdTrkVertHit1() const { return dTrk_vert[1]; }
 
   Double_t GetHitTimeHit0() const { return hit_time[0]; }
   Double_t GetHitTimeHit1() const { return hit_time[1]; }
@@ -152,8 +152,8 @@ protected:
   Int_t plane[2];
   Int_t paddle[2];
   Int_t track_id[2];
-  Double_t delta_pos_trans[2];
-  Double_t delta_pos_long[2];
+  Double_t dTrk_horiz[2];
+  Double_t dTrk_vert[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];
   Double_t hit_theta[2];

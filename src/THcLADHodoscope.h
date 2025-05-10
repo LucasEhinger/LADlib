@@ -67,8 +67,6 @@ protected:
   Int_t fNPlanes;
   Int_t fNHits;
   Int_t *fNPaddle;
-  Double_t fTofTolerance;
-  Int_t fNumPlanesBetaCalc; // Number of planes to use in beta calculation
   Int_t fMaxHodoScin;
   Int_t fCosmicFlag;
   Double_t fScinTdcMin, fScinTdcMax;
@@ -77,8 +75,8 @@ protected:
   Double_t *fAdcTdcOffset;
   Double_t *fHodoSlop;
   Int_t fIsMC;
-  Double_t fTrackToleranceLong;
-  Double_t fTrackToleranceTrans;
+  Double_t fTrackToleranceVert;
+  Double_t fTrackToleranceHoriz;
 
   // Output variables
   static const Int_t MAXGOODHITS = 500;
@@ -88,67 +86,11 @@ protected:
   Int_t num_unique_good_hits;
   Double_t *fHodoVelLight;
 
-  Double_t fStartTime;
-  Double_t fFPTimeAll;
-  Double_t *fFPTime; // [fNPlanes] Array
-
   THaApparatus *fSpectro;
   THcLADGEM *fGEM;
 
-  struct TOFPInfo {
-    Bool_t onTrack;
-    Bool_t keep_pos;
-    Bool_t keep_neg;
-    Double_t time_pos;      // Times also corrected for particle
-    Double_t time_neg;      // flight time
-    Double_t scin_pos_time; // Times corrected for position on
-    Double_t scin_neg_time; // the bar
-    Double_t pathp;
-    Double_t pathn;
-    Double_t zcor;
-    Double_t scinTrnsCoord;
-    Double_t scinLongCoord;
-    Int_t planeIndex;
-    Int_t hitNumInPlane;
-    THcLADHodoHit *hit;
-    TOFPInfo()
-        : onTrack(kFALSE), keep_pos(kFALSE), keep_neg(kFALSE), time_pos(-99.0), time_neg(-99.0), scin_pos_time(0.0),
-          scin_neg_time(0.0) {}
-  };
-  std::vector<TOFPInfo> fTOFPInfo;
 
-  struct TOFCalc {
-    Int_t hit_paddle;
-    Int_t pindex; // Plane index
-    Int_t good_raw_pad;
-    Bool_t good_scin_time;
-    Bool_t good_tdc_pos;
-    Bool_t good_tdc_neg;
-    Double_t scin_time;
-    Double_t scin_time_fp;
-    Double_t scin_sigma;
-    Double_t dedx;
-    TOFCalc() : good_scin_time(kFALSE), good_tdc_pos(kFALSE), good_tdc_neg(kFALSE) {}
-  };
-  std::vector<TOFCalc> fTOFCalc;
-
-  std::vector<std::vector<Double_t>> fdEdX; // Vector over track #
-  std::vector<Int_t> fNScinHit;             // # scins hit for the track
-
-  Double_t *fSumPlaneTime; // [fNPlanes]
   Int_t *fNScinHits;       // [fNPlanes]
-  Int_t *fNPlaneTime;      // [fNPlanes]
-  Bool_t *fGoodPlaneTime;  // [fNPlanes]
-
-  struct GoodFlags {
-    Bool_t onTrack;
-    Bool_t goodScinTime;
-    Bool_t goodTdcNeg;
-    Bool_t goodTdcPos;
-    GoodFlags() : onTrack(false), goodScinTime(false), goodTdcNeg(false), goodTdcPos(false) {}
-  };
-  std::vector<std::vector<std::vector<GoodFlags>>> fGoodFlags;
-  //
 
   // Time walk
   Double_t *fHodoVelFit;
@@ -162,14 +104,10 @@ protected:
 
   Int_t fAnalyzePedestals;
 
-  Double_t *fHodoBtmAdcTimeWindowMin; // per element? per plane?
+  Double_t *fHodoBtmAdcTimeWindowMin;
   Double_t *fHodoBtmAdcTimeWindowMax;
   Double_t *fHodoTopAdcTimeWindowMin;
   Double_t *fHodoTopAdcTimeWindowMax;
-
-  // FIXME. Neither of these are used or initialized.
-  Double_t fPartMass;    // Nominal particle mass
-  Double_t fBetaNominal; // Beta for central ray of nominal particle type
 
   THcLADHodoPlane **fPlanes;
   char **fPlaneNames;

@@ -43,8 +43,9 @@ protected:
   TClonesArray *fGEMTracks;
   Double_t fD0Cut_wVertex;
   Double_t fD0Cut_noVertex;
-  Double_t fmax_dTrans_match;
-  Double_t fmax_dLong_match;
+  Double_t fMax_dTrk_horiz_match;
+  Double_t fMax_dTrk_vert_match;
+  Double_t fTrk_dtCut;
   Int_t fNfixed_z;
   Double_t *fFixed_z;
   Double_t fglobal_time_offset;
