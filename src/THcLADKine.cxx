@@ -112,17 +112,19 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
 
   fD0Cut_wVertex      = 0.0;
   fD0Cut_noVertex     = 0.0;
-  fmax_dTrans_match   = 0.0;
-  fmax_dLong_match    = 0.0;
+  fMax_dTrk_horiz_match   = 0.0;
+  fMax_dTrk_vert_match    = 0.0;
   fNfixed_z           = 0;
   fglobal_time_offset = 0.0;
+  fTrk_dtCut         = 10.0;
 
   DBRequest list[] = {{"d0_cut_wVertex", &fD0Cut_wVertex, kDouble, 0, 1},
                       {"d0_cut_noVertex", &fD0Cut_noVertex, kDouble, 0, 1},
-                      {"max_dTrans_hitMatch", &fmax_dTrans_match, kDouble, 0, 1},
-                      {"max_dLong_hitMatch", &fmax_dLong_match, kDouble, 0, 1},
+                      {"max_dTrk_horiz_hitMatch", &fMax_dTrk_horiz_match, kDouble, 0, 1},
+                      {"max_dTrk_vert_hitMatch", &fMax_dTrk_vert_match, kDouble, 0, 1},
                       {"nfixed_z", &fNfixed_z, kInt, 0, 1},
                       {"global_time_offset", &fglobal_time_offset, kDouble, 0, 1},
+                      {"trk_dt_cut", &fTrk_dtCut, kDouble, 0, 1},
                       {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
@@ -198,6 +200,11 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         isGoodTrack[i] = true;
       }
     }
+
+
+    if(track->GetdT() > fTrk_dtCut) {
+      isGoodTrack[i] = false;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -252,8 +259,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     }
     if (matching_hit_index != -1) {
       THcGoodLADHit *goodhit = static_cast<THcGoodLADHit *>(fGoodLADHits->At(matching_hit_index));
-      if (abs(hit->GetDeltaPosTransHit0()) <
-          (plane_loc ? abs(goodhit->GetDeltaPosTransHit1()) : abs(goodhit->GetDeltaPosTransHit0()))) {
+      if (abs(hit->GetdTrkHorizHit0()) <
+          (plane_loc ? abs(goodhit->GetdTrkHorizHit1()) : abs(goodhit->GetdTrkHorizHit0()))) {
 
         goodhit->CopyHit(plane_loc, 0, hit); // Copy the new hit into the good hit
         goodhit->SetTrackID(plane_loc, track_id);
@@ -267,7 +274,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
   // Find matching front + back plane hits
   // Create a vector of pairs to store matching hits for each track
   std::vector<std::pair<Int_t, Int_t>> matchingHits(ntracks, {-1, -1});
-  std::vector<double> deltaPosTransValues;
+  std::vector<double> dTrk_horiz_values;
 
   // TODO: This can probably be incorporated into the loop above
   for (Int_t i = 0; i < goodhit_n; i++) {
@@ -275,12 +282,12 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     if (goodhit == nullptr)
       continue;
 
-    // Add delta_pos_trans values for both planes (if valid) to the vector
-    if (goodhit->GetDeltaPosTransHit0() != 0) {
-      deltaPosTransValues.push_back(goodhit->GetDeltaPosTransHit0());
+    // Add dTrk_horiz values for both planes (if valid) to the vector
+    if (goodhit->GetdTrkHorizHit0() != 0) {
+      dTrk_horiz_values.push_back(goodhit->GetdTrkHorizHit0());
     }
-    if (goodhit->GetDeltaPosTransHit1() != 0) {
-      deltaPosTransValues.push_back(goodhit->GetDeltaPosTransHit1());
+    if (goodhit->GetdTrkHorizHit1() != 0) {
+      dTrk_horiz_values.push_back(goodhit->GetdTrkHorizHit1());
     }
 
     Int_t trackID0 = goodhit->GetTrackIDHit0();
@@ -291,7 +298,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       if (matchingHits[trackID0].first == -1) {
         // If it is, set the second hit index to the current index
         matchingHits[trackID0].first = i;
-      } else if (deltaPosTransValues[matchingHits[trackID0].first] > goodhit->GetDeltaPosTransHit0()) {
+      } else if (dTrk_horiz_values[matchingHits[trackID0].first] > goodhit->GetdTrkHorizHit0()) {
         matchingHits[trackID0].first = i;
       }
     }
@@ -300,7 +307,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       if (matchingHits[trackID1].second == -1) {
         // If it is, set the second hit index to the current index
         matchingHits[trackID1].second = i;
-      } else if (deltaPosTransValues[matchingHits[trackID1].second] > goodhit->GetDeltaPosTransHit1()) {
+      } else if (dTrk_horiz_values[matchingHits[trackID1].second] > goodhit->GetdTrkHorizHit1()) {
         matchingHits[trackID1].second = i;
       }
     }
@@ -411,8 +418,8 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
         {"goodhit_paddle_0", "Good hit paddle", "fGoodLADHits.THcGoodLADHit.GetPaddleHit0()"},
         {"goodhit_trackid_0", "Good hit track ID", "fGoodLADHits.THcGoodLADHit.GetTrackIDHit0()"},
         {"goodhit_beta_0", "Good hit beta", "fGoodLADHits.THcGoodLADHit.GetBetaHit0()"},
-        {"goodhit_deltapostrans_0", "Good hit delta pos trans", "fGoodLADHits.THcGoodLADHit.GetDeltaPosTransHit0()"},
-        {"goodhit_deltaposlong_0", "Good hit delta pos long", "fGoodLADHits.THcGoodLADHit.GetDeltaPosLongHit0()"},
+        {"goodhit_dTrkHoriz_0", "Good hit horizontal trk proj - hit position", "fGoodLADHits.THcGoodLADHit.GetdTrkHorizHit0()"},
+        {"goodhit_dTrkVert_0", "Good hit vertical trk proj - hit position", "fGoodLADHits.THcGoodLADHit.GetdTrkVertHit0()"},
         {"goodhit_hittime_0", "Good hit time", "fGoodLADHits.THcGoodLADHit.GetHitTimeHit0()"},
         {"goodhit_hittheta_0", "Good hit theta", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit0()"},
         {"goodhit_hitphi_0", "Good hit phi", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit0()"},
@@ -421,10 +428,10 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
         {"goodhit_paddle_1", "Good hit paddle (second plane)", "fGoodLADHits.THcGoodLADHit.GetPaddleHit1()"},
         {"goodhit_trackid_1", "Good hit track ID (second plane)", "fGoodLADHits.THcGoodLADHit.GetTrackIDHit1()"},
         {"goodhit_beta_1", "Good hit beta (second plane)", "fGoodLADHits.THcGoodLADHit.GetBetaHit1()"},
-        {"goodhit_deltapostrans_1", "Good hit delta pos trans (second plane)",
-         "fGoodLADHits.THcGoodLADHit.GetDeltaPosTransHit1()"},
-        {"goodhit_deltaposlong_1", "Good hit delta pos long (second plane)",
-         "fGoodLADHits.THcGoodLADHit.GetDeltaPosLongHit1()"},
+        {"goodhit_dTrkHoriz_1", "Good hit horizontal trk proj - hit position (second plane)",
+         "fGoodLADHits.THcGoodLADHit.GetdTrkHorizHit1()"},
+        {"goodhit_dTrkVert_1", "Good hit vertical trk proj - hit position (second plane)",
+         "fGoodLADHits.THcGoodLADHit.GetdTrkVertHit1()"},
         {"goodhit_hittime_1", "Good hit time (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitTimeHit1()"},
         {"goodhit_hittheta_1", "Good hit theta (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit1()"},
         {"goodhit_hitphi_1", "Good hit phi (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit1()"},
