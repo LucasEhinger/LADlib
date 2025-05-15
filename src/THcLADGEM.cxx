@@ -183,6 +183,10 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
     // Track/Space point variables
     RVarDef vars_trk[] = {{"trk.ntracks", "Number of GEM track candidates", "fNTracks"},
                           {"trk.id", "GEM Track ID", "fGEMTracks.THcLADGEMTrack.GetTrackID()"},
+                          {"trk.spID_0u", "Space Point ID for Layer 0 U", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_0U()"},
+                          {"trk.spID_0v", "Space Point ID for Layer 0 V", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_0V()"},
+                          {"trk.spID_1u", "Space Point ID for Layer 1 U", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_1U()"},
+                          {"trk.spID_1v", "Space Point ID for Layer 1 V", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_1V()"},
                           {"trk.adc1", "2D hit ADC mean for 1st layer", "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp1()"},
                           {"trk.adc2", "2D hit ADC mean for 2nd layer", "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp2()"},
                           {"trk.asy1", "2D hit ADC asym for 1st layer", "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp1()"},
@@ -386,6 +390,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
     return 0;
 
   for (auto gemhit1 : f2DHits[fNLayers - 2]) {
+    int gemhit1_id = 0;
     // LHE. The -X is a hard-coded fix to get the right coordinate system. This should be really easy to fix in the
     // param file instead, but we're currently trying to debug low-level gem issues, and doing this is one less moving
     // part.
@@ -396,6 +401,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
     gemhit1.posZ = v_hit1[2];
 
     for (auto gemhit2 : f2DHits[fNLayers - 1]) {
+      int gemhit2_id = 0;
 
       if (!gemhit1.IsGoodHit || !gemhit2.IsGoodHit)
         continue;
@@ -480,7 +486,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         theGEMTrack->SetYVertex(vpy);
       }
       fNTracks++;
+      gemhit2_id++;
     }
+    gemhit1_id++;
   }
 
   return 0;
