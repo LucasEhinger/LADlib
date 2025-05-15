@@ -110,13 +110,13 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   prefix[0] = 'l';
   prefix[1] = '\0';
 
-  fD0Cut_wVertex      = 0.0;
-  fD0Cut_noVertex     = 0.0;
-  fMax_dTrk_horiz_match   = 0.0;
-  fMax_dTrk_vert_match    = 0.0;
-  fNfixed_z           = 0;
-  fglobal_time_offset = 0.0;
-  fTrk_dtCut         = 10.0;
+  fD0Cut_wVertex        = 0.0;
+  fD0Cut_noVertex       = 0.0;
+  fMax_dTrk_horiz_match = 0.0;
+  fMax_dTrk_vert_match  = 0.0;
+  fNfixed_z             = 0;
+  fglobal_time_offset   = 0.0;
+  fTrk_dtCut            = 10.0;
 
   DBRequest list[] = {{"d0_cut_wVertex", &fD0Cut_wVertex, kDouble, 0, 1},
                       {"d0_cut_noVertex", &fD0Cut_noVertex, kDouble, 0, 1},
@@ -201,8 +201,7 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       }
     }
 
-
-    if(track->GetdT() > fTrk_dtCut) {
+    if (track->GetdT() > fTrk_dtCut) {
       isGoodTrack[i] = false;
     }
   }
@@ -355,19 +354,19 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
 //_____________________________________________________________________________
 Double_t THcLADKine::CalculateToF(Double_t t_raw) {
   // Calculate the time of flight
-  if(fTrack == nullptr) {
+  if (fTrack == nullptr) {
     // Error("CalculateToF", "No track found");
     return kBig;
   }
 
-  Double_t HMScentralPathLen = 22.0*100.;
-  Double_t SHMScentralPathLen = 18.1*100.;
-  Double_t elecMass =  0.510998/1000.0; // electron mass in GeV/c^2
-  Double_t lightSpeed = 29.9792; // in cm/ns
+  Double_t HMScentralPathLen  = 22.0 * 100.;
+  Double_t SHMScentralPathLen = 18.1 * 100.;
+  Double_t elecMass           = 0.510998 / 1000.0; // electron mass in GeV/c^2
+  Double_t lightSpeed         = 29.9792;           // in cm/ns
 
   Double_t fPtime = fTrack->GetFPTime();
-  Double_t xptar = fTrack->GetTTheta();     
-  Double_t dP = fTrack->GetDp();  
+  Double_t xptar  = fTrack->GetTTheta();
+  Double_t dP     = fTrack->GetDp();
   Double_t elec_P = fTrack->GetP();
   if (fPtime == -2000 || fPtime == -1000) {
     return kBig;
@@ -382,20 +381,20 @@ Double_t THcLADKine::CalculateToF(Double_t t_raw) {
   char aparatus_prefix[2];
   aparatus_prefix[0] = tolower(fSpecName[0]);
   aparatus_prefix[1] = '\0';
-  
+
   Double_t DeltaPathLength;
   if (aparatus_prefix[0] == 'h') {
-    DeltaPathLength = (.12*xptar*1000 +0.17*dP/100.);
+    DeltaPathLength = (.12 * xptar * 1000 + 0.17 * dP / 100.);
     DeltaPathLength += HMScentralPathLen;
   } else if (aparatus_prefix[0] == 'p') {
-    DeltaPathLength = (.11*xptar*1000 +0.057*dP/100.);
+    DeltaPathLength = (.11 * xptar * 1000 + 0.057 * dP / 100.);
     DeltaPathLength += SHMScentralPathLen;
   } else {
     Error("CalculateToF", "Invalid apparatus prefix: %s", aparatus_prefix);
     return kBig;
-  }  
+  }
 
-  Double_t beta_calc = elec_P / sqrt(elec_P*elec_P + elecMass*elecMass);
+  Double_t beta_calc      = elec_P / sqrt(elec_P * elec_P + elecMass * elecMass);
   Double_t PathLengthCorr = DeltaPathLength / (lightSpeed * beta_calc);
 
   Double_t vertex_time = fPtime - PathLengthCorr;
@@ -418,12 +417,16 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
         {"goodhit_paddle_0", "Good hit paddle", "fGoodLADHits.THcGoodLADHit.GetPaddleHit0()"},
         {"goodhit_trackid_0", "Good hit track ID", "fGoodLADHits.THcGoodLADHit.GetTrackIDHit0()"},
         {"goodhit_beta_0", "Good hit beta", "fGoodLADHits.THcGoodLADHit.GetBetaHit0()"},
-        {"goodhit_dTrkHoriz_0", "Good hit horizontal trk proj - hit position", "fGoodLADHits.THcGoodLADHit.GetdTrkHorizHit0()"},
-        {"goodhit_dTrkVert_0", "Good hit vertical trk proj - hit position", "fGoodLADHits.THcGoodLADHit.GetdTrkVertHit0()"},
+        {"goodhit_dTrkHoriz_0", "Good hit horizontal trk proj - hit position",
+         "fGoodLADHits.THcGoodLADHit.GetdTrkHorizHit0()"},
+        {"goodhit_dTrkVert_0", "Good hit vertical trk proj - hit position",
+         "fGoodLADHits.THcGoodLADHit.GetdTrkVertHit0()"},
         {"goodhit_hittime_0", "Good hit time", "fGoodLADHits.THcGoodLADHit.GetHitTimeHit0()"},
         {"goodhit_hittheta_0", "Good hit theta", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit0()"},
         {"goodhit_hitphi_0", "Good hit phi", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit0()"},
         {"goodhit_hitedep_0", "Good hit energy deposition", "fGoodLADHits.THcGoodLADHit.GetHitEdepHit0()"},
+        {"goodhit_hitedep_amp_0", "Good hit energy deposition (amplitude)",
+         "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit0()"},
         {"goodhit_plane_1", "Good hit plane (second plane)", "fGoodLADHits.THcGoodLADHit.GetPlaneHit1()"},
         {"goodhit_paddle_1", "Good hit paddle (second plane)", "fGoodLADHits.THcGoodLADHit.GetPaddleHit1()"},
         {"goodhit_trackid_1", "Good hit track ID (second plane)", "fGoodLADHits.THcGoodLADHit.GetTrackIDHit1()"},
@@ -437,6 +440,8 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
         {"goodhit_hitphi_1", "Good hit phi (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit1()"},
         {"goodhit_hitedep_1", "Good hit energy deposition (second plane)",
          "fGoodLADHits.THcGoodLADHit.GetHitEdepHit1()"},
+        {"goodhit_hitedep_amp_1", "Good hit energy deposition (amplitude) (second plane)",
+         "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit1()"},
         {"goodhit_ypos_0", "Good hit y position", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit0()"},
         {"goodhit_ypos_1", "Good hit y position (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit1()"},
         {"goodhit_tof_0", "Good hit time of flight", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit0()"},

@@ -54,7 +54,7 @@ public:
 
 protected:
   const Int_t NUM_PADDLES = 11; // number of paddles in a plane
-  const Int_t MAX_HITS = 20; // maximum number of paddles in a plane
+  const Int_t MAX_HITS = 40; // maximum number of hits in a plane (TClones array will automatically resize if needed)
 
   TClonesArray *fHodoHits;
 

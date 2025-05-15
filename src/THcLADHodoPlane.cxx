@@ -25,61 +25,52 @@ THcLADHodoPlane::THcLADHodoPlane(const char *name, const char *description, cons
   fPosBtm    = 0;
   fPosTop    = 0;
 
-  fHodoHits = new TClonesArray("THcLADHodoHit", 16);
+  fHodoHits = new TClonesArray("THcLADHodoHit", MAX_HITS);
 
-  frTopAdcErrorFlag = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcErrorFlag = new TClonesArray("THcSignalHit", 16);
+  frTopAdcErrorFlag = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcErrorFlag = new TClonesArray("THcSignalHit", MAX_HITS);
 
-  frTopTdcHits = new TClonesArray("THcSignalHit", 16);
-  frBtmTdcHits = new TClonesArray("THcSignalHit", 16);
-  frTopAdcHits = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcHits = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSums = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSums = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPeds = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPeds = new TClonesArray("THcSignalHit", 16);
+  frTopTdcTimeRaw      = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPedRaw       = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPulseIntRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPulseAmpRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPulseTimeRaw = new TClonesArray("THcSignalHit", MAX_HITS);
 
-  frTopTdcTimeRaw      = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPedRaw       = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPulseIntRaw  = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPulseAmpRaw  = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPulseTimeRaw = new TClonesArray("THcSignalHit", 16);
+  frTopTdcTime      = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPed       = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPulseInt  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPulseAmp  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcPulseTime = new TClonesArray("THcSignalHit", MAX_HITS);
 
-  frTopTdcTime      = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPed       = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPulseInt  = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPulseAmp  = new TClonesArray("THcSignalHit", 16);
-  frTopAdcPulseTime = new TClonesArray("THcSignalHit", 16);
+  frBtmTdcTimeRaw      = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPedRaw       = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPulseIntRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPulseAmpRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPulseTimeRaw = new TClonesArray("THcSignalHit", MAX_HITS);
 
-  frBtmTdcTimeRaw      = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPedRaw       = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPulseIntRaw  = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPulseAmpRaw  = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPulseTimeRaw = new TClonesArray("THcSignalHit", 16);
+  frBtmTdcTime      = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPed       = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPulseInt  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPulseAmp  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcPulseTime = new TClonesArray("THcSignalHit", MAX_HITS);
 
-  frBtmTdcTime      = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPed       = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPulseInt  = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPulseAmp  = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcPulseTime = new TClonesArray("THcSignalHit", 16);
+  frTopAdcSampPedRaw       = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPulseIntRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPulseAmpRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPulseTimeRaw = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPed          = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPulseInt     = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPulseAmp     = new TClonesArray("THcSignalHit", MAX_HITS);
+  frTopAdcSampPulseTime    = new TClonesArray("THcSignalHit", MAX_HITS);
 
-  frTopAdcSampPedRaw       = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPulseIntRaw  = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPulseAmpRaw  = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPulseTimeRaw = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPed          = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPulseInt     = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPulseAmp     = new TClonesArray("THcSignalHit", 16);
-  frTopAdcSampPulseTime    = new TClonesArray("THcSignalHit", 16);
-
-  frBtmAdcSampPedRaw       = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPulseIntRaw  = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPulseAmpRaw  = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPulseTimeRaw = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPed          = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPulseInt     = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPulseAmp     = new TClonesArray("THcSignalHit", 16);
-  frBtmAdcSampPulseTime    = new TClonesArray("THcSignalHit", 16);
+  frBtmAdcSampPedRaw       = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPulseIntRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPulseAmpRaw  = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPulseTimeRaw = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPed          = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPulseInt     = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPulseAmp     = new TClonesArray("THcSignalHit", MAX_HITS);
+  frBtmAdcSampPulseTime    = new TClonesArray("THcSignalHit", MAX_HITS);
 }
 
 //_______________________________________________________________________________________
@@ -94,14 +85,6 @@ THcLADHodoPlane::~THcLADHodoPlane() {
   frBtmAdcErrorFlag = NULL;
 
   delete fHodoHits;
-  delete frTopTdcHits;
-  delete frBtmTdcHits;
-  delete frTopAdcHits;
-  delete frBtmAdcHits;
-  delete frTopAdcSums;
-  delete frBtmAdcSums;
-  delete frTopAdcPeds;
-  delete frBtmAdcPeds;
 
   delete frTopTdcTimeRaw;
   delete frTopAdcPedRaw;
@@ -809,6 +792,7 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"HodoHitPaddleNum", "List of HodoHit paddle numbers", "fHodoHits.THcLADHodoHit.GetPaddleNumber()"},
       {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
       {"HodoHitEdep", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC()"},
+      {"HodoHitEdepAmp", "List of HodoHit ADC amplitudes", "fHodoHits.THcLADHodoHit.GetPaddleADCpeak()"},
       {"HodoHitisFull", "List of Bool's specifing if hit has top and btm hodo hits",
        "fHodoHits.THcLADHodoHit.GetHasCorrectedTimes()"},
       {0}};
@@ -832,7 +816,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
    * - Called by THcHodoscope::Decode
    * - Loops through "rawhits" array  starting at index of "nexthit"
    * - Assumes that the hit list is sorted by plane and looping ends when plane number of hit doesn't match fPlaneNum
-   * - Fills THcSignalHit objects frTopTdcHits and frBtmTdcHits when TDC > 0
    * - Fills THcSignalHit objects frTopAdcHits and frBtmAdcHit with pedestal subtracted ADC when value larger than 50
    * - For hits that have TDC value for either top or bottom PMT within  fScinTdcMin and fScinTdcMax
    *  + Creates new  fHodoHits[fNScinHits] =  THcHodoHit
@@ -1399,24 +1382,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           adcint_btm  = hit->GetRawAdcHitNeg().GetPulseIntRaw() - fBtmPed[index]; // Neg=Btm
           badcraw_top = badcraw_btm = kTRUE;
         }
-
-        // We don't really do anything with these arrays (frTopAdcHits, frBtmAdcHits, ..)
-        if (adcint_top >= fADCDiagCut) {
-          ((THcSignalHit *)frTopAdcHits->ConstructedAt(nrTopADCHits))->Set(padnum, adcint_top);
-          Double_t samplesum = hit->GetRawAdcHitPos().GetSampleIntRaw(); // Pos=Top
-          Double_t pedestal  = hit->GetRawAdcHitPos().GetPedRaw();       // Pos=Top
-          ((THcSignalHit *)frTopAdcSums->ConstructedAt(nrTopADCHits))->Set(padnum, samplesum);
-          ((THcSignalHit *)frTopAdcPeds->ConstructedAt(nrTopADCHits++))->Set(padnum, pedestal);
-        }
-        if (adcint_btm >= fADCDiagCut) {
-          ((THcSignalHit *)frBtmAdcHits->ConstructedAt(nrBtmADCHits))->Set(padnum, adcint_btm);
-          Double_t samplesum = hit->GetRawAdcHitNeg().GetSampleIntRaw(); // Neg=Btm
-          Double_t pedestal  = hit->GetRawAdcHitNeg().GetPedRaw();       // Neg=Btm
-          ((THcSignalHit *)frBtmAdcSums->ConstructedAt(nrBtmADCHits))->Set(padnum, samplesum);
-          ((THcSignalHit *)frBtmAdcPeds->ConstructedAt(nrBtmADCHits++))->Set(padnum, pedestal);
-        }
     */
-
     // Loop over individual TDC/ADC pairs for top and btm
 
     for (int i_top_hit = 0; i_top_hit < n_top_hit; i_top_hit++) {

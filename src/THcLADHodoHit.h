@@ -31,6 +31,7 @@ public:
   Int_t GetPaddleNumber() const { return fPaddleNumber; }
   Int_t GetPaddleCenter() const { return fPaddleCenter; }
   Double_t GetPaddleADC() const { return sqrt(fTopADC_Ped * fBtmADC_Ped); }
+  Double_t GetPaddleADCpeak() const { return sqrt(fTopADC_Peak * fBtmADC_Peak); }
 
   void SetPaddleCenter(Double_t padcenter) { fPaddleCenter = padcenter; }
   void SetTopADCpeak(Double_t adc) { fTopADC_Peak = adc; }

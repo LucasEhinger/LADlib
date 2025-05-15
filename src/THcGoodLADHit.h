@@ -9,7 +9,7 @@ public:
     for (int i = 0; i < 2; ++i) {
       plane[i] = paddle[i] = track_id[i] = -1;
       hit_tof[i] = dTrk_horiz[i] = dTrk_vert[i] = hit_time[i] = hit_theta[i] = hit_phi[i] = hit_edep[i] =
-          hit_yPos[i] = hit_alpha[i] = hit_beta[i] = 1e30;
+          hit_edep_amp[i] = hit_yPos[i] = hit_alpha[i] = hit_beta[i] = 1e30;
     }
   };
   virtual ~THcGoodLADHit() = default;
@@ -56,6 +56,10 @@ public:
     CheckHitIndex(hit);
     hit_edep[hit] = value;
   }
+  void SetHitEdepAmp(Int_t hit, Double_t value) {
+    CheckHitIndex(hit);
+    hit_edep_amp[hit] = value;
+  }
   void SetHitAlpha(Int_t hit, Double_t value) {
     CheckHitIndex(hit);
     hit_alpha[hit] = value;
@@ -85,6 +89,7 @@ public:
       SetHitTheta(this_plane, copyhit->GetHitThetaHit0());
       SetHitPhi(this_plane, copyhit->GetHitPhiHit0());
       SetHitEdep(this_plane, copyhit->GetHitEdepHit0());
+      SetHitEdepAmp(this_plane, copyhit->GetHitEdepAmpHit0());
       SetHitAlpha(this_plane, copyhit->GetHitAlphaHit0());
       SetHitYPos(this_plane, copyhit->GetHitYPosHit0());
       SetHitTOF(this_plane, copyhit->GetHitTOFHit0());
@@ -98,6 +103,7 @@ public:
       SetHitTheta(this_plane, copyhit->GetHitThetaHit1());
       SetHitPhi(this_plane, copyhit->GetHitPhiHit1());
       SetHitEdep(this_plane, copyhit->GetHitEdepHit1());
+      SetHitEdepAmp(this_plane, copyhit->GetHitEdepAmpHit1());
       SetHitAlpha(this_plane, copyhit->GetHitAlphaHit1());
       SetHitYPos(this_plane, copyhit->GetHitYPosHit1());
       SetHitTOF(this_plane, copyhit->GetHitTOFHit1());
@@ -139,6 +145,9 @@ public:
   Double_t GetHitEdepHit0() const { return hit_edep[0]; }
   Double_t GetHitEdepHit1() const { return hit_edep[1]; }
 
+  Double_t GetHitEdepAmpHit0() const { return hit_edep_amp[0]; }
+  Double_t GetHitEdepAmpHit1() const { return hit_edep_amp[1]; }
+
   Double_t GetHitAlphaHit0() const { return hit_alpha[0]; }
   Double_t GetHitAlphaHit1() const { return hit_alpha[1]; }
 
@@ -159,6 +168,7 @@ protected:
   Double_t hit_theta[2];
   Double_t hit_phi[2];
   Double_t hit_edep[2];
+  Double_t hit_edep_amp[2];
   Double_t hit_tof[2];
   Double_t hit_yPos[2];
   Double_t hit_alpha[2];

@@ -92,7 +92,7 @@ public:
   Double_t GetT() const { return fT; }
   Double_t GetdT() const { return fTdiff; }
   bool GetHasHodoHit() const { return fHasHodoHit; }
-  
+
   void SetHasHodoHit(bool hasHodoHit) { fHasHodoHit = hasHodoHit; }
   void SetTrackID(int itrk) { fTrackID = itrk; }
   void SetD0(Double_t d0) { fD0 = d0; }
@@ -106,6 +106,10 @@ public:
 
   GEM2DHits GetSpacePoint(int isp) { return fSp[isp]; }
   virtual void AddSpacePoint(GEM2DHits sp);
+  int GetSpacePointID_0U() { return fSp[0].clusID[0]; }
+  int GetSpacePointID_0V() { return fSp[0].clusID[1]; }
+  int GetSpacePointID_1U() { return fSp[1].clusID[0]; }
+  int GetSpacePointID_1V() { return fSp[1].clusID[1]; }
 
 protected:
   Int_t fNSp;
@@ -114,6 +118,8 @@ protected:
   Double_t fD0;
   Bool_t fhasGoodD0;
   Int_t fTrackID;
+  Int_t fClustID0;
+  Int_t fClustID1;
   Double_t fT;
   Double_t fTdiff;
   bool fHasHodoHit;

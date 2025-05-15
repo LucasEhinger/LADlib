@@ -224,6 +224,7 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
       {"goodhit_hittheta_0", "Good hit theta", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit0()"},
       {"goodhit_hitphi_0", "Good hit phi", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit0()"},
       {"goodhit_hitedep_0", "Good hit energy deposition", "fGoodLADHits.THcGoodLADHit.GetHitEdepHit0()"},
+      {"goodhit_hitedep_amp_0", "Good hit energy deposition (amplitude)", "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit0()"},
       // Plane 1 not used at this stage. All hits are in plane 0, until matching can occur in THcLADKine
       // {"goodhit_plane_1", "Good hit plane (second plane)", "fGoodLADHits.THcGoodLADHit.GetPlaneHit1()"},
       // {"goodhit_paddle_1", "Good hit paddle (second plane)", "fGoodLADHits.THcGoodLADHit.GetPaddleHit1()"},
@@ -556,6 +557,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
             goodhit->SetHitTheta(0, track_theta);
             goodhit->SetHitPhi(0, track_phi);
             goodhit->SetHitEdep(0, hit->GetPaddleADC());
+            goodhit->SetHitEdepAmp(0, hit->GetPaddleADCpeak());
             goodhit->SetHitYPos(0, hit->GetCalcPosition());
 
           } // condition for cenetr on a paddle
