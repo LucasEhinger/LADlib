@@ -60,6 +60,7 @@ public:
   Double_t GetTDCThrs() const { return fTdc_Thrs; }
 
   TClonesArray *GetLADGoodHits() { return fGoodLADHits; }
+  TClonesArray *GetLADHits(Int_t plane) { return fPlanes[plane]->GetHits(); }
 
 protected:
   TH1F *hTime;

@@ -49,7 +49,9 @@ protected:
   Int_t fNfixed_z;
   Double_t *fFixed_z;
   Double_t fglobal_time_offset;
+  Double_t fTVertex;
   virtual Int_t DefineVariables(EMode mode = kDefine);
+  void CalculateTVertex();
   Double_t CalculateToF(Double_t t_raw);
 
   ClassDef(THcLADKine, 0)
