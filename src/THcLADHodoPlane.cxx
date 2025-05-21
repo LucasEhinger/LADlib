@@ -364,14 +364,12 @@ void THcLADHodoPlane::Clear(Option_t *opt) {
   for (UInt_t ielem = 0; ielem < fGoodTopTdcTimeUnCorr.size(); ielem++) {
     fGoodTopTdcTimeUnCorr.at(ielem)   = kBig;
     fGoodTopTdcTimeCorr.at(ielem)     = kBig;
-    fGoodTopTdcTimeTOFCorr.at(ielem)  = kBig;
     fGoodTopTdcTimeWalkCorr.at(ielem) = kBig;
   }
 
   for (UInt_t ielem = 0; ielem < fGoodBtmTdcTimeUnCorr.size(); ielem++) {
     fGoodBtmTdcTimeUnCorr.at(ielem)   = kBig;
     fGoodBtmTdcTimeCorr.at(ielem)     = kBig;
-    fGoodBtmTdcTimeTOFCorr.at(ielem)  = kBig;
     fGoodBtmTdcTimeWalkCorr.at(ielem) = kBig;
   }
 
@@ -572,8 +570,6 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fGoodBtmTdcTimeUnCorr   = vector<Double_t>(fNelem, 0.0);
   fGoodTopTdcTimeCorr     = vector<Double_t>(fNelem, 0.0);
   fGoodBtmTdcTimeCorr     = vector<Double_t>(fNelem, 0.0);
-  fGoodTopTdcTimeTOFCorr  = vector<Double_t>(fNelem, 0.0);
-  fGoodBtmTdcTimeTOFCorr  = vector<Double_t>(fNelem, 0.0);
   fGoodTopTdcTimeWalkCorr = vector<Double_t>(fNelem, 0.0);
   fGoodBtmTdcTimeWalkCorr = vector<Double_t>(fNelem, 0.0);
   fGoodDiffDistTrack      = vector<Double_t>(fNelem, 0.0);
@@ -757,10 +753,6 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
        "fGoodTopTdcTimeCorr"},
       {"GoodBtmTdcTimeCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodBtmTdcTimeCorr"},
-      {"GoodTopTdcTimeTOFCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
-       "fGoodTopTdcTimeTOFCorr"},
-      {"GoodBtmTdcTimeTOFCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
-       "fGoodBtmTdcTimeTOFCorr"},
       {"GoodTopTdcTimeWalkCorr", "List of top TDC values (passed TDC && ADC Min and Max cuts for either end)",
        "fGoodTopTdcTimeWalkCorr"},
       {"GoodBtmTdcTimeWalkCorr", "List of bottom TDC values (passed TDC && ADC Min and Max cuts for either end)",
@@ -789,6 +781,7 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
   RVarDef vars2[] = {
       {"nFullHodoHits", "List of HodoHit objects", "fNScinHits"},
       {"HodoHitTime", "List of HodoHit times", "fHodoHits.THcLADHodoHit.GetScinCorrectedTime()"},
+      {"HodoHitTOF", "List of HodoHit times of flight", "fHodoHits.THcLADHodoHit.GetScinTOFCorrectedTime()"},
       {"HodoHitPaddleNum", "List of HodoHit paddle numbers", "fHodoHits.THcLADHodoHit.GetPaddleNumber()"},
       {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
       {"HodoHitEdep", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC()"},
@@ -1541,7 +1534,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           Double_t hit_position     = scint_center + dist_from_center;
           hit_position              = TMath::Min(hit_position, fPosBtm[padnum - 1]);
           hit_position              = TMath::Max(hit_position, fPosTop[padnum - 1]);
-          Double_t scin_corrected_time, toptime, btmtime;
+          Double_t scin_corrected_time;
           Double_t adc_toptime = adc_timec_top;
           Double_t adc_btmtime = adc_timec_btm;
 
@@ -1565,7 +1558,7 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPaddleCenter(fPosCenter[index]);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))
-              ->SetCorrectedTimes(timec_top, timec_btm, toptime, btmtime, scin_corrected_time);
+              ->SetCorrectedTimes(timec_top, timec_btm, scin_corrected_time);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetTopADCpeak(adcamp_top[i_good_top_adc_elem]);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetBtmADCpeak(adcamp_btm[i_good_btm_adc_elem]);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetTopADCCorrtime(adc_toptime);
@@ -1574,8 +1567,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
           fGoodTopTdcTimeCorr.at(padnum - 1)    = timec_top;
           fGoodBtmTdcTimeCorr.at(padnum - 1)    = timec_btm;
-          fGoodTopTdcTimeTOFCorr.at(padnum - 1) = toptime;
-          fGoodBtmTdcTimeTOFCorr.at(padnum - 1) = btmtime;
           fGoodHitTimeAvg.at(padnum - 1)        = scin_corrected_time;
         } else {
           cout << "THcLADHodoPlane::ProcessHits. Good hit has bad ADC or TDC on some end" << endl;

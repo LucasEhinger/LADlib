@@ -143,7 +143,9 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
 Int_t THcLADKine::Process(const THaEvData &evdata) {
   // Get Golden Track (for tof calculation later)
   fTrack = fSpectro->GetGoldenTrack();
+  CalculateTVertex();
 
+  //////////////////////////////////////////////////////////////////////////////
   // Check track projection to vertex
   fGEMTracks    = fGEM->GetTracks();
   Int_t ntracks = fGEMTracks->GetLast() + 1;
@@ -347,16 +349,39 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     }
   }
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Calculate tof for raw planes
+  // Get the number of planes
+  Int_t nPlanes = fHodoscope->GetNPlanes();
+
+  // Loop through the planes and get LAD hits
+  for (Int_t plane = 0; plane < nPlanes; plane++) {
+    TClonesArray *planeHits = fHodoscope->GetLADHits(plane);
+    Int_t nPlaneHits        = planeHits->GetLast() + 1;
+
+    for (Int_t i = 0; i < nPlaneHits; i++) {
+      THcLADHodoHit *hit = static_cast<THcLADHodoHit *>(planeHits->At(i));
+      if (hit == nullptr)
+        continue;
+
+      // Calculate time of flight for each hit
+      Double_t tof_avg = CalculateToF(hit->GetScinCorrectedTime());
+      Double_t tof_top = CalculateToF(hit->GetTopCorrectedTime());
+      Double_t tof_btm = CalculateToF(hit->GetBtmCorrectedTime());
+      hit->SetTOFCorrectedTimes(tof_top, tof_btm, tof_avg);
+    }
+  }
+
   // LADHits_unfiltered->Clear(); // Clear the unfiltered hits
   // fGEMTracks->Clear();      // Clear the tracks
   return kOK;
 }
 //_____________________________________________________________________________
-Double_t THcLADKine::CalculateToF(Double_t t_raw) {
+void THcLADKine::CalculateTVertex() {
   // Calculate the time of flight
   if (fTrack == nullptr) {
     // Error("CalculateToF", "No track found");
-    return kBig;
+    return;
   }
 
   Double_t HMScentralPathLen  = 22.0 * 100.;
@@ -369,7 +394,7 @@ Double_t THcLADKine::CalculateToF(Double_t t_raw) {
   Double_t dP     = fTrack->GetDp();
   Double_t elec_P = fTrack->GetP();
   if (fPtime == -2000 || fPtime == -1000) {
-    return kBig;
+    return;
   }
 
   // Leave these here for now, but don't think I need them
@@ -391,15 +416,20 @@ Double_t THcLADKine::CalculateToF(Double_t t_raw) {
     DeltaPathLength += SHMScentralPathLen;
   } else {
     Error("CalculateToF", "Invalid apparatus prefix: %s", aparatus_prefix);
-    return kBig;
+    return;
   }
 
   Double_t beta_calc      = elec_P / sqrt(elec_P * elec_P + elecMass * elecMass);
   Double_t PathLengthCorr = DeltaPathLength / (lightSpeed * beta_calc);
 
-  Double_t vertex_time = fPtime - PathLengthCorr;
+  fTVertex = fPtime - PathLengthCorr;
 
-  Double_t tof = t_raw - vertex_time + fglobal_time_offset;
+  return;
+}
+//_____________________________________________________________________________
+Double_t THcLADKine::CalculateToF(Double_t t_raw) {
+
+  Double_t tof = t_raw - fTVertex + fglobal_time_offset;
 
   return tof;
 }

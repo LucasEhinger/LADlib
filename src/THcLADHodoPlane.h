@@ -161,11 +161,9 @@ protected:
   // Hodoscopoe "GOOD" TDC Variables
   vector<Double_t> fGoodTopTdcTimeUnCorr;
   vector<Double_t> fGoodTopTdcTimeCorr;
-  vector<Double_t> fGoodTopTdcTimeTOFCorr;
 
   vector<Double_t> fGoodBtmTdcTimeUnCorr;
   vector<Double_t> fGoodBtmTdcTimeCorr;
-  vector<Double_t> fGoodBtmTdcTimeTOFCorr;
 
   // Time Walk Corrected
   vector<Double_t> fGoodTopTdcTimeWalkCorr;

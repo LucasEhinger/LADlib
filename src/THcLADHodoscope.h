@@ -25,8 +25,6 @@ public:
   virtual Int_t CoarseProcess(TClonesArray &tracks);
   virtual Int_t FineProcess(TClonesArray &tracks);
 
-  Double_t DetermineTimePeak(Int_t FillFlag) { return 0.0; }; // TODO: Implement this function
-
   Int_t GetScinIndex(Int_t nPlane, Int_t nPaddle) { return fNPlanes * nPaddle + nPlane; }
   Int_t GetScinIndex(Int_t nSide, Int_t nPlane, Int_t nPaddle) {
     return nSide * fMaxHodoScin + fNPlanes * nPaddle + nPlane - 1;
@@ -60,6 +58,7 @@ public:
   Double_t GetTDCThrs() const { return fTdc_Thrs; }
 
   TClonesArray *GetLADGoodHits() { return fGoodLADHits; }
+  TClonesArray *GetLADHits(Int_t plane) { return fPlanes[plane]->GetHits(); }
 
 protected:
   TH1F *hTime;

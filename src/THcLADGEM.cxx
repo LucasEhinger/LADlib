@@ -285,8 +285,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   //  cout << "THcLADGEM::CoarseProcess" << endl;
 
   fNTracks = 0;
-  fGEMTracks->Clear();
   fGEMTracks->Delete();
+  // delete fGEMTracks;
+  // fGEMTracks = new TClonesArray("THcLADGEMTrack", MAXTRACKS);
 
   fNlayers_hit   = 0;
   fNlayers_hitU  = 0;

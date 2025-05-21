@@ -23,8 +23,6 @@ public:
   Int_t GetBtmTDC() const { return fBtmTDC; }
   Double_t GetTopCorrectedTime() const { return fTopCorrectedTime; }
   Double_t GetBtmCorrectedTime() const { return fBtmCorrectedTime; }
-  Double_t GetTopTOFCorrectedTime() const { return fTopTOFCorrectedTime; }
-  Double_t GetBtmTOFCorrectedTime() const { return fBtmTOFCorrectedTime; }
   Double_t GetScinCorrectedTime() const { return fScinCorrectedTime; }
   Bool_t GetTwoGoodTimes() const { return fTwoGoodTimes; }
   Bool_t GetHasCorrectedTimes() const { return fHasCorrectedTimes; }
@@ -32,6 +30,9 @@ public:
   Int_t GetPaddleCenter() const { return fPaddleCenter; }
   Double_t GetPaddleADC() const { return sqrt(fTopADC_Ped * fBtmADC_Ped); }
   Double_t GetPaddleADCpeak() const { return sqrt(fTopADC_Peak * fBtmADC_Peak); }
+  Double_t GetTopTOFCorrectedTime() const { return fTopTOFCorrectedTime; }
+  Double_t GetBtmTOFCorrectedTime() const { return fBtmTOFCorrectedTime; }
+  Double_t GetScinTOFCorrectedTime() const { return fScinTOFCorrectedTime; }
 
   void SetPaddleCenter(Double_t padcenter) { fPaddleCenter = padcenter; }
   void SetTopADCpeak(Double_t adc) { fTopADC_Peak = adc; }
@@ -42,7 +43,8 @@ public:
   void SetCalcPosition(Double_t calcpos) { fCalcPosition = calcpos; }
   void SetBtmADCtime(Double_t ptime) { fBtmADC_Time = ptime; }
   void SetCorrectedTimes(Double_t top, Double_t btm);
-  void SetCorrectedTimes(Double_t top, Double_t btm, Double_t toptof, Double_t btmtof, Double_t timeave);
+  void SetCorrectedTimes(Double_t top, Double_t btm, Double_t timeave);
+  void SetTOFCorrectedTimes(Double_t top, Double_t btm, Double_t timeave);
 
 protected:
   Int_t fTopTDC;
@@ -64,6 +66,8 @@ protected:
                                  // based on ADCs.
   Double_t fTopTOFCorrectedTime; // Times corrected for z position
   Double_t fBtmTOFCorrectedTime; // using nominal beta
+  Double_t fScinTOFCorrectedTime; // Times corrected for z position
+                                   // using nominal beta
 
   Bool_t fHasCorrectedTimes;
   Bool_t fTwoGoodTimes;
