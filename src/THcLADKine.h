@@ -9,6 +9,7 @@
 #include "THcPrimaryKine.h"
 #include "THcReactionPoint.h"
 #include "THcTrigDet.h"
+#include "THcGoodLADHit.h"
 
 class THcReactionPoint;
 class THcLADHodoscope;
