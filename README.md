@@ -9,7 +9,7 @@ To build
 Check that the library and classes are visible
 
     % hcana -l
-    hcana [0] gSystem->Load("build/src/libNPS")
+    hcana [0] gSystem->Load("build/src/libLAD")
     (int) 0
     hcana [1] .class THcLADHodoPlane
     ===========================================================================
