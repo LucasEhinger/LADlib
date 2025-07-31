@@ -215,6 +215,11 @@ THcLADHodoPlane::~THcLADHodoPlane() {
   fHodoVelLight = NULL;
   // delete[] fHodoSigma;
   // fHodoSigma = NULL;
+
+  delete [] fEdep2MeV_int;
+  fEdep2MeV_int = NULL;
+  delete [] fEdep2MeV_amp;
+  fEdep2MeV_amp = NULL;
 }
 
 //_______________________________________________________________________________________
@@ -506,6 +511,9 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoTop_c2   = new Double_t[fNelem];
   fHodoBtm_c2   = new Double_t[fNelem];
 
+  fEdep2MeV_int = new Double_t[fNelem];
+  fEdep2MeV_amp = new Double_t[fNelem];
+
   for (Int_t j = 0; j < (Int_t)fNelem; j++) {
     Int_t index                 = parent->GetScinIndex(fPlaneNum - 1, j);
     fHodoTopAdcTimeWindowMin[j] = parent->GetHodoTopAdcTimeWindowMin(index);
@@ -532,6 +540,9 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     // Double_t topsigma = parent->GetHodoTopSigma(index);
     // Double_t btmsigma = parent->GetHodoBtmSigma(index);
     // fHodoSigma[j] = TMath::Sqrt(topsigma*topsigma+btmsigma*btmsigma)/2.0;
+
+    fEdep2MeV_int[j] = parent->GetEdep2MeV_int(index);
+    fEdep2MeV_amp[j] = parent->GetEdep2MeV_amp(index);
   }
 
   fTdc_Thrs = parent->GetTDCThrs();
@@ -786,6 +797,8 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
       {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
       {"HodoHitEdep", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC()"},
       {"HodoHitEdepAmp", "List of HodoHit ADC amplitudes", "fHodoHits.THcLADHodoHit.GetPaddleADCpeak()"},
+       {"HodoHitEdep_MeV", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC_MeV()"},
+      {"HodoHitEdepAmp_MeV", "List of HodoHit ADC amplitudes", "fHodoHits.THcLADHodoHit.GetPaddleADCpeak_MeV()"},
       {"HodoHitisFull", "List of Bool's specifing if hit has top and btm hodo hits",
        "fHodoHits.THcLADHodoHit.GetHasCorrectedTimes()"},
       {0}};

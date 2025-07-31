@@ -48,7 +48,8 @@ public:
   Double_t GetPosTop(Int_t PaddleNo) { return fPosTop[PaddleNo]; };
   Double_t GetPosOffset() {return fPosOffset;};
   Double_t GetPosCenter(Int_t PaddleNo) { return fPosCenter[PaddleNo]; }; // counting from zero!
-
+  Double_t GetEdep2MeV_int(Int_t PaddleNo) { return fEdep2MeV_int[PaddleNo]; } // conversion factor for energy deposition to MeV
+  Double_t GetEdep2MeV_amp(Int_t PaddleNo) { return fEdep2MeV_amp[PaddleNo]; } // conversion factor for energy deposition to MeV
 
   TClonesArray *GetHits() { return fHodoHits; }
 
@@ -238,6 +239,10 @@ protected:
 
   Double_t tw_corr_top;
   Double_t tw_corr_btm;
+
+  // Edep calibrations
+  Double_t *fEdep2MeV_int;
+  Double_t *fEdep2MeV_amp;
 
   // Pedestal calculations
   Int_t fNPedestalEvents; /* Number of pedestal events */

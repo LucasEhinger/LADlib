@@ -56,13 +56,13 @@ public:
   Double_t GetHodoTop_c2(Int_t iii) const { return fHodoTop_c2[iii]; }
   Double_t GetHodoBtm_c2(Int_t iii) const { return fHodoBtm_c2[iii]; }
   Double_t GetTDCThrs() const { return fTdc_Thrs; }
+  Double_t GetEdep2MeV_int(Int_t iii) const { return fEdep2MeV_int[iii]; }
+  Double_t GetEdep2MeV_amp(Int_t iii) const { return fEdep2MeV_amp[iii]; }
 
   TClonesArray *GetLADGoodHits() { return fGoodLADHits; }
   TClonesArray *GetLADHits(Int_t plane) { return fPlanes[plane]->GetHits(); }
 
 protected:
-  TH1F *hTime;
-
   Int_t fNPlanes;
   Int_t fNHits;
   Int_t *fNPaddle;
@@ -107,6 +107,9 @@ protected:
   Double_t *fHodoBtmAdcTimeWindowMax;
   Double_t *fHodoTopAdcTimeWindowMin;
   Double_t *fHodoTopAdcTimeWindowMax;
+
+  Double_t *fEdep2MeV_int; // [fMaxHodoScin]
+  Double_t *fEdep2MeV_amp; // [fMaxHodoScin]
 
   THcLADHodoPlane **fPlanes;
   char **fPlaneNames;
