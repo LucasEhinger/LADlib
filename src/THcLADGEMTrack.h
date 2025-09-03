@@ -11,11 +11,11 @@ class GEM2DHits {
 public:
   GEM2DHits()
       : layer(-1), posX(kBig), posY(kBig), posZ(kBig), posX_local(kBig), posY_local(kBig), TimeMean(kBig),
-        TimeDiff(kBig), TimeCorr(kBig), IsGoodHit(kFALSE), ADCMean(kBig), ADCasym(kBig), trackID(-1), clusID{-1, -1} {}
+        TimeDiff(kBig), TimeCorr(kBig), IsGoodHit(kFALSE), ADCMean(kBig), ADCasym(kBig), spID(-1), clusID{-1, -1} {}
   GEM2DHits(const GEM2DHits &other)
       : layer(other.layer), posX(other.posX), posY(other.posY), posZ(other.posZ), posX_local(other.posX_local),
         posY_local(other.posY_local), TimeMean(other.TimeMean), TimeDiff(other.TimeDiff), TimeCorr(other.TimeCorr),
-        IsGoodHit(other.IsGoodHit), ADCMean(other.ADCMean), ADCasym(other.ADCasym), trackID(other.trackID) {
+        IsGoodHit(other.IsGoodHit), ADCMean(other.ADCMean), ADCasym(other.ADCasym), spID(other.spID) {
     clusID[0] = other.clusID[0];
     clusID[1] = other.clusID[1];
   }
@@ -39,7 +39,7 @@ public:
     clusID[0] = id1;
     clusID[1] = id2;
   }
-  void SetTrackID(Int_t id) { trackID = id; }
+  void SetSPID(Int_t id) { spID = id; }
 
   Int_t layer;
   Double_t posX;
@@ -53,7 +53,7 @@ public:
   Bool_t IsGoodHit;
   Double_t ADCMean; // average adc sum
   Double_t ADCasym;
-  Int_t trackID;   // associated Track ID
+  Int_t spID;   // this Space point's ID
   Int_t clusID[2]; // associated cluster IDs
 };
 

@@ -46,15 +46,20 @@ public:
   Double_t GetTheta() { return fTheta; };
   Double_t GetPosBtm(Int_t PaddleNo) { return fPosBtm[PaddleNo]; };
   Double_t GetPosTop(Int_t PaddleNo) { return fPosTop[PaddleNo]; };
-  Double_t GetPosOffset() {return fPosOffset;};
+  Double_t GetPosOffset() { return fPosOffset; };
   Double_t GetPosCenter(Int_t PaddleNo) { return fPosCenter[PaddleNo]; }; // counting from zero!
-
+  Double_t GetEdep2MeV_int(Int_t PaddleNo) {
+    return fEdep2MeV_int[PaddleNo];
+  } // conversion factor for energy deposition to MeV
+  Double_t GetEdep2MeV_amp(Int_t PaddleNo) {
+    return fEdep2MeV_amp[PaddleNo];
+  } // conversion factor for energy deposition to MeV
 
   TClonesArray *GetHits() { return fHodoHits; }
 
 protected:
   const Int_t NUM_PADDLES = 11; // number of paddles in a plane
-  const Int_t MAX_HITS = 40; // maximum number of hits in a plane (TClones array will automatically resize if needed)
+  const Int_t MAX_HITS    = 40; // maximum number of hits in a plane (TClones array will automatically resize if needed)
 
   TClonesArray *fHodoHits;
 
@@ -209,7 +214,7 @@ protected:
   Int_t fIsMC;
 
   Double_t *fPosBtm; /* array with bottom position for all scintillators in the plane */
-  Double_t *fPosTop;  /* array with top position for all scintillators in the plane */
+  Double_t *fPosTop; /* array with top position for all scintillators in the plane */
   Double_t fPosOffset;
   Int_t fTdcOffset;
   Double_t fAdcTdcOffset;
@@ -239,6 +244,10 @@ protected:
   Double_t tw_corr_top;
   Double_t tw_corr_btm;
 
+  // Edep calibrations
+  Double_t *fEdep2MeV_int;
+  Double_t *fEdep2MeV_amp;
+
   // Pedestal calculations
   Int_t fNPedestalEvents; /* Number of pedestal events */
   Int_t fMinPeds;         /* Only analyze/update if num events > */
@@ -257,6 +266,8 @@ protected:
   Double_t *fBtmPed;
   Double_t *fBtmSig;
   Double_t *fBtmThresh;
+
+  Double_t afterPulse_window = 50; // ns (should make this a parameter, but hard-coded for now)
 
   enum { kADCStandard = 0, kADCDynamicPedestal, kADCSampleIntegral, kADCSampIntDynPed };
 

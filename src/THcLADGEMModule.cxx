@@ -2152,8 +2152,10 @@ void THcLADGEMModule::Find2DHits() {
 
           // Add to 2Dhit list
           if (nstripU > 1 && nstripV > 1) {
+            int clust_id1 = fClustersU[iu].GetCLIndex();
+            int clust_id2 = fClustersV[iv].GetCLIndex();
             static_cast<THcLADGEM *>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos, tmean, tdiff, tcorr, isgoodhit,
-                                                         emean, adcasym);
+                                                         emean, adcasym, clust_id1, clust_id2, fN2Dhits - 1);
           }
         } else {
           cout << "THcLADGEMModule::Find2DHits -- Warning: Max number of 2D hits exceeded" << endl;

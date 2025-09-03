@@ -30,6 +30,8 @@ public:
   Int_t GetPaddleCenter() const { return fPaddleCenter; }
   Double_t GetPaddleADC() const { return sqrt(fTopADC_Ped * fBtmADC_Ped); }
   Double_t GetPaddleADCpeak() const { return sqrt(fTopADC_Peak * fBtmADC_Peak); }
+  Double_t GetPaddleADC_MeV() const { return fPlane->GetEdep2MeV_int(fPaddleNumber) * GetPaddleADC(); }
+  Double_t GetPaddleADCpeak_MeV() const { return fPlane->GetEdep2MeV_amp(fPaddleNumber) * GetPaddleADCpeak(); }
   Double_t GetTopTOFCorrectedTime() const { return fTopTOFCorrectedTime; }
   Double_t GetBtmTOFCorrectedTime() const { return fBtmTOFCorrectedTime; }
   Double_t GetScinTOFCorrectedTime() const { return fScinTOFCorrectedTime; }
