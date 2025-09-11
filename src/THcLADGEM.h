@@ -49,6 +49,7 @@ public:
 
   virtual Int_t Decode(const THaEvData &);
   virtual EStatus Init(const TDatime &date);
+  Int_t Begin( THaRunBase* run ) ;
   virtual Int_t CoarseProcess(TClonesArray &tracks);
   virtual Int_t FineProcess(TClonesArray &tracks);
   virtual void Clear(Option_t *opt = "");

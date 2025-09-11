@@ -106,6 +106,14 @@ THaAnalysisObject::EStatus THcLADGEM::Init(const TDatime &date) {
   return fStatus = kOK;
 }
 
+//____________________________________________________________________
+Int_t THcLADGEM::Begin( THaRunBase* run ) {
+  for( auto& module: fModules ) {
+    module->Begin(run);
+  }
+  return 0;
+}
+
 //____________________________________________________________
 Int_t THcLADGEM::DefineVariables(EMode mode) {
   if (mode == kDefine && fIsSetup)

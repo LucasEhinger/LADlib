@@ -3,6 +3,7 @@
 #include "THcLADGEM.h"
 #include "THcLADSpectrometer.h"
 #include "THcParmList.h"
+#include "THaRunBase.h"
 
 using namespace std;
 
@@ -307,6 +308,19 @@ THaAnalysisObject::EStatus THcLADGEMModule::Init(const TDatime &date) {
   return fStatus = kOK;
 }
 
+Int_t   THcLADGEMModule::Begin( THaRunBase* r){ 
+  fZeroSuppress = fZeroSuppress && !fPedestalMode; 
+  fCODA_BUILD_ALL_SAMPLES = r->GetDAQInfo("VTP_MPDRO_BUILD_ALL_SAMPLES") == "1";
+  fCODA_CM_ENABLED = r->GetDAQInfo("VTP_MPDRO_ENABLE_CM") == "1";
+
+  if(r->GetDAQInfo("VTP_MPDRO_ENABLE_CM").empty()){
+    fCODA_BUILD_ALL_SAMPLES = -1;
+    fCODA_CM_ENABLED = -1;
+  }
+  std::cout << "THcLADGEMModule::Begin: CODA DAQ info: VTP_MPDRO_BUILD_ALL_SAMPLES = " << r->GetDAQInfo("VTP_MPDRO_BUILD_ALL_SAMPLES") 
+      << ", VTP_MPDRO_ENABLE_CM = " << r->GetDAQInfo("VTP_MPDRO_ENABLE_CM") << std::endl;
+  return 0;
+}
 //____________________________________________________________________________________
 Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
   //  cout << "THcLADGEMModule::ReadDatabase" << endl;

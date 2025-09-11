@@ -45,6 +45,7 @@ class THcLADGEMModule : public THaSubDetector {
   virtual ~THcLADGEMModule();
   
   virtual EStatus Init( const TDatime& run_time );
+  Int_t   Begin( THaRunBase* r);
   virtual void    Clear( Option_t* opt="" );
   virtual Int_t   Decode( const THaEvData& );
   virtual Int_t   CoarseProcess( TClonesArray& tracks );
