@@ -111,14 +111,11 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
   char prefix[2];
 
   prefix[0] = tolower(GetApparatus()->GetName()[0]);
-  // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
-  prefix[0] = 'l';
   prefix[1] = '\0';
-
-  TString temp(prefix[0]);
-
-  TString histname = temp + "_timehist";
-  hTime            = new TH1F(histname, "", 400, 0, 200);
+  // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
+  char prefix_lad[2];
+  prefix_lad[0] = 'l';
+  prefix_lad[1] = '\0';
 
   string planenamelist;
   DBRequest listextra[] = {{"ladhodo_num_planes", &fNPlanes, kInt},
@@ -129,7 +126,7 @@ void THcLADHodoscope::Setup(const char *name, const char *description) {
   // fNPlanes = 4; 		// Default if not defined
   fTDC_RefTimeCut = 0; // Minimum allowed reference times
   fADC_RefTimeCut = 0;
-  gHcParms->LoadParmValues((DBRequest *)&listextra, prefix);
+  gHcParms->LoadParmValues((DBRequest *)&listextra, prefix_lad);
 
   cout << "Plane Name List : " << planenamelist << endl;
 
@@ -224,7 +221,8 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
       {"goodhit_hittheta_0", "Good hit theta", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit0()"},
       {"goodhit_hitphi_0", "Good hit phi", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit0()"},
       {"goodhit_hitedep_0", "Good hit energy deposition", "fGoodLADHits.THcGoodLADHit.GetHitEdepHit0()"},
-      {"goodhit_hitedep_amp_0", "Good hit energy deposition (amplitude)", "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit0()"},
+      {"goodhit_hitedep_amp_0", "Good hit energy deposition (amplitude)",
+       "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit0()"},
       // Plane 1 not used at this stage. All hits are in plane 0, until matching can occur in THcLADKine
       // {"goodhit_plane_1", "Good hit plane (second plane)", "fGoodLADHits.THcGoodLADHit.GetPlaneHit1()"},
       // {"goodhit_paddle_1", "Good hit paddle (second plane)", "fGoodLADHits.THcGoodLADHit.GetPaddleHit1()"},
@@ -252,6 +250,7 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   cout << "THcLADHodoscope::ReadDatabase()" << endl;
   char prefix[2];
   prefix[0] = tolower(GetApparatus()->GetName()[0]); // "lad"
+  prefix[1] = '\0';
   // Fix to prevent different param files for SHMS & HMS LAD hodoscopes
   char prefix_lad[2];
   prefix_lad[0] = 'l';
@@ -295,12 +294,16 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fHodoBtm_c1   = new Double_t[fMaxHodoScin];
   fHodoTop_c2   = new Double_t[fMaxHodoScin];
   fHodoBtm_c2   = new Double_t[fMaxHodoScin];
+  fEdep2MeV_int = new Double_t[fMaxHodoScin];
+  fEdep2MeV_amp = new Double_t[fMaxHodoScin];
 
   for (int ii = 0; ii < fMaxHodoScin; ii++) {
     fHodoTopAdcTimeWindowMin[ii] = -1000.;
     fHodoTopAdcTimeWindowMax[ii] = 1000.;
     fHodoBtmAdcTimeWindowMin[ii] = -1000.;
     fHodoBtmAdcTimeWindowMax[ii] = 1000.;
+    fEdep2MeV_int[ii]            = 1.0; // Default value
+    fEdep2MeV_amp[ii]            = 1.0; // Default value
   }
 
   DBRequest list3[] = {{"ladcosmicflag", &fCosmicFlag, kInt, 0, 1},
@@ -336,13 +339,15 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   DBRequest list[] = {{"ladhodo_vel_light", &fHodoVelLight[0], kDouble, (UInt_t)fMaxHodoScin, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix_lad);
 
-  DBRequest list4[] = {{"ladhodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+  DBRequest list4[] = {// {"ladhodo_velFit", &fHodoVelFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_cableFit", &fHodoCableFit[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_LCoeff", &fHodo_LCoeff[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c1_Top", &fHodoTop_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_adcAmp2MeV", &fEdep2MeV_int[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_adcInt2MeV", &fEdep2MeV_amp[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"TDC_threshold", &fTdc_Thrs, kDouble, 0, 1},
                        {0}};
 
@@ -504,7 +509,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
           continue;
         }
 
-        Int_t fNScinHits         = fPlanes[ip]->GetNScinHits();
+        Int_t fNScinHits       = fPlanes[ip]->GetNScinHits();
         TClonesArray *hodoHits = fPlanes[ip]->GetHits();
 
         Double_t zPos       = fPlanes[ip]->GetZpos();
@@ -533,7 +538,6 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
                            TMath::Tan(track_phi) / TMath::Cos(track_theta - planeTheta) * (zposition)); // Line 184
 
           Double_t scinCenter = fPlanes[ip]->GetPosCenter(paddle) + fPlanes[ip]->GetPosOffset();
-
 
           if ((TMath::Abs(scinCenter - scinTrnsCoord) < (fPlanes[ip]->GetSize() * 0.5 + fTrackToleranceHoriz)) &&
               (TMath::Abs(scinLongCoord - hit->GetCalcPosition()) < fTrackToleranceVert)) {

@@ -66,7 +66,7 @@ void THcLADGEM::Clear(Option_t *opt) {
   fIsGoodHit.clear();
   fClusID0.clear();
   fClusID1.clear();
-  fTrackID.clear();
+  fSPID.clear();
   fLayer.clear();
 }
 
@@ -162,7 +162,7 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                        {"sp.isgoodhit", "Good hit flag of GEM hit in layer 0", "fIsGoodHit"},
                        {"sp.clusID1", "Cluster ID1 of GEM hit in layer 0", "fClusID0"},
                        {"sp.clusID2", "Cluster ID2 of GEM hit in layer 0", "fClusID1"},
-                       {"sp.trackID", "Track ID of GEM hit in layer 0", "fTrackID"},
+                       {"sp.spID", "Track ID of GEM hit in layer 0", "fSPID"},
                        {"sp.layer", "2D hit layer", "fLayer"},
                        {0}};
   DefineVarsFromList(vars_sp, mode);
@@ -373,7 +373,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   fIsGoodHit.reserve(nhits);
   fClusID0.reserve(nhits);
   fClusID1.reserve(nhits);
-  fTrackID.reserve(nhits);
+  fSPID.reserve(nhits);
   fLayer.reserve(nhits);
 
   for (int layer = 0; layer < fNLayers; ++layer) {
@@ -389,7 +389,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       fIsGoodHit.push_back(hit.IsGoodHit);
       fClusID0.push_back(hit.clusID[0]);
       fClusID1.push_back(hit.clusID[1]);
-      fTrackID.push_back(hit.trackID);
+      fSPID.push_back(hit.spID);
       fLayer.push_back(layer);
     }
   }
@@ -482,8 +482,8 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         vpy = -v_hit1[0] * (v_hit2[1] - v_hit1[1]) / (v_hit2[0] - v_hit1[0]) + v_hit1[1];
       }
 
-      gemhit1.trackID = fNTracks;
-      gemhit2.trackID = fNTracks;
+      gemhit1.spID = fNTracks;
+      gemhit2.spID = fNTracks;
 
       if (fNTracks < MAXTRACKS) {
         // Add track object
@@ -519,15 +519,16 @@ void THcLADGEM::RotateToLab(Double_t angle, TVector3 &vect) {
 
 //____________________________________________________________
 void THcLADGEM::Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z, Double_t t, Double_t dt, Double_t tc,
-                          Bool_t goodhit, Double_t adc, Double_t adcasy) {
+                          Bool_t goodhit, Double_t adc, Double_t adcasy, Int_t clust_id1, Int_t clust_id2, Int_t sp_index) {
   // FIXME:Add flag for filtering good hits?
 
   GEM2DHits gemhit;
   gemhit.Set(ilayer, x, y, z, t, dt, tc, goodhit, adc, adcasy);
-  gemhit.SetClusterIDs(-1, -1);
-  gemhit.SetTrackID(-1);
+  gemhit.SetClusterIDs(clust_id1, clust_id2);
+  // gemhit.SetSpacePointIndex(sp_index);
+  gemhit.SetSPID(sp_index);
   f2DHits[ilayer].push_back(gemhit);
-  // Set initial trackID = -1
+  // Set initial spID = -1
   //  f2DHits[ilayer].push_back( {ilayer, x, y, z, t, dt, tc, goodhit, adc, adcasy, -1} );
 }
 
