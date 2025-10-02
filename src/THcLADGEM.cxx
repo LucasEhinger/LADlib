@@ -244,7 +244,7 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   fD0Cut       = 100.0; // DCA cut in cm
   fPedFilename = "";
   fCMFilename  = "";
-
+  fPedestalMode = 0;
   DBRequest list[] = {{"gem_num_modules", &fNModules, kInt}, // should be defined in DB file
                       {"gem_num_layers", &fNLayers, kInt},
                       {"gem_angle", &fGEMAngle, kDouble, 0, 1},
@@ -256,7 +256,7 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
 
   };
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-
+  
   // Define GEM Modules
   for (int imod = 0; imod < fNModules; imod++) {
     THcLADGEMModule *new_module = new THcLADGEMModule(Form("m%d", imod), Form("m%d", imod), imod, this);
@@ -268,7 +268,6 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   fNstripsV_layer.resize(fNLayers);
   fNclustU_layer.resize(fNLayers);
   fNclustV_layer.resize(fNLayers);
-
   return kOK;
 }
 
@@ -677,7 +676,8 @@ void THcLADGEM::LoadCM() {
 }
 
 Int_t THcLADGEM::End(THaRunBase* r) {
-  UInt_t runnum = r->GetNumber(); 
+  UInt_t runnum = r->GetNumber();
+  std::cout << "THcLADGEM::End() fPedestalMode: " << fPedestalMode << std::endl; 
   if( fPedestalMode ){
     TString fname_dbped, fname_daqped, fname_dbcm, fname_daqcm;
     

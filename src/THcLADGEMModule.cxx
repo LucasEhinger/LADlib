@@ -156,10 +156,10 @@ THaAnalysisObject::EStatus THcLADGEMModule::Init(const TDatime &date) {
     
     hcommonmode_subtracted_ADCs_by_stripU = new TH2D( TString::Format( "hpedestalU_%s", detname.Data() ), "ADCs by U strip number, w/common mode correction, no ped. subtraction; U/X strip; ADC - Common-mode",
 						      fNstripsU, -0.5, fNstripsU-0.5,
-						      500, -500.0, 500.0 );
+						      500, -500.0, 5000.0 );
     hcommonmode_subtracted_ADCs_by_stripV = new TH2D( TString::Format( "hpedestalV_%s", detname.Data() ), "ADCs by V strip number, w/common mode correction, no ped. subtraction; V/Y strip; ADC - Common-mode",
 						      fNstripsV, -0.5, fNstripsV-0.5,
-						      500, -500.0, 500.0 );
+						      500, -500.0, 5000.0 );
 
     hpedestal_subtracted_ADCs_by_stripU = new TH2D( TString::Format( "hADCpedsubU_%s", detname.Data() ), "Pedestal and common-mode subtracted ADCs by U strip number; U/X strip; ADC - Common-mode - pedestal",
 						    fNstripsU, -0.5, fNstripsU-0.5,
@@ -1120,6 +1120,15 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
 
             fCM_online[2 * iw]     = double(CMcalc_signed[2 * iw]);
             fCM_online[2 * iw + 1] = double(CMcalc_signed[2 * iw + 1]);
+
+            //Thesee are filled six times per APV per event:
+	          if( it->axis == LADGEM::kUaxis ){
+	            hcommonmode_online_by_APV_U->Fill( it->pos, fCM_online[2*iw] );
+	            hcommonmode_online_by_APV_U->Fill( it->pos, fCM_online[2*iw+1] );
+	          } else {
+	            hcommonmode_online_by_APV_V->Fill( it->pos, fCM_online[2*iw] );
+	            hcommonmode_online_by_APV_V->Fill( it->pos, fCM_online[2*iw+1] );
+	          }
           }
         }
       }
@@ -1129,6 +1138,19 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
 
     Int_t nsamp = evdata.GetNumHits(it->crate, it->slot, effChan);
     if (nsamp > 0) {
+      // Temporary variable to store the number of hits above negative saturation threshold
+      // by time sample. If we have a full readout event and we fail to calculate a good
+      // common-mode value in any time sample, we might want to ignore that APV's data? 
+      
+      //These are filled once per APV card per event
+      // as long as the APV card has non-zero hits:
+      int flag_cm_or = CM_OUT_OF_RANGE ? 1 : 0;
+      if( axis == LADGEM::kUaxis ){
+      	hCM_OR_by_APV_U->Fill( it->pos, flag_cm_or );
+      } else {
+	      hCM_OR_by_APV_V->Fill( it->pos, flag_cm_or );
+      }
+
       Int_t nstrips = nsamp / fN_MPD_TIME_SAMP; // number of strips fired on this APV card (should be exactly 128 if
                                                 // online zero suppression is NOT used):
       bool fullreadout = !CM_ENABLED && BUILD_ALL_SAMPLES && nstrips == fN_APV25_CHAN;
@@ -1217,7 +1239,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
               double cm_mean;
               UInt_t iAPV = it->pos;
 
-              if (!CM_OUT_OF_RANGE || fPedestalMode) {
+              //if (!CM_OUT_OF_RANGE || fPedestalMode) {
                 if (axis == LADGEM::kUaxis) {
                   cm_mean = fCommonModeMeanU[iAPV];
                   /*std::cout << "APV, CMmean, CM_danning, CM_histo, CM_sorting, CM_online: " << iAPV << ", "
@@ -1243,7 +1265,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
                   fCommonModeDiffV->Fill( iAPV, commonMode[isamp] - cm_danning_online );
                   
                 }
-              }
+              //}
 
             } else if (!fPedestalMode) { // if not doing diagnostic plots, just calculate whichever way the user wanted:
               commonMode[isamp] = GetCommonMode(isamp, fCommonModeFlag, *it);
