@@ -49,10 +49,11 @@ public:
 
   virtual Int_t Decode(const THaEvData &);
   virtual EStatus Init(const TDatime &date);
+  Int_t Begin( THaRunBase* run ) ;
   virtual Int_t CoarseProcess(TClonesArray &tracks);
   virtual Int_t FineProcess(TClonesArray &tracks);
   virtual void Clear(Option_t *opt = "");
-
+  virtual Int_t End(THaRunBase *r = nullptr);
   Int_t GetNTracks() const { return fNTracks; }
   TClonesArray *GetTracks() const { return fGEMTracks; }
 
@@ -84,6 +85,8 @@ protected:
   // pointer to global var indicatiing whether this spectrometer is triggered
   // for this event
   Bool_t *fPresentP;
+
+  Bool_t fPedestalMode;
 
   vector<THcLADGEMModule *> fModules;
 
@@ -122,7 +125,7 @@ protected:
   std::vector<Int_t> fClusID1;
   std::vector<Int_t> fSPID;
   std::vector<Int_t> fLayer;
-
+  std::ofstream fpedfile_dbase, fCMfile_dbase, fpedfile_daq, fCMfile_daq, fCMbiasfile_dbase;
 
 public:
   void Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z, Double_t t, Double_t dt, Double_t tc, Bool_t goodhit,

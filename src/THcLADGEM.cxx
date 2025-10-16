@@ -9,6 +9,7 @@
 #include "THcParmList.h"
 #include "VarDef.h"
 #include "VarType.h"
+#include "THaRunBase.h"
 
 using namespace std;
 
@@ -103,6 +104,14 @@ THaAnalysisObject::EStatus THcLADGEM::Init(const TDatime &date) {
     LoadCM();
 
   return fStatus = kOK;
+}
+
+//____________________________________________________________________
+Int_t THcLADGEM::Begin( THaRunBase* run ) {
+  for( auto& module: fModules ) {
+    module->Begin(run);
+  }
+  return 0;
 }
 
 //____________________________________________________________
@@ -235,18 +244,19 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   fD0Cut       = 100.0; // DCA cut in cm
   fPedFilename = "";
   fCMFilename  = "";
-
+  fPedestalMode = 0;
   DBRequest list[] = {{"gem_num_modules", &fNModules, kInt}, // should be defined in DB file
                       {"gem_num_layers", &fNLayers, kInt},
                       {"gem_angle", &fGEMAngle, kDouble, 0, 1},
                       {"gem_pedfile", &fPedFilename, kString, 0, 1},
                       {"gem_cmfile", &fCMFilename, kString, 0, 1},
                       {"gem_d0_cut", &fD0Cut, kDouble, 0, 1},
+                      {"gem_pedestal_mode", &fPedestalMode, kInt, 0, 1},
                       {0}
 
   };
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-
+  
   // Define GEM Modules
   for (int imod = 0; imod < fNModules; imod++) {
     THcLADGEMModule *new_module = new THcLADGEMModule(Form("m%d", imod), Form("m%d", imod), imod, this);
@@ -258,7 +268,6 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   fNstripsV_layer.resize(fNLayers);
   fNclustU_layer.resize(fNLayers);
   fNclustV_layer.resize(fNLayers);
-
   return kOK;
 }
 
@@ -664,6 +673,60 @@ void THcLADGEM::LoadCM() {
       }
     }
   } // module loop
+}
+
+Int_t THcLADGEM::End(THaRunBase* r) {
+  UInt_t runnum = r->GetNumber();
+  std::cout << "THcLADGEM::End() fPedestalMode: " << fPedestalMode << std::endl; 
+  if( fPedestalMode ){
+    TString fname_dbped, fname_daqped, fname_dbcm, fname_daqcm;
+    
+    
+    TString specname = GetApparatus()->GetName();
+    TString detname = GetName();
+    
+    fname_dbped.Form( "db_ped_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
+    fname_dbcm.Form( "db_cmr_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
+    fname_daqped.Form( "daq_ped_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
+    fname_daqcm.Form( "daq_cmr_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
+    std::cout<<"\n\n\n"<<specname<<" "<<detname<<"\n\n\n";
+    
+    fCMfile_dbase.open( fname_dbcm.Data() );
+    fpedfile_daq.open( fname_daqped.Data() );
+    fCMfile_daq.open( fname_daqcm.Data() );
+    
+    
+    TString sdate = r->GetDate().AsString();
+    sdate.Prepend( "#" );
+    
+    TString message;
+
+    message.Form( "# Copy file into sbs-onl@sbsvtp#:~/cfg/pedestals for online pedestal subtraction" );
+    fCMfile_daq << sdate << std::endl;
+    fCMfile_daq << message << std::endl;
+    fCMfile_daq << "# format = crate, slot, mpd, adc_ch, CM min, CM max"
+    		  << std::endl;
+
+    message.Form( "# Copy this file into $DB_DIR/gemped to use these pedestals for analysis");
+    fCMfile_dbase << sdate << std::endl;
+    fCMfile_dbase << message << std::endl;
+    fCMfile_dbase << "# format = crate, slot, mpd, adc_ch, CM mean, CM RMS"
+		  << std::endl;
+    
+    message.Form( "# Copy file into sbs-onl@sbsvtp#:~/cfg/pedestals for online pedestal subtraction" );
+    
+    fpedfile_daq << sdate << std::endl;
+    fpedfile_daq <<  message << std::endl;
+    fpedfile_daq << "# format = APV        crate       slot       mpd_id       adc_ch followed by " << std::endl
+     		 << "# APV channel number      pedestal mean      pedestal rms " << std::endl;
+
+  }
+
+  for (auto &module : fModules) {
+    if( fPedestalMode ) { module->PrintPedestals(fCMfile_dbase, fpedfile_daq, fCMfile_daq); }
+    module->End(r);
+  }
+  return 0;
 }
 
 //____________________________________________________________
