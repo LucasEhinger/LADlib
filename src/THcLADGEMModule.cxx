@@ -1145,12 +1145,13 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
       //These are filled once per APV card per event
       // as long as the APV card has non-zero hits:
       int flag_cm_or = CM_OUT_OF_RANGE ? 1 : 0;
-      if( axis == LADGEM::kUaxis ){
-      	hCM_OR_by_APV_U->Fill( it->pos, flag_cm_or );
-      } else {
-	      hCM_OR_by_APV_V->Fill( it->pos, flag_cm_or );
+      if (fPedDiagHistosInitialized){
+        if( axis == LADGEM::kUaxis ){
+      	  hCM_OR_by_APV_U->Fill( it->pos, flag_cm_or );
+        } else {
+	        hCM_OR_by_APV_V->Fill( it->pos, flag_cm_or );
+        }
       }
-
       Int_t nstrips = nsamp / fN_MPD_TIME_SAMP; // number of strips fired on this APV card (should be exactly 128 if
                                                 // online zero suppression is NOT used):
       bool fullreadout = !CM_ENABLED && BUILD_ALL_SAMPLES && nstrips == fN_APV25_CHAN;
