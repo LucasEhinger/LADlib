@@ -183,7 +183,7 @@ THaAnalysisObject::EStatus THcLADGEMModule::Init(const TDatime &date) {
 
     fPedHistosInitialized = true;
   }
-  if( !fPedDiagHistosInitialized ){
+  if( (fPedestalMode || fMakeCommonModePlots) && !fPedDiagHistosInitialized ){
 
     //Let's make versions of these for "all" events and "regular" full readout events only:
     hpedestal_subtracted_ADCsU = new TH1D( TString::Format( "hADCpedsubU_allstrips_%s", detname.Data() ), "full readout: ped-subtracted U strip ADCs w/common-mode correction; ADC - Common-mode - pedestal", 1250, -500.,4500. );
