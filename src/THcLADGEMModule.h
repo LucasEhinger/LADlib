@@ -350,6 +350,8 @@ class THcLADGEMModule : public THaSubDetector {
   Double_t fPxV;            //V Strip X projection = cos( VAngle );
   Double_t fPyV;            //V Strip Y projection = sin( VAngle );
   Double_t fCenter[3];      //Position center of the module in the local detector coord  
+  Double_t fGEMAngle[2];        //angle between centerline to the beam line
+  Double_t fRotation[3];       //rotation around the center of the detector
 
   Bool_t fIsMC;
 

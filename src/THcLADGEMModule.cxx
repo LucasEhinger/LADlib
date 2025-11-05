@@ -495,6 +495,12 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
   for (int i = 0; i < 3; i++)
     fCenter[i] = 0.; // init
 
+  for (int i = 0; i < 2; i++)
+    fGEMAngle[i] = 0.; // init
+  for (int i = 0; i < 3; i++)
+    fRotation[i] = 0.; // init
+  
+
   // Geometry for each module
   const DBRequest list1[] = {{"_layer", &fLayer, kInt, 0, 1},
                              {"_apvmap", &fAPVmapping, kInt, 0, 1},
@@ -503,9 +509,10 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
                              {"_uangle", &fUAngle, kDouble, 0, 1}, // mandatory: Angle of "U" strips wrt X axis
                              {"_vangle", &fVAngle, kDouble, 0, 1}, // mandatory: Angle of "V" strips wrt X axis
                              {"_position", fCenter, kDouble, static_cast<UInt_t>(3)},
+                             {"_angle", fGEMAngle, kDouble, static_cast<UInt_t>(2)}, // angle between centerline to the beam line(rotate along y, then z)
+                             {"_rotation", fRotation, kDouble, static_cast<UInt_t>(3)}, // rotation around the center of the detector along x, y, and z-axis
                              {0}};
   gHcParms->LoadParmValues((DBRequest *)&list1, prefix.c_str());
-
   // common for all layers -- move to THcLADGEM::ReadDatabase?
   const DBRequest list2[] = {{"lgem_zerosuppress", &fZeroSuppress, kInt, 0, 1}, // optional
                              {"lgem_zerosuppress_nsigma", &fZeroSuppressRMS, kDouble, 0, 1},
@@ -2316,9 +2323,9 @@ void THcLADGEMModule::Find2DHits() {
         TVector2 PosUV(upos, vpos);
         TVector2 PosXY = UVtoXY(PosUV); // no changes if using XY GEM
 
-        double xpos = PosXY.X() + fCenter[0]; // FIXME: check how strip numbers are defined
-        double ypos = PosXY.Y() + fCenter[1];
-        double zpos = fCenter[2];
+        double xpos = PosXY.X(); // FIXME: check how strip numbers are defined
+        double ypos = PosXY.Y();
+        double zpos = 0;
 
         double tmean = 0.5 * (fClustersU[iu].GetTime() + fClustersV[iv].GetTime());
         double emean = 0.5 * (fClustersU[iu].GetADCsum() + fClustersV[iv].GetADCsum());
@@ -2409,8 +2416,22 @@ void THcLADGEMModule::Find2DHits() {
           if (nstripU > 1 && nstripV > 1) {
             int clust_id1 = fClustersU[iu].GetCLIndex();
             int clust_id2 = fClustersV[iv].GetCLIndex();
-            static_cast<THcLADGEM *>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos, tmean, tdiff, tcorr, isgoodhit,
+            GEM2DHits* hitTmp =static_cast<THcLADGEM *>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos, tmean, tdiff, tcorr, isgoodhit,
                                                          emean, adcasym, clust_id1, clust_id2, fN2Dhits - 1);
+             std::vector<GEM2DHits> f2DHits = static_cast<THcLADGEM *>(fParent)->Get2DHits(fLayer);
+             int hitIndex = f2DHits.size()-1;
+             TVector3 vHit(xpos, ypos, zpos);
+             vHit.RotateX(fRotation[0] * TMath::DegToRad()); 
+             vHit.RotateY(fRotation[1] * TMath::DegToRad()); 
+             vHit.RotateZ(fRotation[2] * TMath::DegToRad());
+             vHit.SetX(vHit.X()+fCenter[0]); 
+             vHit.SetY(vHit.Y()+fCenter[1]); 
+             vHit.SetZ(vHit.Z()+fCenter[2]);
+             vHit.RotateY(fGEMAngle[0] * TMath::DegToRad()); 
+             vHit.RotateZ(fGEMAngle[1] * TMath::DegToRad()); 
+             hitTmp->posX=vHit.X();
+             hitTmp->posY=vHit.Y();
+             hitTmp->posZ=vHit.Z();
           }
         } else {
           cout << "THcLADGEMModule::Find2DHits -- Warning: Max number of 2D hits exceeded" << endl;
