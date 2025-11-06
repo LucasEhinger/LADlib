@@ -2418,8 +2418,6 @@ void THcLADGEMModule::Find2DHits() {
             int clust_id2 = fClustersV[iv].GetCLIndex();
             GEM2DHits* hitTmp =static_cast<THcLADGEM *>(fParent)->Add2DHits(fLayer, xpos, ypos, zpos, tmean, tdiff, tcorr, isgoodhit,
                                                          emean, adcasym, clust_id1, clust_id2, fN2Dhits - 1);
-             std::vector<GEM2DHits> f2DHits = static_cast<THcLADGEM *>(fParent)->Get2DHits(fLayer);
-             int hitIndex = f2DHits.size()-1;
              TVector3 vHit(xpos, ypos, zpos);
              vHit.RotateX(fRotation[0] * TMath::DegToRad()); 
              vHit.RotateY(fRotation[1] * TMath::DegToRad()); 
