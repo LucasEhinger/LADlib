@@ -3,6 +3,7 @@
 #include "THcLADGEM.h"
 #include "THcLADSpectrometer.h"
 #include "THcParmList.h"
+#include "THaRunBase.h"
 
 using namespace std;
 
@@ -89,9 +90,237 @@ THaAnalysisObject::EStatus THcLADGEMModule::Init(const TDatime &date) {
 
   fParent = GetParent();
 
+  TString appname = (static_cast<THaDetector *>(GetParent()) )->GetApparatus()->GetName();
+  appname.ReplaceAll(".","_");
+  appname += "_";
+  TString detname = GetParent()->GetName();
+  detname.Prepend(appname);
+  detname.ReplaceAll(".","_");
+  detname += "_";
+  detname += GetName();
+  fPedHistosInitialized = kFALSE;
+  fPedDiagHistosInitialized = kFALSE;
+  fCommonModePlotsInitialized = false;
+  std::cout << "THcLADGEMModule::Init() - Initializing histograms for " << detname.Data() << std::endl;
+
+  if( (fPedestalMode || fMakeCommonModePlots) && !fPedHistosInitialized ){ //make pedestal histograms:
+
+    //Procedure:
+    // 1. Analyze pedestal data with no pedestals supplied from the database.
+    // 2. Extract "coarse" strip offsets from raw ADC histograms (i.e., common-mode means)
+    // 3. Extract "fine" strip offsets from common-mode-subtracted histograms 
+    // 3. Add "coarse" strip offsets (common-mode means) back into "common-mode subtracted" ADC 
+
+    //U strips:
+    hpedrmsU_distribution = new TH1D( TString::Format( "hpedrmsU_distribution_%s", detname.Data() ), "Pedestal RMS distribution, U strips; Ped. RMS", 200, 0, 100 );
+    hpedmeanU_distribution = new TH1D( TString::Format( "hpedmeanU_distribution_%s", detname.Data() ), "Pedestal mean distribution, U strips; Ped. mean", 250, -250, 250 );
+    hpedrmsU_by_strip = new TH1D( TString::Format( "hpedrmsU_by_strip_%s", detname.Data() ), "Pedestal rms U by strip; strip; ped. RMS", fNstripsU, -0.5, fNstripsU - 0.5 );
+    hpedmeanU_by_strip = new TH1D( TString::Format( "hpedmeanU_by_strip_%s", detname.Data() ), "Pedestal mean U by strip; strip; ped. mean", fNstripsU, -0.5, fNstripsU - 0.5 );
+
+    //V strips:
+    hpedrmsV_distribution = new TH1D( TString::Format( "hpedrmsV_distribution_%s", detname.Data() ), "Pedestal RMS distribution, V strips; Ped. RMS", 200, 0, 100 );
+    hpedmeanV_distribution = new TH1D( TString::Format( "hpedmeanV_distribution_%s", detname.Data() ), "Pedestal mean distribution, V strips; Ped. mean", 250, -250, 250 );
+    hpedrmsV_by_strip = new TH1D( TString::Format( "hpedrmsV_by_strip_%s", detname.Data() ), "Pedestal rms V by strip; strip; Ped. RMS", fNstripsV, -0.5, fNstripsV - 0.5 );
+    hpedmeanV_by_strip = new TH1D( TString::Format( "hpedmeanV_by_strip_%s", detname.Data() ), "Pedestal mean V by strip; strip; Ped. mean", fNstripsV, -0.5, fNstripsV - 0.5 );
+
+    if( !fPedestalMode ){ //fill the above histograms with the pedestal info loaded from the database:
+      for( UInt_t istrip = 0; istrip<fNstripsU; istrip++ ){
+	      hpedmeanU_distribution->Fill( fPedestalU[istrip] );
+	      hpedrmsU_distribution->Fill( fPedRMSU[istrip] );
+	      hpedmeanU_by_strip->SetBinContent( istrip+1, fPedestalU[istrip] );
+	      hpedrmsU_by_strip->SetBinContent( istrip+1, fPedRMSU[istrip] );	
+      }
+
+      for( UInt_t istrip=0; istrip<fNstripsV; istrip++ ){
+      	hpedmeanV_distribution->Fill( fPedestalV[istrip] );
+    	  hpedrmsV_distribution->Fill( fPedRMSV[istrip] );
+      	hpedmeanV_by_strip->SetBinContent( istrip+1, fPedestalV[istrip] );
+      	hpedrmsV_by_strip->SetBinContent( istrip+1, fPedRMSV[istrip] );
+      }
+      
+    }
+    hrawADCs_by_stripU = new TH2D( TString::Format( "hrawADCs_by_stripU_%s", detname.Data() ), "Raw ADCs by U strip number, no corrections; U/X strip; Raw ADC",
+				   fNstripsU, -0.5, fNstripsU-0.5,
+				   512, -0.5, 4095.5 );
+    hrawADCs_by_stripV = new TH2D( TString::Format( "hrawADCs_by_stripV_%s", detname.Data() ), "Raw ADCs by V strip number, no corrections; V/Y strip; Raw ADC",
+				   fNstripsV, -0.5, fNstripsV-0.5,
+				   512, -0.5, 4095.5 );
+
+    hrawADCs_by_stripU_nopedsub = new TH2D( TString::Format( "hrawADCs_by_stripU_nopedsub_%s", detname.Data() ), "Raw ADCs by U strip number, no corrections; U/X strip; Raw ADC",
+				   fNstripsU, -0.5, fNstripsU-0.5,
+				   512, -0.5, 4095.5 );
+    hrawADCs_by_stripV_nopedsub = new TH2D( TString::Format( "hrawADCs_by_stripV_nopedsub_%s", detname.Data() ), "Raw ADCs by V strip number, no corrections; V/Y strip; Raw ADC",
+				   fNstripsV, -0.5, fNstripsV-0.5,
+				   512, -0.5, 4095.5 );
+    
+    
+    hcommonmode_subtracted_ADCs_by_stripU = new TH2D( TString::Format( "hpedestalU_%s", detname.Data() ), "ADCs by U strip number, w/common mode correction, no ped. subtraction; U/X strip; ADC - Common-mode",
+						      fNstripsU, -0.5, fNstripsU-0.5,
+						      500, -500.0, 5000.0 );
+    hcommonmode_subtracted_ADCs_by_stripV = new TH2D( TString::Format( "hpedestalV_%s", detname.Data() ), "ADCs by V strip number, w/common mode correction, no ped. subtraction; V/Y strip; ADC - Common-mode",
+						      fNstripsV, -0.5, fNstripsV-0.5,
+						      500, -500.0, 5000.0 );
+
+    hpedestal_subtracted_ADCs_by_stripU = new TH2D( TString::Format( "hADCpedsubU_%s", detname.Data() ), "Pedestal and common-mode subtracted ADCs by U strip number; U/X strip; ADC - Common-mode - pedestal",
+						    fNstripsU, -0.5, fNstripsU-0.5,
+						    500,-500.,4500. );
+    hpedestal_subtracted_ADCs_by_stripV = new TH2D( TString::Format( "hADCpedsubV_%s", detname.Data() ), "Pedestal and common-mode subtracted ADCs by V strip number; V/Y strip; ADC - Common-mode - pedestal",
+						    fNstripsV, -0.5, fNstripsV-0.5,
+						    500,-500.,4500. );
+
+    hpedestal_subtracted_rawADCs_by_stripU = new TH2D( TString::Format( "hrawADCpedsubU_%s", detname.Data() ), "ADCs by U strip, ped-subtracted, no common-mode correction; U/X strip; ADC - pedestal",
+						       fNstripsU, -0.5, fNstripsU-0.5,
+						       500,-500.,4500. );
+    hpedestal_subtracted_rawADCs_by_stripV = new TH2D( TString::Format( "hrawADCpedsubV_%s", detname.Data() ), "ADCs by V strip, ped-subtracted, no common-mode correction; V/Y strip; ADC - pedestal",
+						       fNstripsV, -0.5, fNstripsV-0.5,
+						       500,-500.,4500. );
+
+
+  
+  
+    hpedestal_subtracted_rawADCsU = new TH1D( TString::Format( "hrawADCpedsubU_allstrips_%s", detname.Data() ), "distribution of ped-subtracted U strip ADCs w/o common-mode correction; ADC - pedestal", 1250, -500.,4500. );
+    hpedestal_subtracted_rawADCsV = new TH1D( TString::Format( "hrawADCpedsubV_allstrips_%s", detname.Data() ), "distribution of ped-subtracted V strip ADCs w/o common-mode correction; ADC - pedestal", 1250, -500.,4500. );
+
+    fPedHistosInitialized = true;
+  }
+  if( !fPedDiagHistosInitialized ){
+
+    //Let's make versions of these for "all" events and "regular" full readout events only:
+    hpedestal_subtracted_ADCsU = new TH1D( TString::Format( "hADCpedsubU_allstrips_%s", detname.Data() ), "full readout: ped-subtracted U strip ADCs w/common-mode correction; ADC - Common-mode - pedestal", 1250, -500.,4500. );
+    hpedestal_subtracted_ADCsV = new TH1D( TString::Format( "hADCpedsubV_allstrips_%s", detname.Data() ), "full readout: ped-subtracted V strip ADCs w/common-mode correction; ADC - Common-mode - pedestal", 1250, -500.,4500. );
+
+    hpedestal_subtracted_ADCsU_goodCM = new TH1D( TString::Format( "hADCpedsubU_allstrips_%s_goodCM", detname.Data() ), "full readout: ped-subtracted U strip ADCs w/common-mode correction; ADC - Common-mode - pedestal", 1250, -500.,4500. );
+    hpedestal_subtracted_ADCsV_goodCM = new TH1D( TString::Format( "hADCpedsubV_allstrips_%s_goodCM", detname.Data() ), "full readout: ped-subtracted V strip ADCs w/common-mode correction; ADC - Common-mode - pedestal", 1250, -500.,4500. );
+
+    
+    UInt_t nAPVs_U = fNstripsU/fN_APV25_CHAN;
+    hcommonmode_mean_by_APV_U = new TH2D( TString::Format( "hCommonModeMean_by_APV_U_%s", detname.Data() ), "full readout events: common-mode means for U strips; APV card; Common-mode", nAPVs_U, -0.5, nAPVs_U-0.5, 1024, -0.5, 4095.5 );
+
+    hcommonmode_online_by_APV_U = new TH2D( TString::Format( "hCommonModeOnline_by_APV_U_%s", detname.Data() ), "Online ZS events: common-mode means for U strips; APV card; online common-mode", nAPVs_U, -0.5, nAPVs_U-0.5, 1024, -0.5, 4095.5 );
+    
+    hrawADCs_by_APV_U = new TH2D( TString::Format( "hrawADCs_by_APV_U_%s", detname.Data() ), "U strip Full readout events; APV; raw ADC", nAPVs_U, -0.5, nAPVs_U-0.5, 1250,-500.,4500. );
+
+    hrawADCs_by_APV_U_goodCM = new TH2D( TString::Format( "hrawADCs_by_APV_U_%s_goodCM", detname.Data() ), "U strip Full readout events; APV; raw ADC", nAPVs_U, -0.5, nAPVs_U-0.5, 1250,-500.,4500. );
+
+    hrawADCs_by_APV_U_nopedsub = new TH2D( TString::Format( "hrawADCs_by_APV_U_nopedsub_%s", detname.Data() ), "U strip Full readout events; APV; raw ADC", nAPVs_U, -0.5, nAPVs_U-0.5, 1250,-500.,4500. );
+
+    hrawADCs_by_APV_U_nopedsub_goodCM = new TH2D( TString::Format( "hrawADCs_by_APV_U_nopedsub_%s_goodCM", detname.Data() ), "U strip Full readout events; APV; raw ADC", nAPVs_U, -0.5, nAPVs_U-0.5, 1250,-500.,4500. );
+    
+    
+    hADCs_by_APV_U = new TH2D( TString::Format( "hADCs_by_APV_U_%s", detname.Data() ), "U strip Full readout events; APV; corrected ADC", nAPVs_U, -0.5, nAPVs_U-0.5, 1250,-500.,4500. );
+    
+    hCM_OR_by_APV_U = new TH2D( TString::Format( "hCM_OR_by_APV_U_%s", detname.Data() ), "U strip all events; APV; CM out of range?", nAPVs_U, -0.5, nAPVs_U-0.5, 2, -0.5, 1.5 );
+
+
+    hADCs_by_APV_U_goodCM = new TH2D( TString::Format( "hADCs_by_APV_U_%s_goodCM", detname.Data() ), "U strip Full readout events; APV; corrected ADC", nAPVs_U, -0.5, nAPVs_U-0.5, 1250,-500.,4500. );
+   
+    
+    
+    UInt_t nAPVs_V = fNstripsV/fN_APV25_CHAN;
+    hcommonmode_mean_by_APV_V = new TH2D( TString::Format( "hCommonModeMean_by_APV_V_%s", detname.Data() ), "distribution of common-mode means for V strip pedestal data; APV card; Common-mode", nAPVs_V, -0.5, nAPVs_V-0.5, 1024, -0.5, 4095.5 );
+
+    hcommonmode_online_by_APV_V = new TH2D( TString::Format( "hCommonModeOnline_by_APV_V_%s", detname.Data() ), "Online ZS events: common-mode means for V strips; APV card; online common-mode", nAPVs_V, -0.5, nAPVs_V-0.5, 1024, -0.5, 4095.5 );
+    
+    hrawADCs_by_APV_V = new TH2D( TString::Format( "hrawADCs_by_APV_V_%s", detname.Data() ), "V strip Full readout events; APV; raw ADC", nAPVs_V, -0.5, nAPVs_V-0.5, 1250,-500.,4500. );
+    
+    hrawADCs_by_APV_V_goodCM = new TH2D( TString::Format( "hrawADCs_by_APV_V_%s_goodCM", detname.Data() ), "V strip Full readout events; APV; raw ADC", nAPVs_V, -0.5, nAPVs_V-0.5, 1250,-500.,4500. );
+
+    hrawADCs_by_APV_V_nopedsub = new TH2D( TString::Format( "hrawADCs_by_APV_V_nopedsub_%s", detname.Data() ), "V strip Full readout events; APV; raw ADC", nAPVs_V, -0.5, nAPVs_V-0.5, 1250,-500.,4500. );
+    
+    hrawADCs_by_APV_V_nopedsub_goodCM = new TH2D( TString::Format( "hrawADCs_by_APV_V_nopedsub_%s_goodCM", detname.Data() ), "V strip Full readout events; APV; raw ADC", nAPVs_V, -0.5, nAPVs_V-0.5, 1250,-500.,4500. );
+    
+    hADCs_by_APV_V = new TH2D( TString::Format( "hADCs_by_APV_V_%s", detname.Data() ), "V strip Full readout events; APV; corrected ADC", nAPVs_V, -0.5, nAPVs_V-0.5, 1250,-500.,4500. );
+
+    hADCs_by_APV_V_goodCM = new TH2D( TString::Format( "hADCs_by_APV_V_%s_goodCM", detname.Data() ), "V strip Full readout events; APV; corrected ADC", nAPVs_V, -0.5, nAPVs_V-0.5, 1250,-500.,4500. );
+    
+    hCM_OR_by_APV_V = new TH2D( TString::Format( "hCM_OR_by_APV_V_%s", detname.Data() ), "V strip all events; APV; CM out of range?", nAPVs_V, -0.5, nAPVs_V-0.5, 2, -0.5, 1.5 );
+
+    fPedDiagHistosInitialized = true;
+  }
+
+  if( fMakeCommonModePlots && !fCommonModePlotsInitialized ){
+
+    //std::cout << "SBSGEMModule::Begin: making common-mode histograms for module " << GetName() << std::endl;
+    //U strips:
+   
+    fCommonModeDistU = new TH2D( TString::Format( "hcommonmodeU_%s", detname.Data() ), "U/X strips common-mode (user); APV card; Common-mode - Common-mode mean (user)", fNAPVs_U, -0.5, fNAPVs_U-0.5, 500, -200.0,500.0 );
+
+    fCommonModeDistU_Histo = new TH2D( TString::Format( "hcommonmodeU_histo_%s", detname.Data() ), "U/X strips common-mode (user); APV card; Common-mode - Common-mode mean (Histogram)", fNAPVs_U, -0.5, fNAPVs_U-0.5, 500, -200.0,500.0 );
+    
+    
+    fCommonModeDistU_Sorting = new TH2D( TString::Format( "hcommonmodeU_sorting_%s", detname.Data() ), "U/X strips common-mode (Sorting); APV card; Common-mode (Sorting) - Common-mode mean", fNAPVs_U, -0.5, fNAPVs_U-0.5, 500, -200.0,500.0 );
+    
+    
+    fCommonModeDistU_Danning = new TH2D( TString::Format( "hcommonmodeU_danning_%s", detname.Data() ), "U/X strips common-mode (Danning); APV card; Common-mode (Danning) - Common-mode mean", fNAPVs_U, -0.5, fNAPVs_U-0.5, 500, -200.0,500.0 );
+    
+   
+    fCommonModeDiffU = new TH2D( TString::Format( "hcommonmodeU_diff_%s", detname.Data() ), "U/X strips (all events); APV card; Common-mode (User) - Common-mode (Danning online)", fNAPVs_U, -0.5, fNAPVs_U-0.5, 200, -200.0, 500.0 );
+
+    fCommonModeDiffU_Uncorrected = new TH2D( TString::Format( "hcommonmodeU_diff_uncorrected_%s", detname.Data() ), "U/X strips (uncorrected events only); APV card; CM (User) - CM (Danning online)", fNAPVs_U, -0.5, fNAPVs_U-0.5, 200, -200.0, 500.0 );
+    
+    fCommonModeCorrectionU = new TH2D( TString::Format( "hcommonmodeU_corr_%s", detname.Data() ), "U/X strips; APV card; applied CM correction", fNAPVs_U, -0.5, fNAPVs_U-0.5, 200, -200.0, 200.0 );
+    
+    //fCommonModeNotCorrectionU = new TH2D( TString::Format( "hcommonmodeU_notcorr_%s", detname.Data() ), "U/X strips; APV card; CM Sorting - CM Danning without Correction", fNAPVs_U, -0.5, fNAPVs_U-0.5, 250, -100.0, 100.0 );
+    fCommonModeResidualBiasU = new TH2D( TString::Format( "hcommonmodeU_bias_%s", detname.Data() ), "U/X strips; APV card; residual bias (corr. - true)", fNAPVs_U, -0.5, fNAPVs_U-0.5, 200, -200, 200 );
+
+    fCommonModeResidualBiasU_corrected = new TH2D( TString::Format( "hcommonmodeU_bias_corrected_%s", detname.Data() ), "U/X strips; APV card; residual bias (corr. - true)", fNAPVs_U, -0.5, fNAPVs_U-0.5, 200, -200, 200 );
+
+    fCommonModeResidualBias_vs_OccupancyU = new TH2D( TString::Format( "hcommonmodeU_bias_vs_occupancy_%s", detname.Data() ), "U/X strips; APV in-range occupancy; residual bias (corr. - true)", 100, 0.0, 1.0, 200, -200, 200 );
+
+    //V strips:
+    fCommonModeDistV = new TH2D( TString::Format( "hcommonmodeV_%s", detname.Data() ), "V/Y strips common-mode (user); APV card; Common-mode - Common-mode mean (user)", fNAPVs_V, -0.5, fNAPVs_V-0.5, 500, -200.0,500.0 );
+
+    fCommonModeDistV_Histo = new TH2D( TString::Format( "hcommonmodeV_histo_%s", detname.Data() ), "V/Y strips common-mode (user); APV card; Common-mode - Common-mode mean (Histogram)", fNAPVs_V, -0.5, fNAPVs_V-0.5, 500, -200.0,500.0 );
+    
+    fCommonModeDistV_Sorting = new TH2D( TString::Format( "hcommonmodeV_sorting_%s", detname.Data() ), "V/Y strips common-mode (Sorting); APV card; Common-mode (Sorting) - Common-mode mean", fNAPVs_V, -0.5, fNAPVs_V-0.5, 500, -200.0,500.0 );
+    
+    
+    fCommonModeDistV_Danning = new TH2D( TString::Format( "hcommonmodeV_danning_%s", detname.Data() ), "V/Y strips common-mode (Danning); APV card; Common-mode (Danning) - Common-mode mean", fNAPVs_V, -0.5, fNAPVs_V-0.5, 500, -200.0,500.0 );
+    
+    
+    fCommonModeDiffV = new TH2D( TString::Format( "hcommonmodeV_diff_%s", detname.Data() ), "V/Y strips (all events); APV card; Common-mode (User) - Common-mode (Danning online)", fNAPVs_V, -0.5, fNAPVs_V-0.5, 200, -200.0,500.0 );
+
+    fCommonModeDiffV_Uncorrected = new TH2D( TString::Format( "hcommonmodeV_diff_uncorrected_%s", detname.Data() ), "V/Y strips (uncorrected events only); APV card; CM (User) - CM (Danning online)", fNAPVs_V, -0.5, fNAPVs_V-0.5, 200, -200.0, 500.0 );
+    
+    fCommonModeCorrectionV = new TH2D( TString::Format( "hcommonmodeV_corr_%s", detname.Data() ), "V/Y strips; APV card; applied CM correction", fNAPVs_V, -0.5, fNAPVs_V-0.5, 200, -200.0, 200.0 );
+
+    fCommonModeResidualBiasV = new TH2D( TString::Format( "hcommonmodeV_bias_%s", detname.Data() ), "V/Y strips; APV card; residual bias (corr. - true)", fNAPVs_V, -0.5, fNAPVs_V-0.5, 200, -200, 200 );
+
+    fCommonModeResidualBiasV_corrected = new TH2D( TString::Format( "hcommonmodeV_bias_corrected_%s", detname.Data() ), "V/Y strips; APV card; residual bias (corr. - true)", fNAPVs_V, -0.5, fNAPVs_V-0.5, 200, -200, 200 );
+
+    fCommonModeResidualBias_vs_OccupancyV = new TH2D( TString::Format( "hcommonmodeV_bias_vs_occupancy_%s", detname.Data() ), "V/Y strips; APV in-range occupancy; residual bias (corr. - true)", 100, 0.0, 1.0, 200, -200, 200 );
+    
+    //fCommonModeNotCorrectionV = new TH2D( TString::Format( "hcommonmodeV_notcorr_%s", detname.Data() ), "V/Y strips; APV card; CM Sorting - CM Danning without Correction", fNAPVs_V, -0.5, fNAPVs_V-0.5, 250, -100.0, 100.0 );
+
+    // fCommonModeDistU->Print();
+    // fCommonModeDistU_Sorting->Print();
+    // fCommonModeDistU_Danning->Print();
+    // fCommonModeDiffU->Print();
+
+    // fCommonModeDistV->Print();
+    // fCommonModeDistV_Sorting->Print();
+    // fCommonModeDistV_Danning->Print();
+    // fCommonModeDiffV->Print();
+    fCommonModePlotsInitialized = true;
+  }
+
+
   return fStatus = kOK;
 }
 
+Int_t   THcLADGEMModule::Begin( THaRunBase* r){ 
+  fZeroSuppress = fZeroSuppress && !fPedestalMode; 
+  fCODA_BUILD_ALL_SAMPLES = r->GetDAQInfo("VTP_MPDRO_BUILD_ALL_SAMPLES") == "1";
+  fCODA_CM_ENABLED = r->GetDAQInfo("VTP_MPDRO_ENABLE_CM") == "1";
+
+  if(r->GetDAQInfo("VTP_MPDRO_ENABLE_CM").empty()){
+    fCODA_BUILD_ALL_SAMPLES = -1;
+    fCODA_CM_ENABLED = -1;
+  }
+  std::cout << "THcLADGEMModule::Begin: CODA DAQ info: VTP_MPDRO_BUILD_ALL_SAMPLES = " << r->GetDAQInfo("VTP_MPDRO_BUILD_ALL_SAMPLES") 
+      << ", VTP_MPDRO_ENABLE_CM = " << r->GetDAQInfo("VTP_MPDRO_ENABLE_CM") << std::endl;
+  return 0;
+}
 //____________________________________________________________________________________
 Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
   //  cout << "THcLADGEMModule::ReadDatabase" << endl;
@@ -538,11 +767,12 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
   for (unsigned int iAPV = 0; iAPV < fNAPVs_V; iAPV++) {
     fVgain[iAPV] *= fModuleGain;
   }
-
+  std::cout<< "THcLADGEMModule: fPedestalMode = " << fPedestalMode << std::endl;
   if (fPedestalMode) {
     fZeroSuppress          = false;
     fOnlineZeroSuppression = false;
     // fPedSubFlag = 0;
+    std::cout << "THcLADGEMModule: Pedestal mode ON, zero suppression OFF" << std::endl;
   }
 
   // Hard coded. Should fix later
@@ -890,6 +1120,15 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
 
             fCM_online[2 * iw]     = double(CMcalc_signed[2 * iw]);
             fCM_online[2 * iw + 1] = double(CMcalc_signed[2 * iw + 1]);
+
+            //Thesee are filled six times per APV per event:
+	          if( it->axis == LADGEM::kUaxis ){
+	            hcommonmode_online_by_APV_U->Fill( it->pos, fCM_online[2*iw] );
+	            hcommonmode_online_by_APV_U->Fill( it->pos, fCM_online[2*iw+1] );
+	          } else {
+	            hcommonmode_online_by_APV_V->Fill( it->pos, fCM_online[2*iw] );
+	            hcommonmode_online_by_APV_V->Fill( it->pos, fCM_online[2*iw+1] );
+	          }
           }
         }
       }
@@ -899,6 +1138,19 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
 
     Int_t nsamp = evdata.GetNumHits(it->crate, it->slot, effChan);
     if (nsamp > 0) {
+      // Temporary variable to store the number of hits above negative saturation threshold
+      // by time sample. If we have a full readout event and we fail to calculate a good
+      // common-mode value in any time sample, we might want to ignore that APV's data? 
+      
+      //These are filled once per APV card per event
+      // as long as the APV card has non-zero hits:
+      int flag_cm_or = CM_OUT_OF_RANGE ? 1 : 0;
+      if( axis == LADGEM::kUaxis ){
+      	hCM_OR_by_APV_U->Fill( it->pos, flag_cm_or );
+      } else {
+	      hCM_OR_by_APV_V->Fill( it->pos, flag_cm_or );
+      }
+
       Int_t nstrips = nsamp / fN_MPD_TIME_SAMP; // number of strips fired on this APV card (should be exactly 128 if
                                                 // online zero suppression is NOT used):
       bool fullreadout = !CM_ENABLED && BUILD_ALL_SAMPLES && nstrips == fN_APV25_CHAN;
@@ -987,31 +1239,33 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
               double cm_mean;
               UInt_t iAPV = it->pos;
 
-              if (!CM_OUT_OF_RANGE || fPedestalMode) {
+              //if (!CM_OUT_OF_RANGE || fPedestalMode) {
                 if (axis == LADGEM::kUaxis) {
                   cm_mean = fCommonModeMeanU[iAPV];
-
-                  /*
-                  // Disable histogram stuff for now..
+                  /*std::cout << "APV, CMmean, CM_danning, CM_histo, CM_sorting, CM_online: " << iAPV << ", "
+                            << cm_mean << ", " << cm_danning << ", " << cm_histo << ", " << cm_sorting << ", "
+                            << cm_danning_online << std::endl;
+                  */
+                  
                   fCommonModeDistU->Fill( iAPV, commonMode[isamp] - cm_mean );
                   fCommonModeDistU_Histo->Fill( iAPV, cm_histo - cm_mean );
                   fCommonModeDistU_Sorting->Fill( iAPV, cm_sorting - cm_mean );
                   fCommonModeDistU_Danning->Fill( iAPV, cm_danning - cm_mean );
                   fCommonModeDiffU->Fill( iAPV, commonMode[isamp] - cm_danning_online );
-                  */
+                  
 
                 } else {
                   cm_mean = fCommonModeMeanV[iAPV];
 
-                  /*
+                  
                   fCommonModeDistV->Fill( iAPV, commonMode[isamp] - cm_mean );
                   fCommonModeDistV_Histo->Fill( iAPV, cm_histo - cm_mean );
                   fCommonModeDistV_Sorting->Fill( iAPV, cm_sorting - cm_mean );
                   fCommonModeDistV_Danning->Fill( iAPV, cm_danning - cm_mean );
                   fCommonModeDiffV->Fill( iAPV, commonMode[isamp] - cm_danning_online );
-                  */
+                  
                 }
-              }
+              //}
 
             } else if (!fPedestalMode) { // if not doing diagnostic plots, just calculate whichever way the user wanted:
               commonMode[isamp] = GetCommonMode(isamp, fCommonModeFlag, *it);
@@ -1047,7 +1301,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
 
               UInt_t iAPV = it->pos;
 
-              /*
+              
               // Disable histogram stuff for now
               if( fMakeCommonModePlots ){
                 if( Correction != 0. ){
@@ -1081,7 +1335,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
                   }
                 }
               }// fMakeCommonModePlots
-              */
+              
             }
           } // fCorrectCommonMode
 
@@ -1217,25 +1471,25 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
         CalcDeconvolutedSamples(ADCtemp, DeconvADCtemp);
 
         // Disable histogram stuff for now
-        /*
+        
         if( (fPedestalMode || fMakeCommonModePlots) && !CM_ENABLED ){
           int iAPV = strip/fN_APV25_CHAN;
-
+          double pedtemp = ( axis == LADGEM::kUaxis ) ? fPedestalU[strip] : fPedestalV[strip];
           if( axis == LADGEM::kUaxis ){
             for( int isamp=0; isamp<fN_MPD_TIME_SAMP; isamp++ ){
 
               hrawADCs_by_stripU->Fill( strip, rawADCtemp[isamp] );
               hpedestal_subtracted_ADCs_by_stripU->Fill( strip, ADCtemp[isamp] ); //common-mode AND ped-subtracted
-              hcommonmode_subtracted_ADCs_by_stripU->Fill( strip, ADCtemp[isamp] + pedtemp ); //common-mode subtraction
-        only, no ped: hpedestal_subtracted_rawADCs_by_stripU->Fill( strip, ADCtemp[isamp] + commonMode[isamp] );
-        //pedestal subtraction only, no common-mode hpedestal_subtracted_rawADCsU->Fill( ADCtemp[isamp] +
-        commonMode[isamp] ); //1D distribution of ped-subtracted ADCs w/o common-mode subtraction
-              hpedestal_subtracted_ADCsU->Fill( ADCtemp[isamp] ); //1D distribution of ped-and-common-mode subtracted
-        ADCs hcommonmode_mean_by_APV_U->Fill( iAPV, commonMode[isamp] );
+              hcommonmode_subtracted_ADCs_by_stripU->Fill( strip, ADCtemp[isamp] + pedtemp ); //common-mode subtraction only, no ped: 
+              hpedestal_subtracted_rawADCs_by_stripU->Fill( strip, ADCtemp[isamp] + commonMode[isamp] );
+        //pedestal subtraction only, no common-mode 
+              hpedestal_subtracted_rawADCsU->Fill( ADCtemp[isamp] +commonMode[isamp] ); //1D distribution of ped-subtracted ADCs w/o common-mode subtraction
+              hpedestal_subtracted_ADCsU->Fill( ADCtemp[isamp] ); //1D distribution of ped-and-common-mode subtracted ADCs  
+              hcommonmode_mean_by_APV_U->Fill( iAPV, commonMode[isamp] );
 
-              if( iSampMax != 0 ){
-                hdeconv_ADCsU->Fill( DeconvADCtemp[isamp] );
-              }
+              //if( iSampMax != 0 ){
+              //  hdeconv_ADCsU->Fill( DeconvADCtemp[isamp] );
+             // }
             }
           } else {
             for( int isamp=0; isamp<fN_MPD_TIME_SAMP; isamp++ ){
@@ -1248,14 +1502,14 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
               hpedestal_subtracted_ADCsV->Fill( ADCtemp[isamp] );
               hcommonmode_mean_by_APV_V->Fill( iAPV, commonMode[isamp] );
 
-              if( iSampMax != 0 ){
-                hdeconv_ADCsV->Fill( DeconvADCtemp[isamp] );
-              }
+              //if( iSampMax != 0 ){
+              //  hdeconv_ADCsV->Fill( DeconvADCtemp[isamp] );
+              //}
 
             }
           }
         }
-        */
+        
 
         // the ROOTgui multicrate uses a threshold on the AVERAGE ADC sample (not the MAX). To be consistent
         // with how the "Hit" root files are produced, let's use the same threshold;
@@ -2956,6 +3210,262 @@ double THcLADGEMModule::GetCommonMode(UInt_t isamp, Int_t flag, const mpdmap_t &
   }
 }
 
+void THcLADGEMModule::PrintPedestals( std::ofstream &dbfile_CM, std::ofstream &daqfile_ped, std::ofstream &daqfile_CM ){
+  //The first argument is a file in the format expected by the database,
+  //The second argument is a file in the format expected by the DAQ:
+
+  //Step 1: we need to extract pedestal mean and rms by channel, and also grab
+  // "common-mode min" and "common-mode max" values:
+  // we can simply use the existing arrays to store the values:
+
+  std::cout << "[THcLADGEMModule::PrintPedestals]: module " << GetName() << std::endl;
+
+  hpedmeanU_distribution->Reset();
+  hpedmeanV_distribution->Reset();
+  hpedrmsU_distribution->Reset();
+  hpedrmsV_distribution->Reset();
+
+  hpedmeanU_by_strip->Reset();
+  hpedmeanV_by_strip->Reset();
+  hpedrmsU_by_strip->Reset();
+  hpedrmsV_by_strip->Reset();
+//start with pedestals;
+  for( UInt_t iu = 0; iu<fNstripsU; iu++ ){
+    TH1D *htemp = hcommonmode_subtracted_ADCs_by_stripU->ProjectionY( "htemp", iu+1,iu+1 );
+    
+    fPedestalU[iu] = htemp->GetMean();
+
+    //htemp here represents the individual sample noise width, but the threshold is applied on the average of the six (or other number) time samples:
+    // sigma(average) = sigma(1 sample)/sqrt(number of samples):
+    fPedRMSU[iu] = htemp->GetRMS() / sqrt( double( fN_MPD_TIME_SAMP ) ); 
+
+    hpedmeanU_distribution->Fill( fPedestalU[iu] );
+    hpedrmsU_distribution->Fill( fPedRMSU[iu] );
+
+    hpedmeanU_by_strip->SetBinContent( iu+1, fPedestalU[iu] );
+    hpedrmsU_by_strip->SetBinContent( iu+1, fPedRMSU[iu] );
+    
+    htemp->Delete();
+  }
+
+  for( UInt_t iv = 0; iv<fNstripsV; iv++ ){
+    TH1D *htemp = hcommonmode_subtracted_ADCs_by_stripV->ProjectionY( "htemp", iv+1, iv+1 );
+    fPedestalV[iv] = htemp->GetMean();
+    fPedRMSV[iv] = htemp->GetRMS() / sqrt( double( fN_MPD_TIME_SAMP ) );
+
+    hpedmeanV_distribution->Fill( fPedestalV[iv] );
+    hpedrmsV_distribution->Fill( fPedRMSV[iv] );
+
+    hpedmeanV_by_strip->SetBinContent( iv+1, fPedestalV[iv] );
+    hpedrmsV_by_strip->SetBinContent( iv+1, fPedRMSV[iv] );
+    
+    htemp->Delete();
+  }
+
+  
+  
+  TString appname = static_cast<THaDetector *>(GetParent())->GetApparatus()->GetName();
+  TString detname = GetParent()->GetName();
+  TString modname = GetName();
+  
+  TString header;
+  //TO DO: common-mode mean, min, and max by APV card:
+
+  
+  
+  int nAPVsU = fNstripsU/fN_APV25_CHAN;
+  int nAPVsV = fNstripsV/fN_APV25_CHAN;
+  std::vector<double> commonmode_meanU(nAPVsU), commonmode_rmsU(nAPVsU);
+  std::vector<double> commonmode_meanV(nAPVsV), commonmode_rmsV(nAPVsV);
+
+  
+  for( int iAPV = 0; iAPV<nAPVsU; iAPV++ ){
+    TH1D *htemp = hcommonmode_mean_by_APV_U->ProjectionY("htemp", iAPV+1, iAPV+1 );
+
+    commonmode_meanU[iAPV] = htemp->GetMean();
+    commonmode_rmsU[iAPV] = htemp->GetRMS();
+  }
+  
+  for( int iAPV = 0; iAPV<nAPVsV; iAPV++ ){
+    TH1D *htemp = hcommonmode_mean_by_APV_V->ProjectionY("htemp", iAPV+1, iAPV+1 );
+
+    commonmode_meanV[iAPV] = htemp->GetMean();
+    commonmode_rmsV[iAPV] = htemp->GetRMS();
+  }
+  
+  //That takes care of the database file. For the "DAQ" file, we need to organize things by APV card. For this we can loop over the MPDmap:
+  
+  for( auto iapv = fMPDmap.begin(); iapv != fMPDmap.end(); iapv++ ){
+    int crate = iapv->crate;
+    int slot = iapv->slot;
+    int mpd = iapv->mpd_id;
+    int adc_ch = iapv->adc_id;
+    int pos = iapv->pos;
+    int invert = iapv->invert;
+    int axis = iapv->axis;
+
+    
+    daqfile_ped << "APV "
+	    << std::setw(16) << crate 
+	    << std::setw(16) << slot 
+	    << std::setw(16) << mpd
+	    << std::setw(16) << adc_ch
+	    << std::endl;
+    
+    //Then loop over the strips:
+    for( int ich=0; ich<fN_APV25_CHAN; ich++ ){
+      int strip = GetStripNumber( ich, pos, invert );
+      double pedmean = (axis == LADGEM::kUaxis ) ? fPedestalU[strip] : fPedestalV[strip];
+      double pedrms = (axis == LADGEM::kUaxis ) ? fPedRMSU[strip] : fPedRMSV[strip];
+
+      daqfile_ped << std::setw(16) << ich
+	      << std::setw(16) << std::setprecision(4) << pedmean
+	      << std::setw(16) << std::setprecision(4) << pedrms
+	      << std::endl;
+    }
+
+    double cm_mean = (axis == LADGEM::kUaxis ) ? commonmode_meanU[ pos ] : commonmode_meanV[ pos ];
+    double cm_rms = (axis == LADGEM::kUaxis ) ? commonmode_rmsU[ pos ] : commonmode_rmsV[ pos ];
+
+    //std::cout << "module " << GetName() << ", common-mode range number of sigmas = " << fCommonModeRange_nsigma  << std::endl;
+    
+    double cm_min = cm_mean - fCommonModeRange_nsigma * cm_rms;
+    
+    double cm_max = cm_mean + fCommonModeRange_nsigma * cm_rms;
+
+    //daq CM file needs a CM min and max and integers
+    daqfile_CM << std::setw(12) << crate 
+	       << std::setw(12) << slot
+	       << std::setw(12) << mpd
+	       << std::setw(12) << adc_ch
+	       << std::setw(12) << int( cm_min )
+	       << std::setw(12) << int( cm_max )
+	       << std::endl;
+    
+    //DB CM file prefers the CM mean and RMS and doubles
+    dbfile_CM << std::setw(12) << crate 
+	      << std::setw(12) << slot
+	      << std::setw(12) << mpd
+	      << std::setw(12) << adc_ch
+	      << std::setw(12) << Form("%15.5g", cm_mean)
+	      << std::setw(12) << Form("%15.5g", cm_rms)
+	      << std::endl;
+    
+  }
+}
+
+Int_t THcLADGEMModule::End (THaRunBase* r) {
+  if( fPedestalMode || fMakeCommonModePlots ){ //write out pedestal histograms, print out pedestals in the format needed for both database and DAQ:
+    std::cout << "THcLADGEMModule::End() - Writing out pedestal histograms" << std::endl;
+    //The channel map and pedestal information are specific to a GEM module.
+    //But we want ONE database file and ONE DAQ file for the entire tracker.
+    //So probably the best way to proceed is to have the  
+    hpedrmsU_distribution->Write(0,kOverwrite);
+    hpedmeanU_distribution->Write(0,kOverwrite);
+    hpedrmsV_distribution->Write(0,kOverwrite);
+    hpedmeanV_distribution->Write(0,kOverwrite);
+    std::cout << "THcLADGEMModule::End() - Writing out pedestal histograms by strip" << std::endl;
+
+    hpedrmsU_by_strip->Write(0,kOverwrite);
+    hpedmeanU_by_strip->Write(0,kOverwrite);
+    hpedrmsV_by_strip->Write(0,kOverwrite);
+    hpedmeanV_by_strip->Write(0,kOverwrite);
+    
+    std::cout << "THcLADGEMModule::End() - Writing out rawADC histograms by APV" << std::endl;
+    hrawADCs_by_stripU->Write(0,kOverwrite);
+    hrawADCs_by_stripV->Write(0,kOverwrite);
+
+    hrawADCs_by_stripU_nopedsub->Write(0,kOverwrite);
+    hrawADCs_by_stripV_nopedsub->Write(0,kOverwrite);
+   
+    std::cout << "THcLADGEMModule::End() - Writing out common-mode subtracted ADC histograms by strip" << std::endl;
+    hcommonmode_subtracted_ADCs_by_stripU->Write(0,kOverwrite);
+    hcommonmode_subtracted_ADCs_by_stripV->Write(0,kOverwrite);
+    hpedestal_subtracted_ADCs_by_stripU->Write(0,kOverwrite);
+    hpedestal_subtracted_ADCs_by_stripV->Write(0,kOverwrite);
+    hpedestal_subtracted_rawADCs_by_stripU->Write(0,kOverwrite);
+    hpedestal_subtracted_rawADCs_by_stripV->Write(0,kOverwrite);
+
+    hpedestal_subtracted_rawADCsU->Write(0,kOverwrite);
+    hpedestal_subtracted_rawADCsV->Write(0,kOverwrite);
+  }
+
+  if( fPedDiagHistosInitialized ){
+    //The following histograms are always generated:
+    std::cout << "THcLADGEMModule::End() - Writing out pedestal subtracted ADC histograms" << std::endl;
+    hpedestal_subtracted_ADCsU->Write(0,kOverwrite);
+    hpedestal_subtracted_ADCsV->Write(0,kOverwrite);
+    hpedestal_subtracted_ADCsU_goodCM->Write(0,kOverwrite);
+    hpedestal_subtracted_ADCsV_goodCM->Write(0,kOverwrite);
+    
+    //hdeconv_ADCsU->Write(0,kOverwrite);
+    //hdeconv_ADCsV->Write(0,kOverwrite);
+    //hdeconv_ADCsU_goodCM->Write(0,kOverwrite);
+    //hdeconv_ADCsV_goodCM->Write(0,kOverwrite);
+    
+    hcommonmode_mean_by_APV_U->Write(0,kOverwrite);
+    hcommonmode_mean_by_APV_V->Write(0,kOverwrite);
+
+    hcommonmode_online_by_APV_U->Write(0,kOverwrite);
+    hcommonmode_online_by_APV_V->Write(0,kOverwrite);
+    
+    hrawADCs_by_APV_U->Write(0,kOverwrite);
+    hrawADCs_by_APV_V->Write(0,kOverwrite);
+
+    hrawADCs_by_APV_U_goodCM->Write(0,kOverwrite);
+    hrawADCs_by_APV_V_goodCM->Write(0,kOverwrite);
+
+    hrawADCs_by_APV_U_nopedsub->Write(0,kOverwrite);
+    hrawADCs_by_APV_V_nopedsub->Write(0,kOverwrite);
+
+    hrawADCs_by_APV_U_nopedsub_goodCM->Write(0,kOverwrite);
+    hrawADCs_by_APV_V_nopedsub_goodCM->Write(0,kOverwrite);
+    
+    hADCs_by_APV_U->Write(0,kOverwrite);
+    hADCs_by_APV_V->Write(0,kOverwrite);
+
+    hADCs_by_APV_U_goodCM->Write(0,kOverwrite);
+    hADCs_by_APV_V_goodCM->Write(0,kOverwrite);
+    
+    hCM_OR_by_APV_U->Write(0,kOverwrite);
+    hCM_OR_by_APV_V->Write(0,kOverwrite);
+  }
+  
+  // hrawADCs_by_strip_sampleU->Write();
+  // hrawADCs_by_strip_sampleV->Write();
+  // hcommonmode_subtracted_ADCs_by_strip_sampleU->Write();
+  // hcommonmode_subtracted_ADCs_by_strip_sampleV->Write();
+  // hpedestal_subtracted_ADCs_by_strip_sampleU->Write();
+  // hpedestal_subtracted_ADCs_by_strip_sampleV->Write();
+
+
+  if ( fMakeCommonModePlots ){
+    fCommonModeDistU->Write(0,kOverwrite);
+    fCommonModeDistU_Histo->Write(0,kOverwrite);
+    fCommonModeDistU_Sorting->Write(0,kOverwrite);
+    fCommonModeDistU_Danning->Write(0,kOverwrite);
+    fCommonModeDiffU->Write(0,kOverwrite);
+    fCommonModeDiffU_Uncorrected->Write(0,kOverwrite);
+    fCommonModeCorrectionU->Write(0,kOverwrite);
+    fCommonModeResidualBiasU->Write(0,kOverwrite);
+    fCommonModeResidualBiasU_corrected->Write(0,kOverwrite);
+    fCommonModeResidualBias_vs_OccupancyU->Write(0,kOverwrite);
+    //fCommonModeNotCorrectionU->Write(0,kOverwrite);
+
+    fCommonModeDistV->Write(0,kOverwrite);
+    fCommonModeDistV_Histo->Write(0,kOverwrite);
+    fCommonModeDistV_Sorting->Write(0,kOverwrite);
+    fCommonModeDistV_Danning->Write(0,kOverwrite);
+    fCommonModeDiffV->Write(0,kOverwrite);
+    fCommonModeDiffV_Uncorrected->Write(0,kOverwrite);
+    fCommonModeCorrectionV->Write(0,kOverwrite);
+    fCommonModeResidualBiasV->Write(0,kOverwrite);
+    fCommonModeResidualBiasV_corrected->Write(0,kOverwrite);
+    fCommonModeResidualBias_vs_OccupancyV->Write(0,kOverwrite);
+    //fCommonModeNotCorrectionV->Write(0,kOverwrite);
+  }
+  return 0;
+}
 //____________________________________________________________________________________
 
 void THcLADGEMModule::SetTriggerTime(Double_t ttrig) { fTrigTime = fabs(ttrig) < fMaxTrigTimeCorrection ? ttrig : 0.0; }

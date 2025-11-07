@@ -202,6 +202,12 @@ THcLADHodoPlane::~THcLADHodoPlane() {
   fHodoCableFit = NULL;
   delete[] fHodo_LCoeff;
   fHodo_LCoeff = NULL;
+  delete[] fHodoVelFit_FADC;
+  fHodoVelFit_FADC = NULL;
+  delete[] fHodoCableFit_FADC;
+  fHodoCableFit_FADC = NULL;
+  delete[] fHodo_LCoeff_FADC;
+  fHodo_LCoeff_FADC = NULL;
   delete[] fHodoTop_c1;
   fHodoTop_c1 = NULL;
   delete[] fHodoBtm_c1;
@@ -506,6 +512,9 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoVelFit   = new Double_t[fNelem];
   fHodoCableFit = new Double_t[fNelem];
   fHodo_LCoeff  = new Double_t[fNelem];
+  fHodoVelFit_FADC = new Double_t[fNelem];
+  fHodoCableFit_FADC = new Double_t[fNelem];
+  fHodo_LCoeff_FADC  = new Double_t[fNelem];
   fHodoTop_c1   = new Double_t[fNelem];
   fHodoBtm_c1   = new Double_t[fNelem];
   fHodoTop_c2   = new Double_t[fNelem];
@@ -533,6 +542,9 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     fHodoVelFit[j]   = parent->GetHodoVelFit(index);
     fHodoCableFit[j] = parent->GetHodoCableFit(index);
     fHodo_LCoeff[j]  = parent->GetHodoLCoeff(index);
+    fHodoVelFit_FADC[j]   = parent->GetHodoVelFit_FADC(index);
+    fHodoCableFit_FADC[j] = parent->GetHodoCableFit_FADC(index);
+    fHodo_LCoeff_FADC[j]  = parent->GetHodoLCoeff_FADC(index);
     fHodoTop_c1[j]   = parent->GetHodoTop_c1(index);
     fHodoBtm_c1[j]   = parent->GetHodoBtm_c1(index);
     fHodoTop_c2[j]   = parent->GetHodoTop_c2(index);
@@ -792,15 +804,19 @@ Int_t THcLADHodoPlane::DefineVariables(EMode mode) {
   RVarDef vars2[] = {
       {"nFullHodoHits", "List of HodoHit objects", "fNScinHits"},
       {"HodoHitTime", "List of HodoHit times", "fHodoHits.THcLADHodoHit.GetScinCorrectedTime()"},
+      {"HodoHitTime_FADC", "List of HodoHit times FADC", "fHodoHits.THcLADHodoHit.GetScinCorrectedTime_FADC()"},
       {"HodoHitTOF", "List of HodoHit times of flight", "fHodoHits.THcLADHodoHit.GetScinTOFCorrectedTime()"},
       {"HodoHitPaddleNum", "List of HodoHit paddle numbers", "fHodoHits.THcLADHodoHit.GetPaddleNumber()"},
       {"HodoHitPos", "List of HodoHit positions on bar", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
+      {"HodoHitPos_FADC", "List of HodoHit positions on bar FADC", "fHodoHits.THcLADHodoHit.GetCalcPosition_FADC()"},
       {"HodoHitEdep", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC()"},
       {"HodoHitEdepAmp", "List of HodoHit ADC amplitudes", "fHodoHits.THcLADHodoHit.GetPaddleADCpeak()"},
       {"HodoHitEdep_MeV", "List of HodoHit energy depositions", "fHodoHits.THcLADHodoHit.GetPaddleADC_MeV()"},
       {"HodoHitEdepAmp_MeV", "List of HodoHit ADC amplitudes", "fHodoHits.THcLADHodoHit.GetPaddleADCpeak_MeV()"},
       {"HodoHitisFull", "List of Bool's specifing if hit has top and btm hodo hits",
        "fHodoHits.THcLADHodoHit.GetHasCorrectedTimes()"},
+       {"HodoHitYPos", "List of HodoHit y positions from track intersection", "fHodoHits.THcLADHodoHit.GetCalcPosition()"},
+       {"HodoHitYPos_FADC", "List of HodoHit y positions from track intersection FADC", "fHodoHits.THcLADHodoHit.GetCalcPosition_FADC()"},
       {0}};
 
   /*
@@ -1260,38 +1276,37 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           Double_t TdcAdcTimeDiff = tdc_btm[i_btm_hit] * fScinTdcToTime - pulseTime;
 
           if (rawBtmAdcHit.GetPulseAmpRaw(ielem) <= 0)
-            continue; // Skip negative pulse amps
-          // pulseAmp = 200.; // do we want to to this? or skip simply this element?
+            pulseAmp = -200.; // do we want to to this? or skip simply this element?
 
           Bool_t pulseTimeCut =
               (TdcAdcTimeDiff > fHodoBtmAdcTimeWindowMin[index]) && (TdcAdcTimeDiff < fHodoBtmAdcTimeWindowMax[index]);
-          Bool_t is_used_maxAmp  = false;
-          Bool_t is_used_minTime = false;
+          Bool_t is_used       = false;
+          Bool_t is_used_test2 = false;
           for (UInt_t i = 0; i < i_btm_hit; i++) {
             if (good_ielem_BtmAdc_maxAmp[i] == ielem) {
-              is_used_maxAmp = true;
+              is_used = true;
             }
             if (good_ielem_BtmAdc_minTime[i] == ielem) {
-              is_used_minTime = true;
+              is_used_test2 = true;
             }
           }
-          if (!is_used_maxAmp && pulseTimeCut && pulseAmp > max_adcamp_test) {
+          if (!is_used && pulseTimeCut && pulseAmp > max_adcamp_test) {
             good_ielem_BtmAdc_maxAmp[i_btm_hit] = ielem;
             max_adcamp_test                     = pulseAmp;
           }
-          if (!is_used_minTime && abs(TdcAdcTimeDiff) < max_adctdcdiff_test) {
+          if (!is_used_test2 && abs(TdcAdcTimeDiff) < max_adctdcdiff_test) {
             good_ielem_BtmAdc_minTime[i_btm_hit] = ielem;
             max_adctdcdiff_test                  = abs(TdcAdcTimeDiff);
           }
         }
 
-        // if no max-amp, use the closest time
+        // good_ielem_BtmAdc_maxAmp: select the pulse that has TdcAdcTimeDiff within the given range and with maximum
+        // pulseAmp good_ielem_BtmAdc_minTime: selects the pulse with minimum value of TdcAdcTimeDiff
         if (good_ielem_BtmAdc_maxAmp[i_btm_hit] == -1 && good_ielem_BtmAdc_minTime[i_btm_hit] != -1)
           good_ielem_BtmAdc_maxAmp[i_btm_hit] = good_ielem_BtmAdc_minTime[i_btm_hit];
-        // if no max-amp or time, discarad this hit
-        // if (good_ielem_BtmAdc_maxAmp[i_btm_hit] == -1 && good_ielem_BtmAdc_minTime[i_btm_hit] == -1 &&
-        //     rawBtmAdcHit.GetNPulses() > 0)
-        //   good_ielem_BtmAdc_maxAmp[i_btm_hit] = 0;
+        if (good_ielem_BtmAdc_maxAmp[i_btm_hit] == -1 && good_ielem_BtmAdc_minTime[i_btm_hit] == -1 &&
+            rawBtmAdcHit.GetNPulses() > 0)
+          good_ielem_BtmAdc_maxAmp[i_btm_hit] = 0;
 
         if (good_ielem_BtmAdc_maxAmp[i_btm_hit] != -1 &&
             good_ielem_BtmAdc_maxAmp[i_btm_hit] < rawBtmAdcHit.GetNPulses()) {
@@ -1300,8 +1315,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           adchitused_btm[i_btm_hit] = good_ielem_BtmAdc_maxAmp[i_btm_hit] + 1;
           adcint_btm[i_btm_hit]     = rawBtmAdcHit.GetPulseInt(good_ielem_BtmAdc_maxAmp[i_btm_hit]);
           adcamp_btm[i_btm_hit]     = rawBtmAdcHit.GetPulseAmp(good_ielem_BtmAdc_maxAmp[i_btm_hit]);
-          // if (rawBtmAdcHit.GetPulseAmpRaw(good_ielem_BtmAdc_maxAmp[i_btm_hit]) <= 0)
-          //   adcamp_btm[i_btm_hit] = 200.;
+          if (rawBtmAdcHit.GetPulseAmpRaw(good_ielem_BtmAdc_maxAmp[i_btm_hit]) <= 0)
+            adcamp_btm[i_btm_hit] = -200.;
           adctime_btm[i_btm_hit] = rawBtmAdcHit.GetPulseTime(good_ielem_BtmAdc_maxAmp[i_btm_hit]) + fAdcTdcOffset;
           badcraw_btm[i_btm_hit] = kTRUE;
           adctdcdifftime_btm[i_btm_hit] = tdc_btm[i_btm_hit] * fScinTdcToTime - adctime_btm[i_btm_hit];
@@ -1324,38 +1339,37 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
             Double_t TdcAdcTimeDiff = tdc_top[i_top_hit] * fScinTdcToTime - pulseTime;
 
             if (rawTopAdcHit.GetPulseAmpRaw(ielem) <= 0)
-              continue; // Skip negative pulse amps
-            // pulseAmp = 200.; // do we want to to this? or skip simply this element?
+              pulseAmp = -200.; // do we want to to this? or skip simply this element?
 
             Bool_t pulseTimeCut = (TdcAdcTimeDiff > fHodoTopAdcTimeWindowMin[index]) &&
                                   (TdcAdcTimeDiff < fHodoTopAdcTimeWindowMax[index]);
-            Bool_t is_used_maxAmp  = false;
-            Bool_t is_used_minTime = false;
+            Bool_t is_used       = false;
+            Bool_t is_used_test2 = false;
             for (UInt_t i = 0; i < i_top_hit; i++) {
               if (good_ielem_TopAdc_maxAmp[i] == ielem) {
-                is_used_maxAmp = true;
+                is_used = true;
               }
               if (good_ielem_TopAdc_minTime[i] == ielem) {
-                is_used_minTime = true;
+                is_used_test2 = true;
               }
             }
-            if (!is_used_maxAmp && pulseTimeCut && pulseAmp > max_adcamp_test) {
+            if (!is_used && pulseTimeCut && pulseAmp > max_adcamp_test) {
               good_ielem_TopAdc_maxAmp[i_top_hit] = ielem;
               max_adcamp_test                     = pulseAmp;
             }
-            if (!is_used_minTime && abs(TdcAdcTimeDiff) < max_adctdcdiff_test) {
+            if (!is_used_test2 && abs(TdcAdcTimeDiff) < max_adctdcdiff_test) {
               good_ielem_TopAdc_minTime[i_top_hit] = ielem;
               max_adctdcdiff_test                  = abs(TdcAdcTimeDiff);
             }
           }
 
-          // if no max-amp, use the closest time
+          // good_ielem_TopAdc_maxAmp: select the pulse that has TdcAdcTimeDiff within the given range and with maximum
+          // pulseAmp good_ielem_TopAdc_minTime: selects the pulse with minimum value of TdcAdcTimeDiff
           if (good_ielem_TopAdc_maxAmp[i_top_hit] == -1 && good_ielem_TopAdc_minTime[i_top_hit] != -1)
             good_ielem_TopAdc_maxAmp[i_top_hit] = good_ielem_TopAdc_minTime[i_top_hit];
-          // if no max-amp or time, discarad this hit
-          // if (good_ielem_TopAdc_maxAmp[i_top_hit] == -1 && good_ielem_TopAdc_minTime[i_top_hit] == -1 &&
-          //     rawTopAdcHit.GetNPulses() > 0)
-          //   good_ielem_TopAdc_maxAmp[i_top_hit] = 0;
+          if (good_ielem_TopAdc_maxAmp[i_top_hit] == -1 && good_ielem_TopAdc_minTime[i_top_hit] == -1 &&
+              rawTopAdcHit.GetNPulses() > 0)
+            good_ielem_TopAdc_maxAmp[i_top_hit] = 0;
 
           if (good_ielem_TopAdc_maxAmp[i_top_hit] != -1 &&
               good_ielem_TopAdc_maxAmp[i_top_hit] < rawTopAdcHit.GetNPulses()) {
@@ -1364,8 +1378,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
             adchitused_top[i_top_hit] = good_ielem_TopAdc_maxAmp[i_top_hit] + 1;
             adcint_top[i_top_hit]     = rawTopAdcHit.GetPulseInt(good_ielem_TopAdc_maxAmp[i_top_hit]);
             adcamp_top[i_top_hit]     = rawTopAdcHit.GetPulseAmp(good_ielem_TopAdc_maxAmp[i_top_hit]);
-            // if (rawTopAdcHit.GetPulseAmpRaw(good_ielem_TopAdc_maxAmp[i_top_hit]) <= 0)
-            //   adcamp_top[i_top_hit] = 200.;
+            if (rawTopAdcHit.GetPulseAmpRaw(good_ielem_TopAdc_maxAmp[i_top_hit]) <= 0)
+              adcamp_top[i_top_hit] = -200.;
             adctime_top[i_top_hit] = rawTopAdcHit.GetPulseTime(good_ielem_TopAdc_maxAmp[i_top_hit]) + fAdcTdcOffset;
             badcraw_top[i_top_hit] = kTRUE;
             adctdcdifftime_top[i_top_hit] = tdc_top[i_top_hit] * fScinTdcToTime - adctime_top[i_top_hit];
@@ -1397,14 +1411,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     // Loop over individual TDC/ADC pairs for top and btm
 
     for (int i_top_hit = 0; i_top_hit < n_top_hit; i_top_hit++) {
-      Double_t prev_time[NUM_PADDLES];
-      for (int i = 0; i < NUM_PADDLES; ++i)
-        prev_time[i] = kBig; // for killing after-pulses
+
       if (good_ielem_TopAdc_maxAmp[i_top_hit] != -1) {
-        if (prev_time[padnum - 1] != kBig && adctime_top[i_top_hit] - prev_time[padnum - 1] < afterPulse_window) {
-          good_ielem_TopAdc_maxAmp[i_top_hit] = -1;
-          continue; // skip this hit, it is an after-pulse
-        }
 
         // good adc multiplicity
         fTotNumGoodTopAdcHits++;
@@ -1431,14 +1439,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
     }
 
     for (int i_btm_hit = 0; i_btm_hit < n_btm_hit; i_btm_hit++) {
-      Double_t prev_time[NUM_PADDLES];
-      for (int i = 0; i < NUM_PADDLES; ++i)
-        prev_time[i] = kBig; // for killing after-pulses
+
       if (good_ielem_BtmAdc_maxAmp[i_btm_hit] != -1) {
-        if (prev_time[padnum - 1] != kBig && adctime_btm[i_btm_hit] - prev_time[padnum - 1] < afterPulse_window) {
-          good_ielem_BtmAdc_maxAmp[i_btm_hit] = -1;
-          continue; // skip this hit, it is an after-pulse
-        }
 
         // good adc multiplicity
         fTotNumGoodBtmAdcHits++;
@@ -1474,7 +1476,6 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       double good_i_elem_top_tmp, good_i_elem_btm_tmp;
       for (int i_btm_hit = 0; i_btm_hit < n_btm_hit; i_btm_hit++) {
         if (good_ielem_TopAdc_maxAmp[i_top_hit] != -1 && good_ielem_BtmAdc_maxAmp[i_btm_hit] != -1) {
-          // Check that the hit doesn't already exist (avoid using duplicates)
           if (std::find(good_ielem_Top_Tdc_Full.begin(), good_ielem_Top_Tdc_Full.end(), good_ielem_TopTdc[i_top_hit]) !=
               good_ielem_Top_Tdc_Full.end()) {
             continue;
@@ -1483,11 +1484,13 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
               good_ielem_Btm_Tdc_Full.end()) {
             continue;
           }
-          double dt_tmp = tdc_top[i_top_hit] * fScinTdcToTime - tdc_btm[i_btm_hit] * fScinTdcToTime;
-          if (abs(dt_tmp) < fTDC_match_window && dt_tmp < dt) { // Hard coded to 50ns
-            dt                  = dt_tmp;
-            good_i_elem_top_tmp = good_ielem_TopTdc[i_top_hit];
-            good_i_elem_btm_tmp = good_ielem_BtmTdc[i_btm_hit];
+          double dt = tdc_top[i_top_hit] * fScinTdcToTime - tdc_btm[i_btm_hit] * fScinTdcToTime;
+          if (abs(dt) < fTDC_match_window) { // Hard coded to 50ns
+            good_ielem_Top_Tdc_Full[n_top_hit_full] = good_ielem_TopTdc[i_top_hit];
+            good_ielem_Btm_Tdc_Full[n_top_hit_full] = good_ielem_BtmTdc[i_btm_hit];
+            // good_ielem_Top_Adc_Full[n_top_hit_full] = good_ielem_TopAdc_maxAmp[i_top_hit];
+            // good_ielem_Btm_Adc_Full[n_top_hit_full] = good_ielem_BtmAdc_maxAmp[i_btm_hit];
+            n_top_hit_full++;
           }
         }
       }
@@ -1555,8 +1558,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           timec_top = tdc_top[i_good_top_tdc_elem] * fScinTdcToTime - tw_corr_top + fHodo_LCoeff[index];
           timec_btm = tdc_btm[i_good_btm_tdc_elem] * fScinTdcToTime - tw_corr_btm - 2 * fHodoCableFit[index] +
                       fHodo_LCoeff[index];
-          adc_timec_top = adc_timec_top - tw_corr_top + fHodo_LCoeff[index];
-          adc_timec_btm = adc_timec_btm - tw_corr_btm - 2 * fHodoCableFit[index] + fHodo_LCoeff[index];
+          adc_timec_top = adc_timec_top  + fHodo_LCoeff_FADC[index]; // Pretty sure we don't need to apply time walk corrections. Not sure why the original code did this
+          adc_timec_btm = adc_timec_btm - 2 * fHodoCableFit_FADC[index] + fHodo_LCoeff_FADC[index];
 
           Double_t TWCorrDiff = fGoodBtmTdcTimeWalkCorr.at(padnum - 1) - 2 * fHodoCableFit[index] -
                                 fGoodTopTdcTimeWalkCorr.at(padnum - 1);
@@ -1574,13 +1577,12 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           hit_position              = TMath::Min(hit_position, fPosBtm[padnum - 1]);
           hit_position              = TMath::Max(hit_position, fPosTop[padnum - 1]);
           Double_t scin_corrected_time;
-          Double_t adc_toptime = adc_timec_top;
-          Double_t adc_btmtime = adc_timec_btm;
 
           scin_corrected_time = 0.5 * (timec_btm + timec_top);
           // timec_top                   = scin_corrected_time;
           // timec_btm                   = scin_corrected_time;
           Double_t adc_time_corrected = 0.5 * (adc_timec_top + adc_timec_btm);
+          Double_t fHitDistCorr_FADC = 0.5 * (adc_timec_btm - adc_timec_top) * fHodoVelFit_FADC[index];
           // LHE: Need to change this to match LAD
           // if (fCosmicFlag) {
           //   toptime     = timec_top + (fZpos + (index % 2) * fDzpos) / (29.979 * fBetaNominal);
@@ -1596,11 +1598,11 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
 
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetPaddleCenter(fPosCenter[index]);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCorrectedTimes(timec_top, timec_btm, scin_corrected_time);
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCorrectedTimes_FADC(adc_timec_top, adc_timec_btm, adc_time_corrected);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetTopADCpeak(adcamp_top[i_good_top_adc_elem]);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetBtmADCpeak(adcamp_btm[i_good_btm_adc_elem]);
-          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetTopADCCorrtime(adc_toptime);
-          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetBtmADCCorrtime(adc_btmtime);
-          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition(fHitDistCorr); //
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition(fHitDistCorr);
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition_FADC(fHitDistCorr_FADC);
 
           fGoodTopTdcTimeCorr.at(padnum - 1) = timec_top;
           fGoodBtmTdcTimeCorr.at(padnum - 1) = timec_btm;

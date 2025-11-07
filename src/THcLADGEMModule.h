@@ -4,6 +4,7 @@
 #include "THaSubDetector.h"
 #include "TClonesArray.h"
 #include "THcLADGEMCluster.h"
+#include "TH2D.h"
 
 #include <vector>
 #include <set>
@@ -44,11 +45,13 @@ class THcLADGEMModule : public THaSubDetector {
   virtual ~THcLADGEMModule();
   
   virtual EStatus Init( const TDatime& run_time );
+  Int_t   Begin( THaRunBase* r);
   virtual void    Clear( Option_t* opt="" );
   virtual Int_t   Decode( const THaEvData& );
   virtual Int_t   CoarseProcess( TClonesArray& tracks );
   virtual Int_t   FineProcess( TClonesArray& tracks );
-
+//TODO: add an END method to write out the histograms
+  Int_t   End( THaRunBase* r=0 );
   std::vector<THcLADGEMCluster> GetClusters(int axis){
     if( axis == LADGEM::kUaxis )
       return fClustersU;
@@ -84,6 +87,7 @@ class THcLADGEMModule : public THaSubDetector {
   Int_t GetNStripsHitV() { return fNstrips_hitV; }
   Int_t GetNStripsHit()  { return fNstrips_hit; }
   Int_t GetN2DHits()     { return fN2Dhits; }
+  void PrintPedestals( std::ofstream &dbfile_CM, std::ofstream &daqfile_ped, std::ofstream &daqfile_CM );
   
  protected:
   
@@ -385,6 +389,116 @@ class THcLADGEMModule : public THaSubDetector {
   Int_t fNClus;
   Int_t fMAX2DHITS;
   Int_t fN2Dhits;
+
+  //Let's revamp the common-mode diagnostic plots altogether:
+  
+  //If applicable, make common mode. In principle these should all be broken down by APV, but let's leave as 1D for now.
+  TH2D *fCommonModeDistU; //user
+  TH2D *fCommonModeDistU_Histo; //Distribution of calculated common-mode (minus expected common-mode mean) using chosen method:
+  TH2D *fCommonModeDistU_Sorting;
+  TH2D *fCommonModeDistU_Danning;
+  TH2D *fCommonModeDiffU; //difference between "user" and "online" danning-mode calculations:
+  TH2D *fCommonModeDiffU_Uncorrected;
+  TH2D *fCommonModeCorrectionU; //common-mode correction applied
+  //TH2D *fCommonModeNotCorrectionU;
+  //For full readout events that WEREN'T corrected, plot the difference between "online Danning method" and "true" common-mode:
+  TH2D *fCommonModeResidualBiasU; //for full-readout events only: "online corrected" - "true" common-mode vs APV
+  TH2D *fCommonModeResidualBias_vs_OccupancyU; //for full-readout events only: "online corrected" - "true" common-mode vs. occupancy
+
+  TH2D *fCommonModeResidualBiasU_corrected;
+
+  //If applicable, make common mode. In principle these should all be broken down by APV, but let's leave as 1D for now.
+  TH2D *fCommonModeDistV;
+  TH2D *fCommonModeDistV_Histo; //Distribution of calculated common-mode (minus expected common-mode mean) using chosen method:
+  TH2D *fCommonModeDistV_Sorting;
+  TH2D *fCommonModeDistV_Danning;
+  TH2D *fCommonModeDiffV; //difference between "user" and "online" danning mode calculations
+  TH2D *fCommonModeDiffV_Uncorrected;
+  TH2D *fCommonModeCorrectionV;
+  //TH2D *fCommonModeNotCorrectionV;
+  TH2D *fCommonModeResidualBiasV; //for full-readout events only: "online corrected" - "true" common-mode vs APV
+  TH2D *fCommonModeResidualBias_vs_OccupancyV; //for full-readout events only: "online corrected" - "true" common-mode vs. 
+
+  TH2D *fCommonModeResidualBiasV_corrected;
+
+  bool fPedHistosInitialized;
+
+  bool fPedDiagHistosInitialized;
+  TH2D *hrawADCs_by_stripU; //raw adcs by strip, no corrections, filled for each SAMPLE:
+  TH2D *hrawADCs_by_stripV; //raw adcs by strip, no corrections, filled for each SAMPLE:
+  TH2D *hrawADCs_by_stripU_nopedsub; //Add pedestal back in!
+  TH2D *hrawADCs_by_stripV_nopedsub; //Add pedestal back in!
+  
+  TH2D *hcommonmode_subtracted_ADCs_by_stripU; //common-mode subtracted ADCS without ped subtraction
+  TH2D *hcommonmode_subtracted_ADCs_by_stripV; 
+  TH2D *hpedestal_subtracted_ADCs_by_stripU; //common-mode AND pedestal subtracted ADCs
+  TH2D *hpedestal_subtracted_ADCs_by_stripV;
+
+  TH2D *hpedestal_subtracted_rawADCs_by_stripU; //pedestal-subtracted ADCs w/o common-mode correction
+  TH2D *hpedestal_subtracted_rawADCs_by_stripV;
+
+  //Summed over all strips, pedestal-subtracted (but not common-mode subtracted) ADCs:
+  TH1D *hpedestal_subtracted_rawADCsU;
+  TH1D *hpedestal_subtracted_rawADCsV;
+
+  //Summed over all strips, pedestal-subtracted and  common-mode subtracted ADCs:
+  TH1D *hpedestal_subtracted_ADCsU;
+  TH1D *hpedestal_subtracted_ADCsV;
+
+  //Summed over all strips, pedestal-subtracted and  common-mode subtracted ADCs:
+  TH1D *hpedestal_subtracted_ADCsU_goodCM;
+  TH1D *hpedestal_subtracted_ADCsV_goodCM;
+
+  TH1D *hdeconv_ADCsU; //full readout events only
+  TH1D *hdeconv_ADCsV; //full readout events only
+
+  TH1D *hdeconv_ADCsU_goodCM; //full readout events only
+  TH1D *hdeconv_ADCsV_goodCM; //full readout events only
+
+  //Raw ADC distribution by APV card:
+  TH2D *hrawADCs_by_APV_U;
+  TH2D *hrawADCs_by_APV_V;
+
+  TH2D *hrawADCs_by_APV_U_goodCM;
+  TH2D *hrawADCs_by_APV_V_goodCM;
+
+  TH2D *hrawADCs_by_APV_U_nopedsub;
+  TH2D *hrawADCs_by_APV_V_nopedsub;
+
+  TH2D *hrawADCs_by_APV_U_nopedsub_goodCM;
+  TH2D *hrawADCs_by_APV_V_nopedsub_goodCM;
+
+  //Pedestal and common-mode subtracted ADC distribution by APV card:
+  TH2D *hADCs_by_APV_U;
+  TH2D *hADCs_by_APV_V;
+
+  TH2D *hADCs_by_APV_U_goodCM;
+  TH2D *hADCs_by_APV_V_goodCM;
+
+  //For all events, determine whether an APV threw a common-mode out-of-range condition:
+  TH2D *hCM_OR_by_APV_U;
+  TH2D *hCM_OR_by_APV_V;
+  
+  //These histograms we MAY wish to make all the time (but probably not)
+  TH2D *hcommonmode_mean_by_APV_U;
+  TH2D *hcommonmode_mean_by_APV_V;
+
+  TH2D *hcommonmode_online_by_APV_U;
+  TH2D *hcommonmode_online_by_APV_V;
+
+  TH1D *hpedrmsU_distribution;
+  TH1D *hpedrmsU_by_strip;
+
+  TH1D *hpedmeanU_distribution;
+  TH1D *hpedmeanU_by_strip;
+
+  TH1D *hpedrmsV_distribution;
+  TH1D *hpedrmsV_by_strip;
+
+  TH1D *hpedmeanV_distribution;
+  TH1D *hpedmeanV_by_strip;
+
+  TClonesArray *hpedrms_by_APV;
 
   THaDetectorBase* fParent;
 
