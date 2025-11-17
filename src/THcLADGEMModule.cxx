@@ -2497,7 +2497,7 @@ Int_t THcLADGEMModule::GetStripNumber(UInt_t rawstrip, UInt_t axis, UInt_t pos, 
   Int_t RstripNb = APVMAP[fAPVmapping][rawstrip];
 
   // LHE: Not sure if this code below should be there, or if the number should be 38 or 42.
-  if (axis == LADGEM::kVaxis && pos==11){
+  if (axis == LADGEM::kUaxis && pos==11){//CHL I think this is for U strips on pos 11??
     if (RstripNb & 1)
       RstripNb = 48 - (RstripNb + 1) / 2;
     else
