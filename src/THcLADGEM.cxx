@@ -251,12 +251,14 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
                       {"gem_pedfile", &fPedFilename, kString, 0, 1},
                       {"gem_cmfile", &fCMFilename, kString, 0, 1},
                       {"gem_d0_cut", &fD0Cut, kDouble, 0, 1},
-                      {"gem_pedestal_mode", &fPedestalMode, kInt, 0, 1},
                       {0}
 
   };
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-  
+
+  DBRequest list2[] = {{"lgem_pedestal_mode", &fPedestalMode, kInt, 0, 1}};
+  gHcParms->LoadParmValues((DBRequest *)&list2,"");
+  std::cout<< "THcLADGEM: Pedestal mode set to " << fPedestalMode << std::endl;
   // Define GEM Modules
   for (int imod = 0; imod < fNModules; imod++) {
     THcLADGEMModule *new_module = new THcLADGEMModule(Form("m%d", imod), Form("m%d", imod), imod, this);
@@ -588,7 +590,7 @@ void THcLADGEM::LoadPedestals() {
               int this_apvchan = APVChan[this_crate][this_slot][this_index][i];
               double this_mean = PedMean[this_crate][this_slot][this_index][i];
               double this_rms  = PedRMS[this_crate][this_slot][this_index][i];
-              int this_strip   = fModules[module]->GetStripNumber(this_apvchan, it->pos, it->invert);
+              int this_strip   = fModules[module]->GetStripNumber(this_apvchan, it->axis, it->pos, it->invert);
 
               if (it->axis == LADGEM::kUaxis) {
                 fModules[module]->fPedestalU[this_strip] = this_mean;

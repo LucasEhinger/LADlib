@@ -68,7 +68,7 @@ class THcLADGEMModule : public THaSubDetector {
 
   Int_t GetModuleID() { return fModuleID; }
   Int_t GetLayerNum() { return fLayer; }
-  Int_t GetStripNumber( UInt_t rawstrip, UInt_t pos, UInt_t invert );
+  Int_t GetStripNumber( UInt_t rawstrip, UInt_t axis, UInt_t pos, UInt_t invert );
 
   std::vector<mpdmap_t> fMPDmap;
   std::vector<Int_t> fChanMapData;

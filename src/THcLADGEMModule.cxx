@@ -1180,7 +1180,7 @@ Int_t THcLADGEMModule::Decode(const THaEvData &evdata) {
         Int_t ADC = Int_t(decoded_rawADC);
 
         rawStrip[iraw] = strip;
-        Strip[iraw]    = GetStripNumber(strip, it->pos, it->invert);
+        Strip[iraw]    = GetStripNumber(strip, it->axis, it->pos, it->invert);
         rawADC[iraw]   = ADC;
 
         // Note: this prints out all 128 channels for 6 samples for each APV
@@ -2493,14 +2493,21 @@ TVector2 THcLADGEMModule::XYtoUV(TVector2 XY) {
   return TVector2(Utemp, Vtemp);
 }
 
-Int_t THcLADGEMModule::GetStripNumber(UInt_t rawstrip, UInt_t pos, UInt_t invert) {
+Int_t THcLADGEMModule::GetStripNumber(UInt_t rawstrip, UInt_t axis, UInt_t pos, UInt_t invert) {
   Int_t RstripNb = APVMAP[fAPVmapping][rawstrip];
 
   // LHE: Not sure if this code below should be there, or if the number should be 38 or 42.
-  if (RstripNb & 1)
-    RstripNb = 48 - (RstripNb + 1) / 2;
-  else
-    RstripNb = 48 + RstripNb / 2;
+  if (axis == LADGEM::kVaxis && pos==11){
+    if (RstripNb & 1)
+      RstripNb = 48 - (RstripNb + 1) / 2;
+    else
+      RstripNb = 48 + RstripNb / 2;
+  }else{
+    if (RstripNb & 1)
+      RstripNb = 32 - (RstripNb + 1) / 2;
+    else
+      RstripNb = 32 + RstripNb / 2;
+  }
   RstripNb &= 0x7f;
   // LHE: End code change
   RstripNb        = RstripNb + (127 - 2 * RstripNb) * invert;
@@ -3334,7 +3341,7 @@ void THcLADGEMModule::PrintPedestals( std::ofstream &dbfile_CM, std::ofstream &d
     
     //Then loop over the strips:
     for( int ich=0; ich<fN_APV25_CHAN; ich++ ){
-      int strip = GetStripNumber( ich, pos, invert );
+      int strip = GetStripNumber( ich, axis, pos, invert );
       double pedmean = (axis == LADGEM::kUaxis ) ? fPedestalU[strip] : fPedestalV[strip];
       double pedrms = (axis == LADGEM::kUaxis ) ? fPedRMSU[strip] : fPedRMSV[strip];
 
