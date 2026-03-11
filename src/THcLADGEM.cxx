@@ -127,22 +127,22 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
 
   // Cluster variables
   RVarDef vars_clus[] = {{"clust.layer", "GEM Layer", "fClusOutData.layer"},
-                         {"clust.module", "GEM Module ID", "fClusOutData.imodule"},
-                         {"clust.axis", "U/V axis", "fClusOutData.axis"},
-                         {"clust.mpd", "MPD ID", "fClusOutData.mpdid"},
-                         {"clust.nstrip", "Number of strips in cluster", "fClusOutData.nstrip"},
-                         {"clust.maxstrip", "index of the strip with max ADC of the given cluster", "fClusOutData.maxstrip"},
-                         {"clust.striplo", "index of the lowest strip in the cluster", "fClusOutData.striplo"},
-                         {"clust.striphi", "index of the highest strip in the cluster", "fClusOutData.striphi"},
-                         {"clust.index", "Cluster index", "fClusOutData.clindex"},
-                         {"clust.adc", "Cluster ADC sum", "fClusOutData.adc"},
-                         {"clust.time", "Cluster Time mean", "fClusOutData.time"},
-                         {"clust.pos", "Weighted cluster position", "fClusOutData.pos"},
-                         {"clust.maxpos", "Max strip pos of the cluster", "fClusOutData.mpos"},
-                         {"clust.maxsamp", "Time sample with max ADC", "fClusOutData.maxsamp"},
-                         {"clust.maxadc", "Max strip ADC", "fClusOutData.maxadc"},
-                         {"clust.apvGain", "APV gain correction factor", "fClusOutData.apvGain"},
-                         {0}};
+      {"clust.module", "GEM Module ID", "fClusOutData.imodule"},
+      {"clust.axis", "U/V axis", "fClusOutData.axis"},
+      {"clust.mpd", "MPD ID", "fClusOutData.mpdid"},
+      {"clust.nstrip", "Number of strips in cluster", "fClusOutData.nstrip"},
+      {"clust.maxstrip", "index of the strip with max ADC of the given cluster", "fClusOutData.maxstrip"},
+      {"clust.striplo", "index of the lowest strip in the cluster", "fClusOutData.striplo"},
+      {"clust.striphi", "index of the highest strip in the cluster", "fClusOutData.striphi"},
+      {"clust.index", "Cluster index", "fClusOutData.clindex"},
+      {"clust.adc", "Cluster ADC sum", "fClusOutData.adc"},
+      {"clust.time", "Cluster Time mean", "fClusOutData.time"},
+      {"clust.pos", "Weighted cluster position", "fClusOutData.pos"},
+      {"clust.maxpos", "Max strip pos of the cluster", "fClusOutData.mpos"},
+      {"clust.maxsamp", "Time sample with max ADC", "fClusOutData.maxsamp"},
+      {"clust.maxadc", "Max strip ADC", "fClusOutData.maxadc"},
+      {"clust.apvGain", "APV gain correction factor", "fClusOutData.apvGain"},
+      {0}};
 
   DefineVarsFromList(vars_clus, mode);
 
@@ -159,24 +159,24 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
   DefineVarsFromList(vars_hit, mode);
 
   RVarDef vars_sp[] = {{"sp.nhits", "Number of hits in GEM layer 0", "nhits"},
-                       {"sp.posX", "X position of GEM hit in layer 0", "fPosX"},
-                       {"sp.posY", "Y position of GEM hit in layer 0", "fPosY"},
-                       {"sp.posZ", "Z position of GEM hit in layer 0", "fPosZ"},
-                       {"sp.time", "Time mean of GEM hit in layer 0", "fTimeMean"},
-                       {"sp.adc", "ADC mean of GEM hit in layer 0", "fADCMean"},
-                       {"sp.asym", "ADC asym of GEM hit in layer 0", "fADCAsym"},
-                       {"sp.dt", "Time difference of GEM hit in layer 0", "fTimeDiff"},
-                       {"sp.ct", "Corrected time of GEM hit in layer 0", "fTimeCorr"},
-                       {"sp.isgoodhit", "Good hit flag of GEM hit in layer 0", "fIsGoodHit"},
-                       {"sp.clusID1", "Cluster ID1 of GEM hit in layer 0", "fClusID0"},
-                       {"sp.clusID2", "Cluster ID2 of GEM hit in layer 0", "fClusID1"},
-                       {"sp.corrcoeff", "Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff"},
-                       {"sp.corrcoeff_deconv", "Deconvoluted Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff_Deconv"},
-                       {"sp.corrcoeff_strip", "Strip Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff_Strip"},
+      {"sp.posX", "X position of GEM hit in layer 0", "fPosX"},
+      {"sp.posY", "Y position of GEM hit in layer 0", "fPosY"},
+      {"sp.posZ", "Z position of GEM hit in layer 0", "fPosZ"},
+      {"sp.time", "Time mean of GEM hit in layer 0", "fTimeMean"},
+      {"sp.adc", "ADC mean of GEM hit in layer 0", "fADCMean"},
+      {"sp.asym", "ADC asym of GEM hit in layer 0", "fADCAsym"},
+      {"sp.dt", "Time difference of GEM hit in layer 0", "fTimeDiff"},
+      {"sp.ct", "Corrected time of GEM hit in layer 0", "fTimeCorr"},
+      {"sp.isgoodhit", "Good hit flag of GEM hit in layer 0", "fIsGoodHit"},
+      {"sp.clusID1", "Cluster ID1 of GEM hit in layer 0", "fClusID0"},
+      {"sp.clusID2", "Cluster ID2 of GEM hit in layer 0", "fClusID1"},
+      {"sp.corrcoeff", "Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff"},
+      {"sp.corrcoeff_deconv", "Deconvoluted Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff_Deconv"},
+      {"sp.corrcoeff_strip", "Strip Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff_Strip"},
                        {"sp.corrcoeff_strip_deconv", "Strip Deconvoluted Correlation Coefficient of GEM hit in layer 0", "fCorrCoeff_Strip_Deconv"},
-                       {"sp.spID", "SP ID of GEM hit in layer 0", "fSPID"},
-                       {"sp.layer", "2D hit layer", "fLayer"},
-                       {0}};
+      {"sp.spID", "SP ID of GEM hit in layer 0", "fSPID"},
+      {"sp.layer", "2D hit layer", "fLayer"},
+      {0}};
   DefineVarsFromList(vars_sp, mode);
 
   //  Place holder for space point output
@@ -204,37 +204,37 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
     // Track/Space point variables
     RVarDef vars_trk[] = {
         {"trk.ntracks", "Number of GEM track candidates", "fNTracks"},
-        {"trk.id", "GEM Track ID", "fGEMTracks.THcLADGEMTrack.GetTrackID()"},
-        {"trk.spID_0", "Space Point ID for Layer 0 ", "fGEMTracks.THcLADGEMTrack.GetSpID_0()"},
-        {"trk.spID_1", "Space Point ID for Layer 1 ", "fGEMTracks.THcLADGEMTrack.GetSpID_1()"},
-        {"trk.spID_0u", "Cluster ID for Layer 0 U", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_0U()"},
-        {"trk.spID_0v", "Cluster ID for Layer 0 V", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_0V()"},
-        {"trk.spID_1u", "Cluster ID for Layer 1 U", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_1U()"},
-        {"trk.spID_1v", "Cluster ID for Layer 1 V", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_1V()"},
-        {"trk.adc1", "2D hit ADC mean for 1st layer", "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp1()"},
-        {"trk.adc2", "2D hit ADC mean for 2nd layer", "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp2()"},
-        {"trk.asy1", "2D hit ADC asym for 1st layer", "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp1()"},
-        {"trk.asy2", "2D hit ADC asym for 2nd layer", "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp2()"},
-        {"trk.x1", "Space point1 X", "fGEMTracks.THcLADGEMTrack.GetX1()"},
-        {"trk.y1", "Space point1 Y", "fGEMTracks.THcLADGEMTrack.GetY1()"},
-        {"trk.z1", "Space point1 Z", "fGEMTracks.THcLADGEMTrack.GetZ1()"},
-        {"trk.x2", "Space point2 X", "fGEMTracks.THcLADGEMTrack.GetX2()"},
-        {"trk.y2", "Space point2 Y", "fGEMTracks.THcLADGEMTrack.GetY2()"},
-        {"trk.z2", "Space point2 Z", "fGEMTracks.THcLADGEMTrack.GetZ2()"},
-        {"trk.x1_local", "Space point1 X Local", "fGEMTracks.THcLADGEMTrack.GetX1_local()"},
-        {"trk.y1_local", "Space point1 Y Local", "fGEMTracks.THcLADGEMTrack.GetY1_local()"},
-        {"trk.x2_local", "Space point2 X Local", "fGEMTracks.THcLADGEMTrack.GetX2_local()"},
-        {"trk.y2_local", "Space point2 Y Local", "fGEMTracks.THcLADGEMTrack.GetY2_local()"},
-        {"trk.t", "Avg time", "fGEMTracks.THcLADGEMTrack.GetT()"},
-        {"trk.dt", "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
-        {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
-        {"trk.d0_good", "Track dist from true vertex", "fGEMTracks.THcLADGEMTrack.GetGoodD0()"},
-        {"trk.projz", "Projected z-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
-        {"trk.projy", "Projected y-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVy()"},
-        {"trk.has_hodo_hit", "Track has hodoscope hit", "fGEMTracks.THcLADGEMTrack.GetHasHodoHit()"},
-        // {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},
-        // {"trk.phi", "Track phi", "fGEMTracks.THcLADGEMTrack.GetPhi()"},
-        {0}};
+                          {"trk.id", "GEM Track ID", "fGEMTracks.THcLADGEMTrack.GetTrackID()"},
+                          {"trk.spID_0", "Space Point ID for Layer 0 ", "fGEMTracks.THcLADGEMTrack.GetSpID_0()"},
+                          {"trk.spID_1", "Space Point ID for Layer 1 ", "fGEMTracks.THcLADGEMTrack.GetSpID_1()"},
+                          {"trk.spID_0u", "Cluster ID for Layer 0 U", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_0U()"},
+                          {"trk.spID_0v", "Cluster ID for Layer 0 V", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_0V()"},
+                          {"trk.spID_1u", "Cluster ID for Layer 1 U", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_1U()"},
+                          {"trk.spID_1v", "Cluster ID for Layer 1 V", "fGEMTracks.THcLADGEMTrack.GetSpacePointID_1V()"},
+                          {"trk.adc1", "2D hit ADC mean for 1st layer", "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp1()"},
+                          {"trk.adc2", "2D hit ADC mean for 2nd layer", "fGEMTracks.THcLADGEMTrack.GetADCMean_Sp2()"},
+                          {"trk.asy1", "2D hit ADC asym for 1st layer", "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp1()"},
+                          {"trk.asy2", "2D hit ADC asym for 2nd layer", "fGEMTracks.THcLADGEMTrack.GetADCasym_Sp2()"},
+                          {"trk.x1", "Space point1 X", "fGEMTracks.THcLADGEMTrack.GetX1()"},
+                          {"trk.y1", "Space point1 Y", "fGEMTracks.THcLADGEMTrack.GetY1()"},
+                          {"trk.z1", "Space point1 Z", "fGEMTracks.THcLADGEMTrack.GetZ1()"},
+                          {"trk.x2", "Space point2 X", "fGEMTracks.THcLADGEMTrack.GetX2()"},
+                          {"trk.y2", "Space point2 Y", "fGEMTracks.THcLADGEMTrack.GetY2()"},
+                          {"trk.z2", "Space point2 Z", "fGEMTracks.THcLADGEMTrack.GetZ2()"},
+                          {"trk.x1_local", "Space point1 X Local", "fGEMTracks.THcLADGEMTrack.GetX1_local()"},
+                          {"trk.y1_local", "Space point1 Y Local", "fGEMTracks.THcLADGEMTrack.GetY1_local()"},
+                          {"trk.x2_local", "Space point2 X Local", "fGEMTracks.THcLADGEMTrack.GetX2_local()"},
+                          {"trk.y2_local", "Space point2 Y Local", "fGEMTracks.THcLADGEMTrack.GetY2_local()"},
+                          {"trk.t", "Avg time", "fGEMTracks.THcLADGEMTrack.GetT()"},
+                          {"trk.dt", "Time difference between two sp", "fGEMTracks.THcLADGEMTrack.GetdT()"},
+                          {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
+                          {"trk.d0_good", "Track dist from true vertex", "fGEMTracks.THcLADGEMTrack.GetGoodD0()"},
+                          {"trk.projz", "Projected z-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
+                          {"trk.projy", "Projected y-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVy()"},
+                          {"trk.has_hodo_hit", "Track has hodoscope hit", "fGEMTracks.THcLADGEMTrack.GetHasHodoHit()"},
+                          // {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},
+                          // {"trk.phi", "Track phi", "fGEMTracks.THcLADGEMTrack.GetPhi()"},
+                          {0}};
     DefineVarsFromList(vars_trk, mode);
   }
 
@@ -268,10 +268,9 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
 
   };
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
-
-  DBRequest list2[] = {{"lgem_pedestal_mode", &fPedestalMode, kInt, 0, 1}};
-  gHcParms->LoadParmValues((DBRequest *)&list2,"");
-  std::cout<< "THcLADGEM: Pedestal mode set to " << fPedestalMode << std::endl;
+  DBRequest list2[] = {{"lgem_pedestal_mode", &fPedestalMode, kInt, 0, 1}, {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list2, "");
+  std::cout << "THcLADGEM: Pedestal mode set to " << fPedestalMode << std::endl;
   // Define GEM Modules
   for (int imod = 0; imod < fNModules; imod++) {
     THcLADGEMModule *new_module = new THcLADGEMModule(Form("m%d", imod), Form("m%d", imod), imod, this);
@@ -515,7 +514,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
     }
     gemhit1_id++;
   }
-  
+
   return 0;
 }
 //____________________________________________________________
@@ -533,8 +532,8 @@ void THcLADGEM::RotateToLab(Double_t angle, TVector3 &vect) {
 
 //____________________________________________________________
 GEM2DHits* THcLADGEM::Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z, Double_t t, Double_t dt, Double_t tc,
-                          Bool_t goodhit, Double_t adc, Double_t adcasy, Int_t clust_id1, Int_t clust_id2,
-                          Int_t sp_index) {
+                                Bool_t goodhit, Double_t adc, Double_t adcasy, Int_t clust_id1, Int_t clust_id2,
+                                Int_t sp_index) {
   // FIXME:Add flag for filtering good hits?
 
   GEM2DHits gemhit;
@@ -694,28 +693,28 @@ void THcLADGEM::LoadCM() {
 
 Int_t THcLADGEM::End(THaRunBase* r) {
   UInt_t runnum = r->GetNumber();
-  std::cout << "THcLADGEM::End() fPedestalMode: " << fPedestalMode << std::endl; 
+  std::cout << "THcLADGEM::End() fPedestalMode: " << fPedestalMode << std::endl;
   if( fPedestalMode ){
     TString fname_dbped, fname_daqped, fname_dbcm, fname_daqcm;
     
-    
+
     TString specname = GetApparatus()->GetName();
     TString detname = GetName();
-    
+
     fname_dbped.Form( "db_ped_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
     fname_dbcm.Form( "db_cmr_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
     fname_daqped.Form( "daq_ped_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
     fname_daqcm.Form( "daq_cmr_%s_%s_run%d.dat", specname.Data(), detname.Data(), runnum );
     std::cout<<"\n\n\n"<<specname<<" "<<detname<<"\n\n\n";
-    
+
     fCMfile_dbase.open( fname_dbcm.Data() );
     fpedfile_daq.open( fname_daqped.Data() );
     fCMfile_daq.open( fname_daqcm.Data() );
     
-    
+
     TString sdate = r->GetDate().AsString();
     sdate.Prepend( "#" );
-    
+
     TString message;
 
     message.Form( "# Copy file into sbs-onl@sbsvtp#:~/cfg/pedestals for online pedestal subtraction" );
@@ -729,13 +728,13 @@ Int_t THcLADGEM::End(THaRunBase* r) {
     fCMfile_dbase << message << std::endl;
     fCMfile_dbase << "# format = crate, slot, mpd, adc_ch, CM mean, CM RMS"
 		  << std::endl;
-    
+
     message.Form( "# Copy file into sbs-onl@sbsvtp#:~/cfg/pedestals for online pedestal subtraction" );
-    
+
     fpedfile_daq << sdate << std::endl;
     fpedfile_daq <<  message << std::endl;
     fpedfile_daq << "# format = APV        crate       slot       mpd_id       adc_ch followed by " << std::endl
-     		 << "# APV channel number      pedestal mean      pedestal rms " << std::endl;
+                 << "# APV channel number      pedestal mean      pedestal rms " << std::endl;
 
   }
 

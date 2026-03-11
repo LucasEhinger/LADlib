@@ -4,12 +4,12 @@
 
 #include "THaSpectrometer.h"
 #include "THaTrack.h"
+#include "THcGoodLADHit.h"
 #include "THcLADGEM.h"
 #include "THcLADHodoscope.h"
 #include "THcPrimaryKine.h"
 #include "THcReactionPoint.h"
 #include "THcTrigDet.h"
-#include "THcGoodLADHit.h"
 
 class THcReactionPoint;
 class THcLADHodoscope;
@@ -53,7 +53,9 @@ protected:
   Double_t fTVertex;
   Double_t fRFTime;
   Double_t fTVertex_RFcorr;
-  Double_t rf_offset[2];
+  Int_t n_rf_offsets;
+  Double_t *rf_offset;
+  Double_t rf_period;
   virtual Int_t DefineVariables(EMode mode = kDefine);
   void CalculateTVertex();
   Double_t CalculateToF(Double_t t_raw);
