@@ -24,8 +24,9 @@ ClassImp(THcLADKine)
   fRFTime         = kBig;
   fTVertex_RFcorr = kBig;
   fFixed_z        = nullptr;
-  rf_offset[0]    = 0.0;
-  rf_offset[1]    = 0.0;
+  rf_offset       = nullptr;
+  n_rf_offsets    = 0;
+  rf_period       = 4.00801; // Default RF period in ns
 }
 //_____________________________________________________________________________
 THcLADKine::~THcLADKine() {
@@ -34,6 +35,7 @@ THcLADKine::~THcLADKine() {
   fGoodLADHits->Delete();
   delete fGoodLADHits;
   delete[] fFixed_z;
+  delete[] rf_offset;
 }
 //_____________________________________________________________________________
 void THcLADKine::Clear(Option_t *opt) {
@@ -41,6 +43,12 @@ void THcLADKine::Clear(Option_t *opt) {
   THcPrimaryKine::Clear(opt);
   fGoodLADHits->Delete();
   goodhit_n = 0;
+  for (Int_t i = 0; i < n_rf_offsets; i++) {
+    rf_offset[i] = 0.0;
+  }
+  fTVertex        = kBig;
+  fRFTime         = kBig;
+  fTVertex_RFcorr = kBig;
 }
 //_____________________________________________________________________________
 THaAnalysisObject::EStatus THcLADKine::Init(const TDatime &run_time) {
@@ -123,6 +131,17 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   fglobal_time_offset   = 0.0;
   fTrk_dtCut            = 10.0;
 
+  // delete[] rf_offset;
+  rf_offset = new Double_t[2]; // shouldn't be length 2 FIXME
+
+  cout << "Reading LAD Kinematics parameters from database..." << endl;
+  THaVar *varptr;
+  varptr = gHcParms->Find("gen_run_number");
+  Int_t *runnum;
+  if (varptr) {
+    runnum = (Int_t *)varptr->GetValuePointer(); // Assume correct type
+  }
+
   DBRequest list[] = {{"d0_cut_wVertex", &fD0Cut_wVertex, kDouble, 0, 1},
                       {"d0_cut_noVertex", &fD0Cut_noVertex, kDouble, 0, 1},
                       {"max_dTrk_horiz_hitMatch", &fMax_dTrk_horiz_match, kDouble, 0, 1},
@@ -130,9 +149,26 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
                       {"nfixed_z", &fNfixed_z, kInt, 0, 1},
                       {"global_time_offset", &fglobal_time_offset, kDouble, 0, 1},
                       {"trk_dt_cut", &fTrk_dtCut, kDouble, 0, 1},
-                      {"_rf_offset", rf_offset, kDouble, 2},
+                      // {"_rf_offset", rf_offset, kDouble, 2},
+                      {"_rf_period", &rf_period, kDouble, 0, 1},
                       {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
+
+  DBRequest list_rf[] = {{"l_nr_rf_offsets", &n_rf_offsets, kInt, 0, 1}, {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list_rf, prefix);
+  rf_offset = new Double_t[n_rf_offsets];
+  for (Int_t i = 0; i < n_rf_offsets; i++) {
+    rf_offset[i] = 0.0;
+  }
+  DBRequest list_rf_offsets[] = {{"_rf_offset", rf_offset, kDouble, n_rf_offsets}, {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list_rf_offsets, prefix);
+
+  gHcParms->LoadParmValues((DBRequest *)&list_rf, prefix);
+
+  // else {
+  //   runnum = new Int_t[1];
+  //   gHcParms->Define("gen_run_number","Run Number", *runnum);
+  // }
 
   delete[] fFixed_z;
   if (fNfixed_z > 0) {
@@ -380,10 +416,10 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       Double_t tof_btm = CalculateToF(hit->GetBtmCorrectedTime());
       hit->SetTOFCorrectedTimes(tof_top, tof_btm, tof_avg);
 
-       tof_avg = CalculateTOFRFcorr(hit->GetScinCorrectedTime());
-       tof_top = CalculateTOFRFcorr(hit->GetTopCorrectedTime());
-       tof_btm = CalculateTOFRFcorr(hit->GetBtmCorrectedTime());
-       hit->SetTOF_RF_CorrectedTimes(tof_top, tof_btm, tof_avg);
+      tof_avg = CalculateTOFRFcorr(hit->GetScinCorrectedTime());
+      tof_top = CalculateTOFRFcorr(hit->GetTopCorrectedTime());
+      tof_btm = CalculateTOFRFcorr(hit->GetBtmCorrectedTime());
+      hit->SetTOF_RF_CorrectedTimes(tof_top, tof_btm, tof_avg);
     }
   }
 
@@ -441,9 +477,9 @@ void THcLADKine::CalculateTVertex() {
 
   int fRFTimeIndex = (aparatus_prefix[0] == 'p') ? 0 : 1;
   fRFTime          = fTrigDet->Get_RF_TrigTime(fRFTimeIndex) + rf_offset[fRFTimeIndex];
-  double tmp       = fmod(fTVertex - fRFTime, 4);
+  double tmp       = fmod(fTVertex - fRFTime, rf_period);
   if (tmp > 2)
-    tmp -= 4;
+    tmp -= rf_period;
   fTVertex_RFcorr = fTVertex - tmp;
 
   return;
