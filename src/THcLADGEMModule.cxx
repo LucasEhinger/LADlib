@@ -2351,12 +2351,12 @@ void THcLADGEMModule::Find2DHits() {
         // double vmom = fClustersV[iv].GetMoments();
         
         //Hardcoded fix to move APV pos 10 and 11 on U axis
-        if (fClustersU[iu].GetPos()> fN_APV25_CHAN*5*fUStripPitch){
-          upos -= fN_APV25_CHAN*fUStripPitch;// move back by one APV
+        if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*5)*fUStripPitch){
+          upos -= (fN_APV25_CHAN+16)*fUStripPitch;// move back by one APV
           if (modNum*vpos>0){
             continue; // the strips on this APV only go up to the hole, so skip if vpos is positive
           }
-        }else if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*4+16)*fUStripPitch){
+        }else if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*4-16)*fUStripPitch){
           if (modNum*vpos<0){
             continue; // the strips on this APV only go up to the hole, so skip if vpos is negative
           }
