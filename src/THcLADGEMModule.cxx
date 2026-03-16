@@ -2352,7 +2352,7 @@ void THcLADGEMModule::Find2DHits() {
         
         //Hardcoded fix to move APV pos 10 and 11 on U axis
         if (fClustersU[iu].GetPos()> fN_APV25_CHAN*5*fUStripPitch){
-          upos -= 128*fUStripPitch;// move back by one APV
+          upos -= fN_APV25_CHAN*fUStripPitch;// move back by one APV
           if (modNum*vpos>0){
             continue; // the strips on this APV only go up to the hole, so skip if vpos is positive
           }
