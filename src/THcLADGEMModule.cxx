@@ -2332,7 +2332,14 @@ void THcLADGEMModule::Find2DHits() {
 
   int nsamp_corr = fN_MPD_TIME_SAMP;
   int firstsamp_corr = 0;
-
+  //varaibles for shifting the 2D hits
+  TString modName = GetName();
+  int modNum = 0;
+  if (modName=="m0"){
+    modNum=1;
+  }else if (modName=="m1"){
+    modNum=-1;
+  }
   if (nclustU > 0 && nclustV) {
 
     for (int iu = 0; iu < nclustU; iu++) {
@@ -2342,6 +2349,19 @@ void THcLADGEMModule::Find2DHits() {
         double vpos = fClustersV[iv].GetPos();
         // double umom = fClustersU[iu].GetMoments();
         // double vmom = fClustersV[iv].GetMoments();
+        
+        //Hardcoded fix to move APV pos 10 and 11 on U axis
+        if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*5)*fUStripPitch){
+          upos -= (fN_APV25_CHAN+16)*fUStripPitch;// move back by one APV
+          if (modNum*vpos>0){
+            continue; // the strips on this APV only go up to the hole, so skip if vpos is positive
+          }
+        }else if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*4-16)*fUStripPitch){
+          if (modNum*vpos<0){
+            continue; // the strips on this APV only go up to the hole, so skip if vpos is negative
+          }
+        }
+        
 
         TVector2 PosUV(upos, vpos);
         TVector2 PosXY = UVtoXY(PosUV); // no changes if using XY GEM
