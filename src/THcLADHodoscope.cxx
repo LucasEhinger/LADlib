@@ -503,7 +503,7 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
             continue;
           }
 
-          bool same_paddle = hit2->GetPaddleNumber() - hit->GetPaddleNumber() <= fMatchingPaddleTol;
+          bool same_paddle = fabs(hit2->GetPaddleNumber() - hit->GetPaddleNumber()) <= fMatchingPaddleTol;
           bool time_match  = fabs(hit2->GetScinCorrectedTime() - hit->GetScinCorrectedTime()) < fMatchingTimeTol;
           bool dy_match    = fabs(hit2->GetCalcPosition() - hit->GetCalcPosition()) < fMatchingDyTol;
           if (same_paddle && time_match && dy_match) {
