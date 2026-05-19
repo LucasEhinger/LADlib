@@ -450,7 +450,7 @@ Int_t THcLADHodoscope::CoarseProcess(TClonesArray &tracks) { return 0; }
 Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
 
   fGoodLADHits->Delete();
-  // Hodo tracking coes in FineProcess, to ensure it comes after GEM Coarse Process tracking, no matter what.
+  // Hodo tracking goes in FineProcess, to ensure it comes after GEM Coarse Process tracking, no matter what.
 
   fSpectro = dynamic_cast<THaApparatus *>(GetApparatus());
   fGEM     = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
@@ -463,12 +463,11 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
     return 0;
   }
 
-  // TClonesArray* gemTracks = spectrometer->GetGEM()->GetTracks();
-
   Int_t ntracks = fGEMTracks->GetLast() + 1;
 
   vector<Double_t> nPmtHit(ntracks);
   vector<Double_t> timeAtFP(ntracks);
+
   // Loop over all tracks and get corrected time, tof, beta...
   num_unique_hits = 0;
   for (Int_t ip = 0; ip < fNPlanes; ip++) {
@@ -478,14 +477,16 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
     num_unique_hits += fPlanes[ip]->GetNScinHits();
   }
   num_unique_good_hits = 0;
+
+  // Key by (plane, hit_index) instead of (plane, paddle) so that multiple
+  // hits sharing the same paddle in the same plane are each tracked
+  // independently.
   std::map<std::pair<int, int>, bool> hitUsedMap;
 
   // Initialize the map for all hits
   for (Int_t ip = 0; ip < fNPlanes; ip++) {
     for (Int_t iphit = 0; iphit < fPlanes[ip]->GetNScinHits(); iphit++) {
-      THcLADHodoHit *hit                     = (THcLADHodoHit *)fPlanes[ip]->GetHits()->At(iphit);
-      int paddle                             = hit->GetPaddleNumber() - 1;
-      hitUsedMap[std::make_pair(ip, paddle)] = false;
+      hitUsedMap[std::make_pair(ip, iphit)] = false;
     }
   }
 
@@ -493,13 +494,13 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
   for (Int_t ip = 0; ip < fNPlanes; ip += 2) {
     for (Int_t iphit = 0; iphit < fPlanes[ip]->GetNScinHits(); iphit++) {
       THcLADHodoHit *hit = (THcLADHodoHit *)fPlanes[ip]->GetHits()->At(iphit);
-      if (hitUsedMap[std::make_pair(ip, hit->GetPaddleNumber() - 1)]) {
+      if (hitUsedMap[std::make_pair(ip, iphit)]) {
         continue;
       }
       if (ip + 1 < fNPlanes) {
         for (Int_t iphit2 = 0; iphit2 < fPlanes[ip + 1]->GetNScinHits(); iphit2++) {
           THcLADHodoHit *hit2 = (THcLADHodoHit *)fPlanes[ip + 1]->GetHits()->At(iphit2);
-          if (hitUsedMap[std::make_pair(ip + 1, hit2->GetPaddleNumber() - 1)]) {
+          if (hitUsedMap[std::make_pair(ip + 1, iphit2)]) {
             continue;
           }
 
@@ -507,36 +508,23 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
           bool time_match  = fabs(hit2->GetScinCorrectedTime() - hit->GetScinCorrectedTime()) < fMatchingTimeTol;
           bool dy_match    = fabs(hit2->GetCalcPosition() - hit->GetCalcPosition()) < fMatchingDyTol;
           if (same_paddle && time_match && dy_match) {
-            hitUsedMap[std::make_pair(ip, hit->GetPaddleNumber() - 1)]      = true;
-            hitUsedMap[std::make_pair(ip + 1, hit2->GetPaddleNumber() - 1)] = true;
-            THcGoodLADHit *goodhit = new ((*fGoodLADHits)[goodhit_n]) THcGoodLADHit();
+            hitUsedMap[std::make_pair(ip, iphit)]      = true;
+            hitUsedMap[std::make_pair(ip + 1, iphit2)] = true;
+            THcGoodLADHit *goodhit                     = new ((*fGoodLADHits)[goodhit_n]) THcGoodLADHit();
             goodhit_n++;
             goodhit->SetPlane(0, ip);
             goodhit->SetPaddle(0, hit->GetPaddleNumber() - 1);
-            // goodhit->SetTrackID(0, -1); // Set to -1 for now, will be updated in THcLADKine
-            // goodhit->SetdTrkHoriz(0,
-            //                       hit->GetCalcPosition()); // Set to hit position for now, will be updated in
-            //                       THcLADKine
-            // goodhit->SetdTrkVert(0,
-            //                      hit->GetCalcPosition()); // Set to hit position for now, will be updated in
-            //                      THcLADKine
-            // goodhit->SetHitTheta(0, 0);                   // Set to 0 for now, will be updated in THcLADKine
-            // goodhit->SetHitPhi(0, 0);                     // Set to 0 for now, will be updated in THcLADKine
             goodhit->SetHitTime(0, hit->GetScinCorrectedTime());
             goodhit->SetHitEdep(0, hit->GetPaddleADC());
             goodhit->SetHitEdepAmp(0, hit->GetPaddleADCpeak());
             goodhit->SetHitYPos(0, hit->GetCalcPosition());
             goodhit->SetPlane(1, ip + 1);
             goodhit->SetPaddle(1, hit2->GetPaddleNumber() - 1);
-            // goodhit->SetTrackID(1, -1); // Set to -1 for now, will be updated in THcLADKine
-            // goodhit->SetdTrkHoriz(1, hit2->GetCalcPosition()); // Set to hit position for now, will be updated in
-            // THcLADKine goodhit->SetdTrkVert(1, hit2->GetCalcPosition());  // Set to hit position for now, will be
-            // updated in THcLADKine goodhit->SetHitTheta(1, 0); // Set to 0 for now, will be updated in THcLADKine
-            // goodhit->SetHitPhi(1, 0);   // Set to 0 for now, will be updated in THcLADKine
             goodhit->SetHitTime(1, hit2->GetScinCorrectedTime());
             goodhit->SetHitEdep(1, hit2->GetPaddleADC());
             goodhit->SetHitEdepAmp(1, hit2->GetPaddleADCpeak());
             goodhit->SetHitYPos(1, hit2->GetCalcPosition());
+            break; // front hit is now used; stop looking for more back matches for it
           }
         }
       }
@@ -547,14 +535,10 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
     // skip reference bar plane
     if (strcmp(fPlanes[ip]->GetName(), "REFBAR") == 0)
       continue;
-    // only include planes 0,2,4
-    if (ip != 0 && ip != 2 && ip != 4)
-      continue;
 
     for (Int_t iphit = 0; iphit < fPlanes[ip]->GetNScinHits(); iphit++) {
       THcLADHodoHit *hit = (THcLADHodoHit *)fPlanes[ip]->GetHits()->At(iphit);
-      int paddle         = hit->GetPaddleNumber() - 1;
-      auto key           = std::make_pair(ip, paddle);
+      auto key           = std::make_pair(ip, iphit);
       if (hitUsedMap[key])
         continue;
 
@@ -562,12 +546,15 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
       hitUsedMap[key]        = true;
       THcGoodLADHit *goodhit = new ((*fGoodLADHits)[goodhit_n]) THcGoodLADHit();
       goodhit_n++;
-      goodhit->SetPlane(0, ip);
-      goodhit->SetPaddle(0, paddle);
-      goodhit->SetHitTime(0, hit->GetScinCorrectedTime());
-      goodhit->SetHitEdep(0, hit->GetPaddleADC());
-      goodhit->SetHitEdepAmp(0, hit->GetPaddleADCpeak());
-      goodhit->SetHitYPos(0, hit->GetCalcPosition());
+
+      // Fill front planes (0,2,4) into index 0, back planes (1,3) into index 1
+      Int_t hitIndex = (ip % 2 == 0) ? 0 : 1;
+      goodhit->SetPlane(hitIndex, ip);
+      goodhit->SetPaddle(hitIndex, hit->GetPaddleNumber() - 1);
+      goodhit->SetHitTime(hitIndex, hit->GetScinCorrectedTime());
+      goodhit->SetHitEdep(hitIndex, hit->GetPaddleADC());
+      goodhit->SetHitEdepAmp(hitIndex, hit->GetPaddleADCpeak());
+      goodhit->SetHitYPos(hitIndex, hit->GetCalcPosition());
     }
   }
 

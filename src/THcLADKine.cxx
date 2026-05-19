@@ -110,6 +110,8 @@ THaAnalysisObject::EStatus THcLADKine::Init(const TDatime &run_time) {
     return fStatus;
   }
 
+  
+
   return THaPhysicsModule::Init(run_time);
 }
 //_____________________________________________________________________________
@@ -184,7 +186,6 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     TVector3 v_hit1(track->GetX1(), track->GetY1(), track->GetZ1());
     TVector3 v_hit2(track->GetX2(), track->GetY2(), track->GetZ2());
 
-    TVector3 vertex;
     if (fVertexModule->HasVertex()) {
       vertex = fVertexModule->GetVertex();
       track->SetGoodD0(kTRUE);
@@ -468,19 +469,23 @@ void THcLADKine::CalculateTVertex() {
   int run_idx      = 0;
   while (fRFTimeIndex < 0) {
     if (run_idx >= 3 * n_rf_offsets || rf_offset[run_idx] > *runnum) {
-      fRFTimeIndex = run_idx - 3;
+      fRFTimeIndex = run_idx - 3; // Go back 1 step (3 indices) to get the correct RF offset for the run
+      break;
     }
     run_idx += 3;
   }
-  fRFTimeIndex += (aparatus_prefix[0] == 'p' ? 1 : 2);
+  int fRFSpecIndex = (aparatus_prefix[0] == 'p') ? 0 : 1;
+  fRFTimeIndex += (1 + fRFSpecIndex);
   // (aparatus_prefix[0] == 'p') ? 0 : 1;
 
-  fRFTime    = fTrigDet->Get_RF_TrigTime(fRFTimeIndex) + rf_offset[fRFTimeIndex];
-  double tmp = fmod(fTVertex - fRFTime, rf_period);
+  fRFTime    = fTrigDet->Get_RF_TrigTime(fRFSpecIndex);
+  double tmp = fmod(fTVertex - fRFTime + rf_offset[fRFTimeIndex], rf_period);
   if (tmp > 2)
     tmp -= rf_period;
   fTVertex_RFcorr = fTVertex - tmp;
 
+  // cout << "Offset" << rf_offset[fRFTimeIndex] << " Offset Index " << fRFTimeIndex << " RF Time " << fRFTime
+  //      << " TVertex before RF corr " << fTVertex << " TVertex after RF corr " << fTVertex_RFcorr << endl;
   return;
 }
 //_____________________________________________________________________________
@@ -493,6 +498,8 @@ Double_t THcLADKine::CalculateToF(Double_t t_raw) {
 Double_t THcLADKine::CalculateTOFRFcorr(Double_t t_raw) {
 
   Double_t tof = t_raw - fTVertex_RFcorr + fglobal_time_offset;
+
+  tof -= vertex.Z() / lightSpeed;
 
   return tof;
 }

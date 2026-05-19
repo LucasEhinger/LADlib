@@ -56,6 +56,8 @@ protected:
   Int_t n_rf_offsets;
   Double_t *rf_offset;
   Double_t rf_period;
+  TVector3 vertex;
+  Double_t lightSpeed = 29.9792458; // Speed of light in cm/ns
   virtual Int_t DefineVariables(EMode mode = kDefine);
   void CalculateTVertex();
   Double_t CalculateToF(Double_t t_raw);
