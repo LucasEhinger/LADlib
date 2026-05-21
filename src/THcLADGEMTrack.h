@@ -6,6 +6,7 @@
 #include "THcLADGEM.h"
 #include "TObject.h"
 #include "TVector3.h"
+#include "THcGoodLADHit.h"
 
 class GEM2DHits {
 public:
@@ -95,22 +96,46 @@ public:
   // Track quantities
   Double_t GetProjVz() const { return fProjVz; } // projected z-vertex
   Double_t GetProjVy() const { return fProjVy; } // projected y-vertex
+  Double_t GetProjVx() const { return fProjVx; } // projected x-vertex
   Double_t GetD0() const { return fD0; }
   Bool_t GetGoodD0() const { return fhasGoodD0; }
   Double_t GetT() const { return fT; }
   Double_t GetdT() const { return fTdiff; }
-  bool GetHasHodoHit() const { return fHasHodoHit; }
+  short GetHasHodoHit() const { return fHasHodoHit; }
+  THcGoodLADHit *GetBestHodoHit() const { return fBestHodoHit; }
+  void SetBestHodoHit(THcGoodLADHit *hit) { fBestHodoHit = hit; }
 
-  void SetHasHodoHit(bool hasHodoHit) { fHasHodoHit = hasHodoHit; }
+  void SetHasHodoHit(short hasHodoHit) { fHasHodoHit = hasHodoHit; }
   void SetTrackID(int itrk) { fTrackID = itrk; }
   void SetD0(Double_t d0) { fD0 = d0; }
   void SetGoodD0(Bool_t good) { fhasGoodD0 = good; }
   void SetZVertex(Double_t vz) { fProjVz = vz; }
   void SetYVertex(Double_t vy) { fProjVy = vy; }
+  void SetXVertex(Double_t vx) { fProjVx = vx; }
+  void SetProjVertex(Double_t vx, Double_t vy, Double_t vz) {
+    fProjVx = vx;
+    fProjVy = vy;
+    fProjVz = vz;
+  }
+  void SetAngles(Double_t theta, Double_t phi) {
+    ftheta = theta;
+    fphi   = phi;
+  }
+  void GetAngles(Double_t &theta, Double_t &phi) const {
+    theta = ftheta;
+    phi   = fphi;
+  }
+  Double_t GetTheta() const { return ftheta; }
+  Double_t GetPhi() const { return fphi; }
+  void SetChisq(Double_t c) { chisq = c; }
+  Double_t GetChisq() const { return chisq; }
   void SetTime(Double_t t, Double_t dt) {
     fT     = t;
     fTdiff = dt;
   }
+
+  bool IsGoodTrack() const { return fIsGoodTrack; }
+  void SetIsGoodTrack(bool isGood) { fIsGoodTrack = isGood; }
 
   GEM2DHits GetSpacePoint(int isp) { return fSp[isp]; }
   virtual void AddSpacePoint(GEM2DHits sp);
@@ -120,11 +145,11 @@ public:
   int GetSpacePointID_0V() { return fSp[0].clusID[1]; }
   int GetSpacePointID_1U() { return fSp[1].clusID[0]; }
   int GetSpacePointID_1V() { return fSp[1].clusID[1]; }
-
 protected:
   Int_t fNSp;
   Double_t fProjVz;
   Double_t fProjVy;
+  Double_t fProjVx;
   Double_t fD0;
   Bool_t fhasGoodD0;
   Int_t fTrackID;
@@ -132,9 +157,13 @@ protected:
   Int_t fClustID1;
   Double_t fT;
   Double_t fTdiff;
-  bool fHasHodoHit;
-
+  short fHasHodoHit;
+  Double_t chisq;
+  Double_t ftheta; // track angle between the track and z-azis in radians
+  Double_t fphi;   // track angle between the track and x-azis in radians
+  bool fIsGoodTrack;
   GEM2DHits *fSp;
+  THcGoodLADHit *fBestHodoHit; // pointer to the best hodoscope hit associated with this track, if any
 
 private:
   THcLADGEMTrack(const THcLADGEMTrack &);

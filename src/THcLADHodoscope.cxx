@@ -594,4 +594,22 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
   return 0;
 }
 
+TVector3 THcLADHodoscope::GetHitPositionLab(int plane, int paddle, double ypos) {
+  // Get the position of a hit in the hodoscope, given the plane and paddle number
+  // This is a placeholder function and should be implemented based on the actual geometry of the hodoscope
+  if (plane < 0 || plane >= fNPlanes) {
+    cout << "[THcLADHodoscope] Error: Invalid plane number" << endl;
+    return TVector3(0, 0, 0);
+  }
+  if (paddle < 0 || paddle >= fNPaddle[plane]) {
+    cout << "[THcLADHodoscope] Error: Invalid paddle number" << endl;
+    return TVector3(0, 0, 0);
+  }
+  Double_t offset  = fPlanes[plane]->GetPosCenter(paddle);
+  TVector3 hit = TVector3(offset, ypos , fPlanes[plane]->GetZpos());
+  hit.RotateY(fPlanes[plane]->GetTheta());
+  return hit;
+}
+
+
 ClassImp(THcLADHodoscope)

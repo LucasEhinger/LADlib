@@ -230,10 +230,13 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
                           {"trk.d0", "Track dist from vertex", "fGEMTracks.THcLADGEMTrack.GetD0()"},
                           {"trk.d0_good", "Track dist from true vertex", "fGEMTracks.THcLADGEMTrack.GetGoodD0()"},
                           {"trk.projz", "Projected z-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVz()"},
+                          {"trk.projx", "Projected x-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVx()"},
                           {"trk.projy", "Projected y-vertex", "fGEMTracks.THcLADGEMTrack.GetProjVy()"},
                           {"trk.has_hodo_hit", "Track has hodoscope hit", "fGEMTracks.THcLADGEMTrack.GetHasHodoHit()"},
-                          // {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},
-                          // {"trk.phi", "Track phi", "fGEMTracks.THcLADGEMTrack.GetPhi()"},
+                          {"trk.chisq", "Track chi-squared", "fGEMTracks.THcLADGEMTrack.GetChisq()"},
+                          {"trk.theta", "Track theta", "fGEMTracks.THcLADGEMTrack.GetTheta()"},
+                          {"trk.phi", "Track phi", "fGEMTracks.THcLADGEMTrack.GetPhi()"},
+                          {"trk.is_good", "Track is good", "fGEMTracks.THcLADGEMTrack.IsGoodTrack()"},
                           {0}};
     DefineVarsFromList(vars_trk, mode);
   }

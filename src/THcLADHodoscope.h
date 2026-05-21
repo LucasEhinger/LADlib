@@ -61,7 +61,7 @@ public:
   Double_t GetTDCThrs() const { return fTdc_Thrs; }
   Double_t GetEdep2MeV_int(Int_t iii) const { return fEdep2MeV_int[iii]; }
   Double_t GetEdep2MeV_amp(Int_t iii) const { return fEdep2MeV_amp[iii]; }
-
+  TVector3 GetHitPositionLab(Int_t iplane, Int_t ipaddle, Double_t ypos );
   TClonesArray *GetLADGoodHits() { return fGoodLADHits; }
   TClonesArray *GetLADHits(Int_t plane) { return fPlanes[plane]->GetHits(); }
 

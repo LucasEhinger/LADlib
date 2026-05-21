@@ -5,10 +5,14 @@ THcLADGEMTrack::THcLADGEMTrack(Int_t nlayers)
 {
   fProjVz = -999.;
   fProjVy = -999.;
+  fProjVx = -999.;
   fNSp = 0;
   fD0 = -999;
   fhasGoodD0 = kFALSE;
   fSp = new GEM2DHits[nlayers];
+  chisq = -999.;
+  ftheta = -999.;
+  fphi = -999.;
 
 }
 
