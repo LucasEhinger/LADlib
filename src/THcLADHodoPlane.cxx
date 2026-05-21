@@ -1601,8 +1601,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCorrectedTimes_FADC(adc_timec_top, adc_timec_btm, adc_time_corrected);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetTopADCpeak(adcamp_top[i_good_top_adc_elem]);
           ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetBtmADCpeak(adcamp_btm[i_good_btm_adc_elem]);
-          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition(fHitDistCorr);
-          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition_FADC(fHitDistCorr_FADC);
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition(fHitDistCorr+fPosOffset);//add yposition offset to match LAD geometry
+          ((THcLADHodoHit *)fHodoHits->At(fNScinHits))->SetCalcPosition_FADC(fHitDistCorr_FADC+fPosOffset);
 
           fGoodTopTdcTimeCorr.at(padnum - 1) = timec_top;
           fGoodBtmTdcTimeCorr.at(padnum - 1) = timec_btm;
