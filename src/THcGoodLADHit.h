@@ -7,10 +7,13 @@ class THcGoodLADHit : public TObject {
 public:
   THcGoodLADHit() {
     for (int i = 0; i < 2; ++i) {
-      plane[i] = paddle[i] = track_id[i] = -1;
-      hit_tof[i] = hit_tof_rfcorr[i] = dTrk_horiz[i] = dTrk_vert[i] = hit_time[i] = hit_theta[i] = hit_phi[i] = hit_edep[i] =
-          hit_edep_amp[i] = hit_yPos[i] = hit_alpha[i] = hit_beta[i] = 1e30;
+      plane[i] = paddle[i] = -1;
+      hit_tof[i] = hit_tof_rfcorr[i] = hit_time[i] = hit_theta[i] = hit_phi[i] = hit_edep[i] = hit_edep_amp[i] =
+          hit_yPos[i] = hit_alpha[i] = hit_beta[i] = 1e30;
+      is_proton[i]                                 = false;
     }
+    trk_chiSqr = 1e30;
+    track_id   = -1;
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -28,17 +31,11 @@ public:
     CheckHitIndex(hit);
     paddle[hit] = value;
   }
-  void SetTrackID(Int_t hit, Int_t value) {
+  void SetTrackID(Int_t value) { track_id = value; }
+  void SetTrkChiSqr(Double_t value) { trk_chiSqr = value; }
+  void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
-    track_id[hit] = value;
-  }
-  void SetdTrkHoriz(Int_t hit, Double_t value) {
-    CheckHitIndex(hit);
-    dTrk_horiz[hit] = value;
-  }
-  void SetdTrkVert(Int_t hit, Double_t value) {
-    CheckHitIndex(hit);
-    dTrk_vert[hit] = value;
+    is_proton[hit] = value;
   }
   void SetHitTime(Int_t hit, Double_t value) {
     CheckHitIndex(hit);
@@ -86,9 +83,9 @@ public:
     if (copy_plane == 0) {
       SetPlane(this_plane, copyhit->GetPlaneHit0());
       SetPaddle(this_plane, copyhit->GetPaddleHit0());
-      SetTrackID(this_plane, copyhit->GetTrackIDHit0());
-      SetdTrkHoriz(this_plane, copyhit->GetdTrkHorizHit0());
-      SetdTrkVert(this_plane, copyhit->GetdTrkVertHit0());
+      SetTrackID(copyhit->GetTrackID());
+      SetTrkChiSqr(copyhit->GetTrkChiSqr());
+      SetIsProton(this_plane, copyhit->GetIsProtonHit0());
       SetHitTime(this_plane, copyhit->GetHitTimeHit0());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit0());
       SetHitPhi(this_plane, copyhit->GetHitPhiHit0());
@@ -101,9 +98,9 @@ public:
     } else if (copy_plane == 1) {
       SetPlane(this_plane, copyhit->GetPlaneHit1());
       SetPaddle(this_plane, copyhit->GetPaddleHit1());
-      SetTrackID(this_plane, copyhit->GetTrackIDHit1());
-      SetdTrkHoriz(this_plane, copyhit->GetdTrkHorizHit1());
-      SetdTrkVert(this_plane, copyhit->GetdTrkVertHit1());
+      SetTrackID(copyhit->GetTrackID());
+      SetTrkChiSqr(copyhit->GetTrkChiSqr());
+      SetIsProton(this_plane, copyhit->GetIsProtonHit1());
       SetHitTime(this_plane, copyhit->GetHitTimeHit1());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit1());
       SetHitPhi(this_plane, copyhit->GetHitPhiHit1());
@@ -127,17 +124,15 @@ public:
   Int_t GetPaddleHit0() const { return paddle[0]; }
   Int_t GetPaddleHit1() const { return paddle[1]; }
 
-  Int_t GetTrackIDHit0() const { return track_id[0]; }
-  Int_t GetTrackIDHit1() const { return track_id[1]; }
+  Int_t GetTrackID() const { return track_id; }
 
   Double_t GetBetaHit0() const { return hit_beta[0]; }
   Double_t GetBetaHit1() const { return hit_beta[1]; }
 
-  Double_t GetdTrkHorizHit0() const { return dTrk_horiz[0]; }
-  Double_t GetdTrkHorizHit1() const { return dTrk_horiz[1]; }
+  Double_t GetTrkChiSqr() const { return trk_chiSqr; }
 
-  Double_t GetdTrkVertHit0() const { return dTrk_vert[0]; }
-  Double_t GetdTrkVertHit1() const { return dTrk_vert[1]; }
+  Double_t GetIsProtonHit0() const { return is_proton[0]; }
+  Double_t GetIsProtonHit1() const { return is_proton[1]; }
 
   Double_t GetHitTimeHit0() const { return hit_time[0]; }
   Double_t GetHitTimeHit1() const { return hit_time[1]; }
@@ -169,9 +164,9 @@ public:
 protected:
   Int_t plane[2];
   Int_t paddle[2];
-  Int_t track_id[2];
-  Double_t dTrk_horiz[2];
-  Double_t dTrk_vert[2];
+  Int_t track_id;
+  Double_t trk_chiSqr;
+  Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];
   Double_t hit_theta[2];
