@@ -1,4 +1,5 @@
 #include "THcLADGEM.h"
+#include <sstream>
 #include "THaApparatus.h"
 #include "THaCutList.h"
 #include "THaEvData.h"

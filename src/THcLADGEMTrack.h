@@ -3,7 +3,7 @@
 
 // LAD GEM Track Object
 
-#include "THcLADGEM.h"
+#include "DataType.h"
 #include "TObject.h"
 #include "TVector3.h"
 #include "THcGoodLADHit.h"

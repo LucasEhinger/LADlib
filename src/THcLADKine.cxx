@@ -170,7 +170,7 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   delete[] fFixed_z;
   if (fNfixed_z > 0) {
     fFixed_z          = new Double_t[fNfixed_z];
-    DBRequest list2[] = {{"fixed_z_pos", fFixed_z, kDouble, fNfixed_z}, {0}};
+    DBRequest list2[] = {{"fixed_z_pos", fFixed_z, kDouble, static_cast<UInt_t>(fNfixed_z)}, {0}};
     gHcParms->LoadParmValues((DBRequest *)&list2, prefix);
   } else {
     fFixed_z = nullptr;
