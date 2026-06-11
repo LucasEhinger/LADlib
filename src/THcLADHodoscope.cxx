@@ -223,8 +223,11 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
       {"goodhit_hittheta_0", "Good hit theta", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit0()"},
       {"goodhit_hitphi_0", "Good hit phi", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit0()"},
       {"goodhit_hitedep_0", "Good hit energy deposition", "fGoodLADHits.THcGoodLADHit.GetHitEdepHit0()"},
+      {"goodhit_hitedep_MeV_0", "Good hit energy deposition (calibrated to MeV)", "fGoodLADHits.THcGoodLADHit.GetHitEdepMeVHit0()"},
       {"goodhit_hitedep_amp_0", "Good hit energy deposition (amplitude)",
        "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit0()"},
+      {"goodhit_hitedep_ampM_MeV_0", "Good hit energy deposition (amplitude calibrated to MeV)",
+       "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpMeVHit0()"},
       {"goodhit_hit_alpha_0", "Good hit alpha", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit0()"},
       {"goodhit_hit_ypos_0", "Good hit y position", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit0()"},
       {"goodhit_hit_tof_0", "Good hit time-of-flight", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit0()"},
@@ -238,8 +241,11 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
       {"goodhit_hittheta_1", "Good hit theta (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitThetaHit1()"},
       {"goodhit_hitphi_1", "Good hit phi (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitPhiHit1()"},
       {"goodhit_hitedep_1", "Good hit energy deposition (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitEdepHit1()"},
+      {"goodhit_hitedep_MeV_1", "Good hit energy deposition (calibrated to MeV, second plane)", "fGoodLADHits.THcGoodLADHit.GetHitEdepMeVHit1()"},
       {"goodhit_hitedep_amp_1", "Good hit energy deposition (amplitude, second plane)",
        "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpHit1()"},
+      {"goodhit_hitedep_ampM_MeV_1", "Good hit energy deposition (amplitude calibrated to MeV, second plane)",
+       "fGoodLADHits.THcGoodLADHit.GetHitEdepAmpMeVHit1()"},
       {"goodhit_hit_alpha_1", "Good hit alpha (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit1()"},
       {"goodhit_hit_ypos_1", "Good hit y position (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitYPosHit1()"},
       {"goodhit_hit_tof_1", "Good hit time-of-flight (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit1()"},
@@ -522,13 +528,17 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
             goodhit->SetPaddle(0, hit->GetPaddleNumber() - 1);
             goodhit->SetHitTime(0, hit->GetScinCorrectedTime());
             goodhit->SetHitEdep(0, hit->GetPaddleADC());
+            goodhit->SetHitEdepMeV(0, hit->GetPaddleADC_MeV());
             goodhit->SetHitEdepAmp(0, hit->GetPaddleADCpeak());
+            goodhit->SetHitEdepAmpMeV(0, hit->GetPaddleADCpeak_MeV());
             goodhit->SetHitYPos(0, hit->GetCalcPosition());
             goodhit->SetPlane(1, ip + 1);
             goodhit->SetPaddle(1, hit2->GetPaddleNumber() - 1);
             goodhit->SetHitTime(1, hit2->GetScinCorrectedTime());
             goodhit->SetHitEdep(1, hit2->GetPaddleADC());
+            goodhit->SetHitEdepMeV(1, hit2->GetPaddleADC_MeV());
             goodhit->SetHitEdepAmp(1, hit2->GetPaddleADCpeak());
+            goodhit->SetHitEdepAmpMeV(1, hit2->GetPaddleADCpeak_MeV());
             goodhit->SetHitYPos(1, hit2->GetCalcPosition());
             break; // front hit is now used; stop looking for more back matches for it
           }
@@ -559,7 +569,9 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
       goodhit->SetPaddle(hitIndex, hit->GetPaddleNumber() - 1);
       goodhit->SetHitTime(hitIndex, hit->GetScinCorrectedTime());
       goodhit->SetHitEdep(hitIndex, hit->GetPaddleADC());
+      goodhit->SetHitEdepMeV(hitIndex, hit->GetPaddleADC_MeV());
       goodhit->SetHitEdepAmp(hitIndex, hit->GetPaddleADCpeak());
+      goodhit->SetHitEdepAmpMeV(hitIndex, hit->GetPaddleADCpeak_MeV());
       goodhit->SetHitYPos(hitIndex, hit->GetCalcPosition());
     }
   }

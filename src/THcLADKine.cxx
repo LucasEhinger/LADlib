@@ -427,16 +427,14 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         if (hit_index_for_best_chisq / 3 == 2) {
           int ntmp = 0;
           if (hit_index_for_best_chisq % 3 == 1 || hit_index_for_best_chisq % 3 == 0) {
-            besthit->SetTrackID(track->GetTrackID());
-            besthit->SetTrkChiSqr(track->GetChisq());
             ntmp++;
           }
           if (hit_index_for_best_chisq % 3 == 2 || hit_index_for_best_chisq % 3 == 0) {
-            besthit->SetTrackID(track->GetTrackID());
-            besthit->SetTrkChiSqr(track->GetChisq());
             ntmp++;
           }
           track->SetHasHodoHit(ntmp);
+          besthit->SetTrackID(track->GetTrackID());
+          besthit->SetTrkChiSqr(track->GetChisq());
         } else if (hit_index_for_best_chisq / 3 == 1) {
           besthit->SetTrackID(track->GetTrackID());
           besthit->SetTrkChiSqr(track->GetChisq());
