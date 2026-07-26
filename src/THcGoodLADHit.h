@@ -22,6 +22,11 @@ public:
     track_id_xz                 = -1;
     trk_chiSqr_noTrackVertex_xz = 1e30;
     track_id_noTrackVertex_xz   = -1;
+    // 1D-cluster tracking associations
+    trk_chiSqr_1D    = 1e30; // total chi-square of the best-matching 1D-cluster track
+    trk_chiSqr_1D_xz = 1e30; // horizontal part (V/x-z strips + hodo paddle)
+    trk_chiSqr_1D_y  = 1e30; // vertical part (U/y strips + hodo along-paddle)
+    track_id_1D      = -1;   // trk1d.* candidate row matched to this hit
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -47,6 +52,10 @@ public:
   void SetTrkChiSqr_xz(Double_t value) { trk_chiSqr_xz = value; }
   void SetTrackID_noTrackVertex_xz(Int_t value) { track_id_noTrackVertex_xz = value; }
   void SetTrkChiSqr_noTrackVertex_xz(Double_t value) { trk_chiSqr_noTrackVertex_xz = value; }
+  void SetTrackID_1D(Int_t value) { track_id_1D = value; }
+  void SetTrkChiSqr_1D(Double_t value) { trk_chiSqr_1D = value; }
+  void SetTrkChiSqr_1D_xz(Double_t value) { trk_chiSqr_1D_xz = value; }
+  void SetTrkChiSqr_1D_y(Double_t value) { trk_chiSqr_1D_y = value; }
   void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
     is_proton[hit] = value;
@@ -162,6 +171,10 @@ public:
   Double_t GetTrkChiSqr_noTrackVertex() const { return trk_chiSqr_noTrackVertex; }
   Double_t GetTrkChiSqr_xz() const { return trk_chiSqr_xz; }
   Double_t GetTrkChiSqr_noTrackVertex_xz() const { return trk_chiSqr_noTrackVertex_xz; }
+  Int_t GetTrackID_1D() const { return track_id_1D; }
+  Double_t GetTrkChiSqr_1D() const { return trk_chiSqr_1D; }
+  Double_t GetTrkChiSqr_1D_xz() const { return trk_chiSqr_1D_xz; }
+  Double_t GetTrkChiSqr_1D_y() const { return trk_chiSqr_1D_y; }
 
   Double_t GetIsProtonHit0() const { return is_proton[0]; }
   Double_t GetIsProtonHit1() const { return is_proton[1]; }
@@ -210,6 +223,10 @@ protected:
   Double_t trk_chiSqr_xz;               // chi-square of the associated x-z (no-y) track
   Int_t track_id_noTrackVertex_xz;      // GEM track ID from the no-vertex x-z fit
   Double_t trk_chiSqr_noTrackVertex_xz; // chi-square of the associated no-vertex x-z track
+  Int_t track_id_1D;                    // trk1d.* candidate row matched to this hit
+  Double_t trk_chiSqr_1D;               // total chi-square of the 1D-cluster track
+  Double_t trk_chiSqr_1D_xz;            // horizontal part (V/x-z strips + hodo paddle)
+  Double_t trk_chiSqr_1D_y;             // vertical part (U/y strips + hodo along-paddle)
   Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];
