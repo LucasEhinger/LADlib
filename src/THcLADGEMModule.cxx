@@ -612,6 +612,11 @@ Int_t THcLADGEMModule::ReadDatabase(const TDatime &date) {
   fPxV = cos(fVAngle * TMath::DegToRad());
   fPyV = sin(fVAngle * TMath::DegToRad());
 
+  // Cache the lab-frame geometry (origin, per-axis measurement directions, and
+  // plane normal) now that the strip angles, survey position, GEM angle and
+  // rotation are all loaded. Used by Get1DMeas() for 1D-cluster tracking.
+  ComputeLabGeometry();
+
   // FIXME: THcParmList has no support for vector type input
   // Read channel map data from a separate functiion using Database::LoadDatabase from analyzer for now
   // This should be updated by adding the support for future use
@@ -2529,6 +2534,86 @@ Double_t THcLADGEMModule::CorrCoeff(int nsamples, const std::vector<double> &Usa
   double sigv = sqrt(varv);
 
   return (sumuv - nsamples * mu * mv) / (nsamples * sigu * sigv);
+}
+
+//____________________________________________________________________________________
+TVector3 THcLADGEMModule::LocalDirToLab(const TVector3 &d) const {
+  // Rotate a local (detector-frame) direction into the lab frame using the SAME
+  // rotation sequence as Find2DHits() -- module rotation followed by the GEM
+  // angle -- but WITHOUT the survey-position translation (directions don't
+  // translate).
+  TVector3 v = d;
+  v.RotateX(fRotation[0] * TMath::DegToRad());
+  v.RotateY(fRotation[1] * TMath::DegToRad());
+  v.RotateZ(fRotation[2] * TMath::DegToRad());
+  v.RotateY(fGEMAngle[0] * TMath::DegToRad());
+  v.RotateZ(fGEMAngle[1] * TMath::DegToRad());
+  return v;
+}
+
+//____________________________________________________________________________________
+void THcLADGEMModule::ComputeLabGeometry() {
+  // Lab position of the module local origin. Find2DHits() applies the survey
+  // translation fCenter BEFORE the GEM-angle rotation, so the image of the
+  // local origin is R_gem * fCenter (the module rotation acts on 0 -> 0).
+  TVector3 origin(fCenter[0], fCenter[1], fCenter[2]);
+  origin.RotateY(fGEMAngle[0] * TMath::DegToRad());
+  origin.RotateZ(fGEMAngle[1] * TMath::DegToRad());
+  fOriginLab = origin;
+
+  // A U (V) cluster measures the projection of the local (x,y) hit position
+  // onto (cos angle, sin angle) = (fPxU, fPyU) [(fPxV, fPyV)]. Rotating that
+  // in-plane axis (and the plane normal) into the lab frame gives, for any hit,
+  //     meas = axisHat . (P_lab - originLab).
+  fAxisHatU  = LocalDirToLab(TVector3(fPxU, fPyU, 0.0)).Unit();
+  fAxisHatV  = LocalDirToLab(TVector3(fPxV, fPyV, 0.0)).Unit();
+  fNormalLab = LocalDirToLab(TVector3(0.0, 0.0, 1.0)).Unit();
+}
+
+//____________________________________________________________________________________
+std::vector<GEM1DMeas> THcLADGEMModule::Get1DMeas() {
+  // Turn every 1D cluster on this module into an independent lab-frame
+  // measurement. U and V clusters are NOT paired, so a plane with only one
+  // coordinate present still contributes (that is the whole point).
+  std::vector<GEM1DMeas> out;
+  out.reserve(fClustersU.size() + fClustersV.size());
+
+  for (auto &clu : fClustersU) {
+    double upos = clu.GetPos();
+    // Same wrap correction Find2DHits() applies to the U coordinate. The
+    // vpos-dependent hole vetoes there cannot be evaluated without a V partner,
+    // so they are intentionally skipped for single-coordinate measurements.
+    if (upos > (fN_APV25_CHAN * 5) * fUStripPitch)
+      upos -= (fN_APV25_CHAN + 16) * fUStripPitch;
+
+    GEM1DMeas m;
+    m.layer   = fLayer;
+    m.axis    = LADGEM::kUaxis;
+    m.meas    = upos;
+    m.adc     = clu.GetADCsum();
+    m.time    = clu.GetTime();
+    m.clusID  = clu.GetCLIndex();
+    m.origin  = fOriginLab;
+    m.axisHat = fAxisHatU;
+    m.normal  = fNormalLab;
+    out.push_back(m);
+  }
+
+  for (auto &clv : fClustersV) {
+    GEM1DMeas m;
+    m.layer   = fLayer;
+    m.axis    = LADGEM::kVaxis;
+    m.meas    = clv.GetPos();
+    m.adc     = clv.GetADCsum();
+    m.time    = clv.GetTime();
+    m.clusID  = clv.GetCLIndex();
+    m.origin  = fOriginLab;
+    m.axisHat = fAxisHatV;
+    m.normal  = fNormalLab;
+    out.push_back(m);
+  }
+
+  return out;
 }
 
 //____________________________________________________________________________________

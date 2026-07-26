@@ -62,6 +62,9 @@ public:
   virtual Int_t End(THaRunBase *r = nullptr);
   Int_t GetNTracks() const { return fNTracks; }
   TClonesArray *GetTracks() const { return fGEMTracks; }
+  Int_t GetNLayers() const { return fNLayers; }
+  // Per-layer 1D strip-cluster measurements (lab frame), for 1D-cluster tracking.
+  const std::vector<GEM1DMeas> &Get1DMeas(Int_t layer) const { return f1DMeas[layer]; }
 
 protected:
   virtual Int_t DefineVariables(EMode mode = kDefine);
@@ -101,6 +104,11 @@ protected:
   ClusterOutputData fClusOutData;
 
   std::vector<vector<GEM2DHits>> f2DHits;
+
+  // Per-layer 1D strip-cluster measurements (lab frame). Built every event in
+  // CoarseProcess from the module clusters; consumed by THcLADKine's optional
+  // 1D-cluster tracking pass. Unlike f2DHits these do NOT require both U and V.
+  std::vector<std::vector<GEM1DMeas>> f1DMeas;
 
   // Hit output variables
   Int_t fNlayers_hit;
