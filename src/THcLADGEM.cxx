@@ -53,8 +53,10 @@ void THcLADGEM::Clear(Option_t *opt) {
   for (auto &module : fModules)
     module->Clear();
 
-  for (int i = 0; i < fNLayers; i++)
+  for (int i = 0; i < fNLayers; i++) {
     f2DHits[i].clear();
+    f1DMeas[i].clear();
+  }
 
   fNhits = 0;
   fPosX.clear();
@@ -330,6 +332,7 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   }
 
   f2DHits.resize(fNLayers);
+  f1DMeas.resize(fNLayers);
   fNstripsU_layer.resize(fNLayers);
   fNstripsV_layer.resize(fNLayers);
   fNclustU_layer.resize(fNLayers);
@@ -420,6 +423,18 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         fNClusters++;
       }
     }
+  }
+
+  // Build the per-layer 1D strip-cluster measurements (lab frame) used by the
+  // optional 1D-cluster tracking pass in THcLADKine. These do NOT require both
+  // U and V on a plane, so they survive a missing coordinate. Cheap: only a
+  // handful of clusters per event.
+  for (auto module : fModules) {
+    Int_t ilayer = module->GetLayerNum();
+    if (ilayer < 0 || ilayer >= fNLayers)
+      continue;
+    std::vector<GEM1DMeas> meas = module->Get1DMeas();
+    f1DMeas[ilayer].insert(f1DMeas[ilayer].end(), meas.begin(), meas.end());
   }
 
   // Loop over all 2D hits and find track candidates
