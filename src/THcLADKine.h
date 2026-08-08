@@ -45,7 +45,7 @@ protected:
   THcTrigDet *fTrigDet;
   ROOT::Math::Minimizer *fMinimizer; //! reusable Minuit2 minimizer for track fitting (transient)
 
-  Int_t MAXGOODHITS = 500;
+  Int_t MAXGOODHITS = 5000;
   Int_t goodhit_n;
   TClonesArray *fGoodLADHits;
   TClonesArray *fGEMTracks;

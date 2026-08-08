@@ -492,6 +492,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
           track->SetBestHodoHit(besthit);
           isGoodTrack[iTrack] = true;
         }
+      }else{
+        cout<<"THcLADKine::Process: Exceeded maximum number of good hits ("<<goodhit_n<<"/"<<MAXGOODHITS<<"), skipping hit."<<endl;
       }
     } else {
       track->SetBestHodoHit(nullptr);

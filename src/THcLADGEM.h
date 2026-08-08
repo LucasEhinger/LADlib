@@ -74,7 +74,7 @@ protected:
   void LoadCM();
   void RotateToLab(Double_t angle, TVector3 &vect);
 
-  static const Int_t MAXTRACKS = 500; // Was 100
+  static const Int_t MAXTRACKS = 10000; // Was 100
 
   Int_t fNModules; // total number of modules
   Int_t fNLayers;  // total number of GEM layers
@@ -85,7 +85,7 @@ protected:
   std::string fPedFilename;
   std::string fCMFilename;
 
-  Double_t fD0Cut;
+  Double_t fD0Cut; //D0 cut 
 
   TClonesArray *fGEMTracks;
 
