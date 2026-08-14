@@ -5,6 +5,8 @@
 #include "THcParmList.h"
 #include "THaRunBase.h"
 
+#include <cmath>
+
 using namespace std;
 
 ClassImp(THcLADGEMModule)
@@ -1922,6 +1924,33 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
   Double_t pitch       = (axis == LADGEM::kUaxis) ? fUStripPitch : fVStripPitch;
   Double_t offset      = (axis == LADGEM::kUaxis) ? fUStripOffset : fVStripOffset;
 
+  // Strip-number seam on the U axis.
+  //
+  // Clustering below walks strips by index and assumes index adjacency means
+  // physical adjacency. Along V that holds end to end. Along U it fails once:
+  // the two half-strip APV cards at the top of the module cover the SAME range
+  // of y on opposite sides of the beam hole, and the second card is numbered
+  // past the end of the first (see the wrap applied further down). Strips
+  // straddling that seam are neighbours in index but far apart in space -- and
+  // on opposite sides of the hole -- so a cluster must never span it.
+  //
+  // fUWrapSeam = index of the first strip on the wrapped card, i.e. the lowest
+  // strip whose position exceeds the wrap threshold. Negative means "no seam"
+  // (V axis, or a threshold outside the instrumented range), which disables
+  // every guard below and leaves that axis' behaviour untouched.
+  Int_t wrapseam = -1;
+  if (axis == LADGEM::kUaxis) {
+    double seampos = fN_APV25_CHAN * 5 - offset / pitch + 0.5 * Nstrips - 0.5;
+    wrapseam       = (Int_t)std::floor(seampos) + 1;
+    if (wrapseam <= 0 || wrapseam >= (Int_t)Nstrips)
+      wrapseam = -1;
+  }
+  // True when two strip indices lie on the same side of the seam, i.e. when
+  // stepping between them is a physically meaningful move.
+  auto sameregion = [wrapseam](int s1, int s2) {
+    return wrapseam < 0 || ((s1 < wrapseam) == (s2 < wrapseam));
+  };
+
   // Temporary containers to store strip hit information to iterate
   std::set<UShort_t> striplist;        // sorted list of strips for 1D clustering
   std::map<UShort_t, UInt_t> hitindex; // key = strip ID, mapped value = index in decoded hit array, needed to access
@@ -1987,11 +2016,11 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     double sumleft  = 0.0;
     double sumright = 0.0;
 
-    // check neighbors
-    if (striplist.find(strip - 1) != striplist.end())
+    // check neighbors (a strip across the seam is not a neighbour)
+    if (striplist.find(strip - 1) != striplist.end() && sameregion(strip, strip - 1))
       sumleft = ADC_strip[strip - 1];
 
-    if (striplist.find(strip + 1) != striplist.end())
+    if (striplist.find(strip + 1) != striplist.end() && sameregion(strip, strip + 1))
       sumright = ADC_strip[strip + 1];
 
     double thresh_samp  = fThresholdSample;
@@ -2054,8 +2083,8 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     bool higherpeakright = false, higherpeakleft = false;
     int peakright = -1, peakleft = -1;
 
-    // scan to higher# strips
-    while (striplist.find(striphi + 1) != striplist.end()) {
+    // scan to higher# strips (a contiguous group cannot cross the seam)
+    while (striplist.find(striphi + 1) != striplist.end() && sameregion(striphi, striphi + 1)) {
       striphi++;
 
       Double_t ADCtest = ADC_strip[striphi];
@@ -2071,8 +2100,8 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
       }
     }
 
-    // scan to lower# strips
-    while (striplist.find(striplo - 1) != striplist.end()) {
+    // scan to lower# strips (a contiguous group cannot cross the seam)
+    while (striplist.find(striplo - 1) != striplist.end() && sameregion(striplo, striplo - 1)) {
       striplo--;
 
       Double_t ADCtest = ADC_strip[striplo];
@@ -2154,7 +2183,8 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     bool found_neighbor_low = true;
     while (found_neighbor_low) {
 
-      found_neighbor_low = striplist.find(striplo - 1) != striplist.end() && stripmax - striplo < maxsep;
+      found_neighbor_low = striplist.find(striplo - 1) != striplist.end() && stripmax - striplo < maxsep &&
+                           sameregion(striplo, striplo - 1);
 
       // Time difference
       double Tdiff = fTmean[hitindex[striplo - 1]] - fTmean[hitindex[stripmax]];
@@ -2190,7 +2220,8 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     bool found_neighbor_high = true;
     while (found_neighbor_high) {
 
-      found_neighbor_high = striplist.find(striphi + 1) != striplist.end() && striphi - stripmax < maxsep;
+      found_neighbor_high = striplist.find(striphi + 1) != striplist.end() && striphi - stripmax < maxsep &&
+                            sameregion(striphi, striphi + 1);
 
       // Time difference
       double Tdiff = fTmean[hitindex[striphi + 1]] - fTmean[hitindex[stripmax]];
@@ -2247,7 +2278,9 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
       // loop over nearby local maxima and calculate split fraction for each strip
 
       for (int jstrip = istrip - maxsep; jstrip <= istrip + maxsep; jstrip++) {
-        if (localmaxima.find(jstrip) != localmaxima.end() && jstrip != stripmax) {
+        // a local max across the seam is not physically nearby, so it does not
+        // share charge with this strip
+        if (localmaxima.find(jstrip) != localmaxima.end() && jstrip != stripmax && sameregion(istrip, jstrip)) {
           sumweight += ADC_strip[jstrip] / (1.0 + pow((jstrip - istrip) * pitch / fSigma_hitshape, 2));
         }
       } // jstrip
@@ -2320,7 +2353,11 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     double clposmax = maxpos;
     Int_t splitside = 0;
     if (axis == LADGEM::kUaxis) {
-      if (clpos > (fN_APV25_CHAN * 5) * pitch) {
+      // Keyed off the seam rather than off clpos: no cluster spans the seam
+      // any more, so every strip in it sits on the same side as stripmax and
+      // the two tests are equivalent -- but this one cannot disagree with the
+      // guards above, and needs no float comparison.
+      if (wrapseam >= 0 && stripmax >= wrapseam) {
         clpos -= (fN_APV25_CHAN + 16) * pitch; // move back by one APV
         clposmax -= (fN_APV25_CHAN + 16) * pitch;
         splitside = -1;
