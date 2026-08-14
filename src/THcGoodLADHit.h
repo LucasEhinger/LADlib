@@ -36,6 +36,21 @@ public:
     trk_chiSqr_1D_GEM0       = -1.0;
     trk_chiSqr_1D_GEM1       = -1.0;
     trk_chiSqr_1D_GEMboth    = -1.0;
+    // Number of degrees of freedom of the track chi-square (see the member
+    // declarations). Parallel to each chiSqr above. Sentinel -1 = not computed.
+    trk_ndof                    = -1;
+    trk_ndof_noTrackVertex      = -1;
+    trk_ndof_xz                 = -1;
+    trk_ndof_noTrackVertex_xz   = -1;
+    trk_ndof_1D_xz_GEM0    = -1;
+    trk_ndof_1D_xz_GEM1    = -1;
+    trk_ndof_1D_xz_GEMboth = -1;
+    trk_ndof_1D_y_GEM0     = -1;
+    trk_ndof_1D_y_GEM1     = -1;
+    trk_ndof_1D_y_GEMboth  = -1;
+    trk_ndof_1D_GEM0       = -1;
+    trk_ndof_1D_GEM1       = -1;
+    trk_ndof_1D_GEMboth    = -1;
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -70,6 +85,20 @@ public:
   void SetTrkChiSqr_1D_GEM0(Double_t v) { trk_chiSqr_1D_GEM0 = v; }
   void SetTrkChiSqr_1D_GEM1(Double_t v) { trk_chiSqr_1D_GEM1 = v; }
   void SetTrkChiSqr_1D_GEMboth(Double_t v) { trk_chiSqr_1D_GEMboth = v; }
+  // Degrees of freedom of the corresponding track chi-square.
+  void SetTrkNdof(Int_t v) { trk_ndof = v; }
+  void SetTrkNdof_noTrackVertex(Int_t v) { trk_ndof_noTrackVertex = v; }
+  void SetTrkNdof_xz(Int_t v) { trk_ndof_xz = v; }
+  void SetTrkNdof_noTrackVertex_xz(Int_t v) { trk_ndof_noTrackVertex_xz = v; }
+  void SetTrkNdof_1D_xz_GEM0(Int_t v) { trk_ndof_1D_xz_GEM0 = v; }
+  void SetTrkNdof_1D_xz_GEM1(Int_t v) { trk_ndof_1D_xz_GEM1 = v; }
+  void SetTrkNdof_1D_xz_GEMboth(Int_t v) { trk_ndof_1D_xz_GEMboth = v; }
+  void SetTrkNdof_1D_y_GEM0(Int_t v) { trk_ndof_1D_y_GEM0 = v; }
+  void SetTrkNdof_1D_y_GEM1(Int_t v) { trk_ndof_1D_y_GEM1 = v; }
+  void SetTrkNdof_1D_y_GEMboth(Int_t v) { trk_ndof_1D_y_GEMboth = v; }
+  void SetTrkNdof_1D_GEM0(Int_t v) { trk_ndof_1D_GEM0 = v; }
+  void SetTrkNdof_1D_GEM1(Int_t v) { trk_ndof_1D_GEM1 = v; }
+  void SetTrkNdof_1D_GEMboth(Int_t v) { trk_ndof_1D_GEMboth = v; }
   void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
     is_proton[hit] = value;
@@ -130,6 +159,7 @@ public:
       SetPaddle(this_plane, copyhit->GetPaddleHit0());
       SetTrackID(copyhit->GetTrackID());
       SetTrkChiSqr(copyhit->GetTrkChiSqr());
+      SetTrkNdof(copyhit->GetTrkNdof());
       SetIsProton(this_plane, copyhit->GetIsProtonHit0());
       SetHitTime(this_plane, copyhit->GetHitTimeHit0());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit0());
@@ -147,6 +177,7 @@ public:
       SetPaddle(this_plane, copyhit->GetPaddleHit1());
       SetTrackID(copyhit->GetTrackID());
       SetTrkChiSqr(copyhit->GetTrkChiSqr());
+      SetTrkNdof(copyhit->GetTrkNdof());
       SetIsProton(this_plane, copyhit->GetIsProtonHit1());
       SetHitTime(this_plane, copyhit->GetHitTimeHit1());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit1());
@@ -194,6 +225,20 @@ public:
   Double_t GetTrkChiSqr_1D_GEM0() const { return trk_chiSqr_1D_GEM0; }
   Double_t GetTrkChiSqr_1D_GEM1() const { return trk_chiSqr_1D_GEM1; }
   Double_t GetTrkChiSqr_1D_GEMboth() const { return trk_chiSqr_1D_GEMboth; }
+
+  Int_t GetTrkNdof() const { return trk_ndof; }
+  Int_t GetTrkNdof_noTrackVertex() const { return trk_ndof_noTrackVertex; }
+  Int_t GetTrkNdof_xz() const { return trk_ndof_xz; }
+  Int_t GetTrkNdof_noTrackVertex_xz() const { return trk_ndof_noTrackVertex_xz; }
+  Int_t GetTrkNdof_1D_xz_GEM0() const { return trk_ndof_1D_xz_GEM0; }
+  Int_t GetTrkNdof_1D_xz_GEM1() const { return trk_ndof_1D_xz_GEM1; }
+  Int_t GetTrkNdof_1D_xz_GEMboth() const { return trk_ndof_1D_xz_GEMboth; }
+  Int_t GetTrkNdof_1D_y_GEM0() const { return trk_ndof_1D_y_GEM0; }
+  Int_t GetTrkNdof_1D_y_GEM1() const { return trk_ndof_1D_y_GEM1; }
+  Int_t GetTrkNdof_1D_y_GEMboth() const { return trk_ndof_1D_y_GEMboth; }
+  Int_t GetTrkNdof_1D_GEM0() const { return trk_ndof_1D_GEM0; }
+  Int_t GetTrkNdof_1D_GEM1() const { return trk_ndof_1D_GEM1; }
+  Int_t GetTrkNdof_1D_GEMboth() const { return trk_ndof_1D_GEMboth; }
 
   Double_t GetIsProtonHit0() const { return is_proton[0]; }
   Double_t GetIsProtonHit1() const { return is_proton[1]; }
@@ -252,6 +297,25 @@ protected:
   Double_t trk_chiSqr_1D_GEM0;          // combined (xz+y), front GEM
   Double_t trk_chiSqr_1D_GEM1;          // combined (xz+y), back GEM
   Double_t trk_chiSqr_1D_GEMboth;       // combined (xz+y), both GEMs
+  // Degrees of freedom of each track chi-square = (number of measurement
+  // residual terms summed into that chi-square) - (number of free fit
+  // parameters). For the 1D projective fits this is (#GEM clusters + #hodo
+  // points - 1); the combined (xz+y) is the sum of the two projections. For the
+  // 2D fits it is k*(#GEM + #hodo points) - nParams, with k = 3 (full 3D
+  // residual) or 2 (x-z only), nParams = 3 (vertex) or 4 (no-vertex). -1 = none.
+  Int_t trk_ndof;                    // dof of trk_chiSqr (standard 2D, vertex)
+  Int_t trk_ndof_noTrackVertex;      // dof of trk_chiSqr_noTrackVertex
+  Int_t trk_ndof_xz;                 // dof of trk_chiSqr_xz
+  Int_t trk_ndof_noTrackVertex_xz;   // dof of trk_chiSqr_noTrackVertex_xz
+  Int_t trk_ndof_1D_xz_GEM0;         // dof of trk_chiSqr_1D_xz_GEM0
+  Int_t trk_ndof_1D_xz_GEM1;         // dof of trk_chiSqr_1D_xz_GEM1
+  Int_t trk_ndof_1D_xz_GEMboth;      // dof of trk_chiSqr_1D_xz_GEMboth
+  Int_t trk_ndof_1D_y_GEM0;          // dof of trk_chiSqr_1D_y_GEM0
+  Int_t trk_ndof_1D_y_GEM1;          // dof of trk_chiSqr_1D_y_GEM1
+  Int_t trk_ndof_1D_y_GEMboth;       // dof of trk_chiSqr_1D_y_GEMboth
+  Int_t trk_ndof_1D_GEM0;            // dof of trk_chiSqr_1D_GEM0 (= xz + y)
+  Int_t trk_ndof_1D_GEM1;            // dof of trk_chiSqr_1D_GEM1 (= xz + y)
+  Int_t trk_ndof_1D_GEMboth;         // dof of trk_chiSqr_1D_GEMboth (= xz + y)
   Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];

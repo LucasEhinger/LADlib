@@ -479,9 +479,12 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
           track->SetHasHodoHit(ntmp);
           besthit->SetTrackID(track->GetTrackID());
           besthit->SetTrkChiSqr(track->GetChisq());
+          // dof = 3*(#GEM + #hodo) - 3 params (full 3D residual, vertex-constrained)
+          besthit->SetTrkNdof(3 * (2 + ntmp) - 3);
         } else if (hit_index_for_best_chisq / 3 == 1) {
           besthit->SetTrackID(track->GetTrackID());
           besthit->SetTrkChiSqr(track->GetChisq());
+          besthit->SetTrkNdof(3 * (2 + 1) - 3);
           track->SetHasHodoHit(1);
         }
         if (hit_index_for_best_chisq / 3 != 0) {
@@ -711,6 +714,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       // per-hit association from the no-vertex fit (parallel to the vertex-based track_id / trk_chiSqr)
       besthit->SetTrackID_noTrackVertex(track->GetTrackID());
       besthit->SetTrkChiSqr_noTrackVertex(track->GetChisq_noTrackVertex());
+      // dof = 3*(#GEM + #hodo) - 4 params (full 3D residual, free line, no vertex)
+      besthit->SetTrkNdof_noTrackVertex(3 * (2 + nplanes) - 4);
     }
 
     bool good     = kTRUE;
@@ -935,9 +940,12 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         track->SetHasHodoHit_xz(ntmp);
         besthit->SetTrackID_xz(track->GetTrackID());
         besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
+        // dof = 2*(#GEM + #hodo) - 3 params (x-z residual only, vertex-constrained)
+        besthit->SetTrkNdof_xz(2 * (2 + ntmp) - 3);
       } else if (hit_index_for_best_chisq / 3 == 1) {
         besthit->SetTrackID_xz(track->GetTrackID());
         besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
+        besthit->SetTrkNdof_xz(2 * (2 + 1) - 3);
         track->SetHasHodoHit_xz(1);
       }
       if (hit_index_for_best_chisq / 3 != 0) {
@@ -1155,6 +1163,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       // per-hit association from the no-vertex x-z fit
       besthit->SetTrackID_noTrackVertex_xz(track->GetTrackID());
       besthit->SetTrkChiSqr_noTrackVertex_xz(track->GetChisq_noTrackVertex_xz());
+      // dof = 2*(#GEM + #hodo) - 4 params (x-z residual only, free line, no vertex)
+      besthit->SetTrkNdof_noTrackVertex_xz(2 * (2 + nplanes) - 4);
     }
 
     bool good     = kTRUE;
@@ -1870,5 +1880,20 @@ void THcLADKine::Do1DClusterTracking() {
     gh->SetTrkChiSqr_1D_GEM0((xz0 >= 0 && y0 >= 0) ? xz0 + y0 : -1.0);
     gh->SetTrkChiSqr_1D_GEM1((xz1 >= 0 && y1 >= 0) ? xz1 + y1 : -1.0);
     gh->SetTrkChiSqr_1D_GEMboth((xzB >= 0 && yB >= 0) ? xzB + yB : -1.0);
+    // Degrees of freedom of each projective fit = (#GEM clusters + #hodo points)
+    // - 1 free param. Single GEM -> nH; both GEMs -> nH + 1. The combined (xz+y)
+    // dof is the sum of the two projections'. -1 mirrors a missing chi-square.
+    const int nH    = (int)hpts.size();
+    const int dof_s = nH;     // one GEM cluster + nH hodo - 1
+    const int dof_b = nH + 1; // two GEM clusters + nH hodo - 1
+    gh->SetTrkNdof_1D_xz_GEM0(xz0 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_xz_GEM1(xz1 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_xz_GEMboth(xzB >= 0 ? dof_b : -1);
+    gh->SetTrkNdof_1D_y_GEM0(y0 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_y_GEM1(y1 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_y_GEMboth(yB >= 0 ? dof_b : -1);
+    gh->SetTrkNdof_1D_GEM0((xz0 >= 0 && y0 >= 0) ? 2 * dof_s : -1);
+    gh->SetTrkNdof_1D_GEM1((xz1 >= 0 && y1 >= 0) ? 2 * dof_s : -1);
+    gh->SetTrkNdof_1D_GEMboth((xzB >= 0 && yB >= 0) ? 2 * dof_b : -1);
   }
 }
