@@ -2298,10 +2298,42 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     cluster.SetRawStrip(fStripRaw[hitindex[stripmax]]);
     cluster.SetAxis(axis);
     cluster.SetStrips(nstrips, striplo, striphi, stripmax);
-    cluster.SetPosition(sumx / sumwx);
-    cluster.SetPosMaxStrip(maxpos);
+
+    // Half-strip APV wrap on the U (lab y) axis.
+    //
+    // Along V (lab x) every APV card sits next to the previous one, so strip
+    // number maps monotonically onto position. Along U that is true except at
+    // the top of the module, where the last two cards are *half* strips
+    // covering the SAME range of y: the beam hole splits that range in two, and
+    // each card reads out one side of it. The second of the two is numbered
+    // beyond the end of the nominal strip range, so its raw position has to be
+    // wrapped back onto the physical y it actually measures.
+    //
+    // Both cards measure the same y, so the wrap alone makes fPos/fPosMax
+    // correct for every consumer of a 1D U cluster. Deciding *which* of the two
+    // cards a hit could have come from needs the x coordinate, i.e. a V
+    // partner; that stays in Find2DHits() and is driven by the side flag below.
+    //   +1 -> only compatible with modNum*vpos > 0
+    //   -1 -> only compatible with modNum*vpos < 0
+    //    0 -> not in the split region, no constraint
+    double clpos    = sumx / sumwx;
+    double clposmax = maxpos;
+    Int_t splitside = 0;
+    if (axis == LADGEM::kUaxis) {
+      if (clpos > (fN_APV25_CHAN * 5) * pitch) {
+        clpos -= (fN_APV25_CHAN + 16) * pitch; // move back by one APV
+        clposmax -= (fN_APV25_CHAN + 16) * pitch;
+        splitside = -1;
+      } else if (clpos > (fN_APV25_CHAN * 4 - 16) * pitch) {
+        splitside = +1;
+      }
+    }
+    cluster.SetPosition(clpos);
+    cluster.SetPosMaxStrip(clposmax);
+    cluster.SetSplitSide(splitside);
     cluster.SetHitIndex(clust_hitindex);
 
+    // Moments/sigma are shift-invariant, so they use the unwrapped sums.
     double mom       = ((sumx / sumwx) - maxpos) / pitch;
     double pos_sigma = sqrt(sumx2 / sumwx - pow(sumx / sumwx, 2));
     cluster.SetMoments(mom);
@@ -2352,23 +2384,18 @@ void THcLADGEMModule::Find2DHits() {
     for (int iu = 0; iu < nclustU; iu++) {
       for (int iv = 0; iv < nclustV; iv++) {
 
-        double upos = fClustersU[iu].GetPos();
+        double upos = fClustersU[iu].GetPos(); // already wrapped in FindClusters1D()
         double vpos = fClustersV[iv].GetPos();
         // double umom = fClustersU[iu].GetMoments();
         // double vmom = fClustersV[iv].GetMoments();
-        
-        //Hardcoded fix to move APV pos 10 and 11 on U axis
-        if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*5)*fUStripPitch){
-          upos -= (fN_APV25_CHAN+16)*fUStripPitch;// move back by one APV
-          if (modNum*vpos>0){
-            continue; // the strips on this APV only go up to the hole, so skip if vpos is positive
-          }
-        }else if (fClustersU[iu].GetPos()> (fN_APV25_CHAN*4-16)*fUStripPitch){
-          if (modNum*vpos<0){
-            continue; // the strips on this APV only go up to the hole, so skip if vpos is negative
-          }
-        }
-        
+
+        // Half-strip APV cards at the top of the module (see FindClusters1D):
+        // two cards share a U range but each only spans one side of the hole,
+        // so a U cluster from there can only pair with a V cluster on its side.
+        Int_t splitside = fClustersU[iu].GetSplitSide();
+        if (splitside != 0 && splitside * modNum * vpos < 0)
+          continue;
+
 
         TVector2 PosUV(upos, vpos);
         TVector2 PosXY = UVtoXY(PosUV); // no changes if using XY GEM
@@ -2579,17 +2606,14 @@ std::vector<GEM1DMeas> THcLADGEMModule::Get1DMeas() {
   out.reserve(fClustersU.size() + fClustersV.size());
 
   for (auto &clu : fClustersU) {
-    double upos = clu.GetPos();
-    // Same wrap correction Find2DHits() applies to the U coordinate. The
-    // vpos-dependent hole vetoes there cannot be evaluated without a V partner,
-    // so they are intentionally skipped for single-coordinate measurements.
-    if (upos > (fN_APV25_CHAN * 5) * fUStripPitch)
-      upos -= (fN_APV25_CHAN + 16) * fUStripPitch;
-
+    // The half-strip APV wrap is applied at clustering time, so GetPos() is
+    // already the physical U coordinate. The two cards that share a U range
+    // measure the same y, so a single-coordinate U measurement is unambiguous;
+    // only the U/V pairing veto in Find2DHits() needs a V partner.
     GEM1DMeas m;
     m.layer   = fLayer;
     m.axis    = LADGEM::kUaxis;
-    m.meas    = upos;
+    m.meas    = clu.GetPos();
     m.adc     = clu.GetADCsum();
     m.time    = clu.GetTime();
     m.clusID  = clu.GetCLIndex();

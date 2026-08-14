@@ -17,6 +17,7 @@ THcLADGEMCluster::THcLADGEMCluster()
   fAPV = -1;
   fAxis = -1;
   fCLIndex = -1;
+  fSplitSide = 0;
 
   fPos = -999.;
   fPosDiff = -999.;
@@ -46,6 +47,7 @@ void THcLADGEMCluster::Clear(Option_t* opt)
   fMPD = -1;
   fAPV = -1;
   fAxis = -1;
+  fSplitSide = 0;
 
   fPos = -999.;
   fPosDiff = -999.;
