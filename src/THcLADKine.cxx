@@ -160,28 +160,24 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   prefix[0] = 'l';
   prefix[1] = '\0';
 
-  fD0Cut_wVertex        = 0.0;
-  fD0Cut_noVertex       = 0.0;
-  fMax_dTrk_horiz_match = 0.0;
-  fMax_dTrk_vert_match  = 0.0;
-  fNfixed_z             = 0;
-  fglobal_time_offset   = 0.0;
-  fTrk_dtCut            = 10.0;
-  fDoNoVertexTracking   = 1;    // default: no-vertex tracking on
-  fDoXZTracking         = 0;    // default: x-z (no-y) tracking off
-  fDo1DClusterTracking  = 0;    // default: 1D-cluster tracking off
-  fMax1DClusterPerSlot  = 3;    // default: keep 3 clusters per (layer,axis) slot
-  fMax1DCandidates      = 2000; // default: cap projective fits per event
-  fSigma_Hodo_x         = 6.0;  // default: x-z / paddle-direction resolution (cm)
-  fSigma_Hodo_y         = 3.0;  // default: along-paddle (y) resolution (cm)
-  fHodoXZZeroHW         = 0.0;  // default: no x-z hodo residual zeroing
+  fD0Cut_wVertex       = 0.0;
+  fD0Cut_noVertex      = 0.0;
+  fNfixed_z            = 0;
+  fglobal_time_offset  = 0.0;
+  fTrk_dtCut           = 10.0;
+  fDoNoVertexTracking  = 1;    // default: no-vertex tracking on
+  fDoXZTracking        = 0;    // default: x-z (no-y) tracking off
+  fDo1DClusterTracking = 0;    // default: 1D-cluster tracking off
+  fMax1DClusterPerSlot = 3;    // default: keep 3 clusters per (layer,axis) slot
+  fMax1DCandidates     = 2000; // default: cap projective fits per event
+  fSigma_Hodo_x        = 6.0;  // default: x-z / paddle-direction resolution (cm)
+  fSigma_Hodo_y        = 3.0;  // default: along-paddle (y) resolution (cm)
+  fHodoXZZeroHW        = 0.0;  // default: no x-z hodo residual zeroing
 
   cout << "Reading LAD Kinematics parameters from database..." << endl;
 
   DBRequest list[] = {{"d0_cut_wVertex", &fD0Cut_wVertex, kDouble, 0, 1},
                       {"d0_cut_noVertex", &fD0Cut_noVertex, kDouble, 0, 1},
-                      {"max_dTrk_horiz_hitMatch", &fMax_dTrk_horiz_match, kDouble, 0, 1},
-                      {"max_dTrk_vert_hitMatch", &fMax_dTrk_vert_match, kDouble, 0, 1},
                       {"nfixed_z", &fNfixed_z, kInt, 0, 1},
                       {"global_time_offset", &fglobal_time_offset, kDouble, 0, 1},
                       {"trk_dt_cut", &fTrk_dtCut, kDouble, 0, 1},
