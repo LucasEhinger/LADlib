@@ -187,15 +187,18 @@ bool LADSimSADCEncoder::DecodeSADC(SimEncoder::sadc_data &data, const unsigned i
   if(nwords>3) // LHE: Added 9/17/24 to add pulse amp compatability
     return false;
   unsigned short nread = 0;
-  // data.integral = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTopC();
-  data.integral = (enc_data[nread++])/THcRawAdcHit::GetAdcTopC();
+  // These are raw ADC-channel/tick counts (same domain THcRawAdcHit::GetPulseInt()/
+  // GetPulseAmp()/GetPulseTime() convert FROM via GetAdcTopC()/GetAdcTomV()/GetAdcTons()
+  // when called). Do not apply those conversions here too -- doing so double-converts
+  // (this previously inflated GetPulseIntRaw()/GetPulseAmpRaw()/GetPulseTimeRaw() by
+  // 1/GetAdcTopC() etc., while GetPulseInt()/GetPulseAmp()/GetPulseTime() masked it by
+  // re-applying the same factor on the way back out).
+  data.integral = (enc_data[nread++]);
   data.samples.push_back(0);
-  if(nwords>2) 
-    // data.peak_amp = (enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTomV();
-    data.peak_amp = (enc_data[nread++])/THcRawAdcHit::GetAdcTomV();
-  if(nwords>1) 
-    // data.adc_time.push_back((enc_data[nread++]&fBitMask)/THcRawAdcHit::GetAdcTons());
-    data.adc_time.push_back((enc_data[nread++])/THcRawAdcHit::GetAdcTons());
+  if(nwords>2)
+    data.peak_amp = (enc_data[nread++]);
+  if(nwords>1)
+    data.adc_time.push_back(enc_data[nread++]);
   return nread==nwords;
 
   // data.integral = 0;
