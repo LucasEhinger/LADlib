@@ -1917,6 +1917,47 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
   Double_t pitch       = (axis == LADGEM::kUaxis) ? fUStripPitch : fVStripPitch;
   Double_t offset      = (axis == LADGEM::kUaxis) ? fUStripOffset : fVStripOffset;
 
+  // ---- U-axis beam-hole geometry -------------------------------------------
+  //
+  // Along V every APV card sits next to the previous one, so strip number maps
+  // monotonically onto position. Along U the beam hole at the top of the module
+  // splits a band of strips in two, and the far half is read out by one extra
+  // card whose strips are numbered past the end of the nominal range.
+  //
+  // Layout, confirmed against strip occupancy (run 22570, P.gem, both modules):
+  //
+  //   strips  [0, kHoleLo)             full strips, one readout
+  //   strips  [kHoleLo, kHoleHi)       split by the hole -- side A half-strips.
+  //                                    Exactly one APV wide (128). Straddles two
+  //                                    cards: last 16 of card 9 + first 112 of
+  //                                    card 10.
+  //   strips  [kHoleHi, kDupLo)        card 10's remaining 16 channels. NO strips
+  //                                    attached -- measured to have exactly zero
+  //                                    hits on both modules, and anomalous
+  //                                    pedestal RMS. Skipped below.
+  //   strips  [kDupLo, kDupLo+128)     card 11, the duplicate: side B of the same
+  //                                    band, so it maps back onto [kHoleLo,kHoleHi)
+  //                                    by subtracting kUWrap.
+  //
+  // The "16" in these constants is a phase offset, not a width: the hole starts
+  // 16 strips before card 10's boundary, which is why side A spans two cards and
+  // why card 10 is left with 16 unconnected channels.
+  Int_t kHoleLo = -1, kHoleHi = -1, kDupLo = -1, kUWrap = 0;
+  if (axis == LADGEM::kUaxis) {
+    kHoleLo = fN_APV25_CHAN * 10 - 16; // 1264: first split strip
+    kHoleHi = kHoleLo + fN_APV25_CHAN; // 1392: one past the last split strip
+    kDupLo  = fN_APV25_CHAN * 11;      // 1408: first strip of the duplicate card
+    kUWrap  = kDupLo - kHoleLo;        // 144: duplicate label -> physical strip
+    if (kDupLo >= (Int_t)Nstrips)      // duplicate card not instrumented
+      kHoleLo = kHoleHi = kDupLo = -1;
+  }
+  // Strips with no readout attached: never expected to fire, but if noise gets
+  // through zero suppression they would produce clusters at positions that do
+  // not exist, so drop them at the source.
+  auto unconnected = [kHoleHi, kDupLo](int s) {
+    return kHoleHi >= 0 && s >= kHoleHi && s < kDupLo;
+  };
+
   // Temporary containers to store strip hit information to iterate
   std::set<UShort_t> striplist;        // sorted list of strips for 1D clustering
   std::map<UShort_t, UInt_t> hitindex; // key = strip ID, mapped value = index in decoded hit array, needed to access
@@ -1935,7 +1976,7 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
   std::map<UShort_t, Double_t> pedrms_strip_neg;
 
   for (int ihit = 0; ihit < fNstrips_hit; ihit++) {
-    if (fAxis[ihit] == axis) {
+    if (fAxis[ihit] == axis && !unconnected(fStrip[ihit])) {
 
       bool newstrip = (striplist.insert(fStrip[ihit])).second;
 
@@ -2294,32 +2335,32 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis) {
     cluster.SetAxis(axis);
     cluster.SetStrips(nstrips, striplo, striphi, stripmax);
 
-    // Half-strip APV wrap on the U (lab y) axis.
+    // Map the U cluster onto the physical strip band it measures (see the
+    // geometry block at the top of this function).
     //
-    // Along V (lab x) every APV card sits next to the previous one, so strip
-    // number maps monotonically onto position. Along U that is true except at
-    // the top of the module, where the last two cards are *half* strips
-    // covering the SAME range of y: the beam hole splits that range in two, and
-    // each card reads out one side of it. The second of the two is numbered
-    // beyond the end of the nominal strip range, so its raw position has to be
-    // wrapped back onto the physical y it actually measures.
-    //
-    // Both cards measure the same y, so the wrap alone makes fPos/fPosMax
-    // correct for every consumer of a 1D U cluster. Deciding *which* of the two
-    // cards a hit could have come from needs the x coordinate, i.e. a V
-    // partner; that stays in Find2DHits() and is driven by the side flag below.
-    //   +1 -> only compatible with modNum*vpos > 0
-    //   -1 -> only compatible with modNum*vpos < 0
-    //    0 -> not in the split region, no constraint
+    // A cluster on the duplicate card measures side B of the hole, at a y that
+    // is kUWrap strips lower than its strip number suggests, so its position is
+    // shifted back. That alone makes fPos/fPosMax physical for every consumer of
+    // a 1D U cluster: both sides of the hole measure the same y band, so a
+    // single-coordinate U measurement is unambiguous. Which SIDE the charge came
+    // from needs the x coordinate, i.e. a V partner, so that stays in
+    // Find2DHits() and is driven by the flag recorded here.
+    //   +1 -> only compatible with modNum*vpos > 0  (side A)
+    //   -1 -> only compatible with modNum*vpos < 0  (side B, duplicate card)
+    //    0 -> outside the hole band, no constraint
     double clpos    = sumx / sumwx;
     double clposmax = maxpos;
     Int_t splitside = 0;
-    if (axis == LADGEM::kUaxis) {
-      if (clpos > (fN_APV25_CHAN * 5) * pitch) {
-        clpos -= (fN_APV25_CHAN + 16) * pitch; // move back by one APV
-        clposmax -= (fN_APV25_CHAN + 16) * pitch;
+    if (kHoleLo >= 0) {
+      if (stripmax >= kDupLo) {
+        clpos -= kUWrap * pitch;
+        clposmax -= kUWrap * pitch;
         splitside = -1;
-      } else if (clpos > (fN_APV25_CHAN * 4 - 16) * pitch) {
+      } else if (clpos > (kHoleLo - 0.5 * Nstrips) * pitch + offset) {
+        // Position-based rather than stripmax-based on purpose: the hole's lower
+        // edge is NOT a discontinuity (strip kHoleLo-1 and kHoleLo are physically
+        // adjacent), so a cluster may legitimately straddle it and the ADC-
+        // weighted mean is what decides which band it belongs to.
         splitside = +1;
       }
     }
