@@ -1803,12 +1803,21 @@ void THcLADKine::Do1DClusterTracking() {
   // Run one projection (x-z or y) for one GEM set, trying every cluster (or
   // cluster pair for "both") and keeping the smallest chi-square. Returns -1 if
   // no fit could be formed.
+  // bestPosA/B (when non-null) receive the lab-frame measurement coordinate of
+  // the winning cluster on layer A (front) / layer B (back): the x-z projection
+  // reports the lab x, the y projection reports the lab y. Set to -1000 when no
+  // fit is formed. The measured lab point of a cluster is origin + meas*axisHat.
   auto fitProjection = [&](const std::vector<GEM1DMeas> &clA, const std::vector<GEM1DMeas> &clB, bool both, bool isXZ,
-                           const std::vector<TVector3> &hpts) -> double {
+                           const std::vector<TVector3> &hpts, double *bestPosA = nullptr,
+                           double *bestPosB = nullptr) -> double {
     double sigHodo = isXZ ? fSigma_Hodo_x : fSigma_Hodo_y;
     bool zeroXZ    = isXZ; // only the coarse x-z (paddle) hodo residual is optionally zeroed
     double bestchi = -1.0;
-    auto tryOne    = [&](const std::vector<GEM1DMeas> &gm) {
+    auto coordOf   = [&](const GEM1DMeas &m) {
+      TVector3 P = m.origin + m.meas * m.axisHat; // lab point of the cluster along its axis
+      return isXZ ? P.X() : P.Y();
+    };
+    auto tryOne = [&](const std::vector<GEM1DMeas> &gm) {
       if (nFits >= maxFits || gm.empty())
         return;
       nFits++;
@@ -1828,9 +1837,19 @@ void THcLADKine::Do1DClusterTracking() {
       TVector3 exz  = seed.Cross(ey).Unit(); // transverse direction in the x-z plane
       TVector3 tdir = isXZ ? exz : ey;
       double chi    = FitProj(vtx, seed, tdir, gm, hpts, sigHodo, zeroXZ);
-      if (chi >= 0 && (bestchi < 0 || chi < bestchi))
+      if (chi >= 0 && (bestchi < 0 || chi < bestchi)) {
         bestchi = chi;
+        // gm[0] is the layer-A (front) cluster; for "both", gm[1] is layer-B (back).
+        if (bestPosA)
+          *bestPosA = coordOf(gm[0]);
+        if (bestPosB)
+          *bestPosB = (gm.size() > 1) ? coordOf(gm[1]) : -1000.0;
+      }
     };
+    if (bestPosA)
+      *bestPosA = -1000.0;
+    if (bestPosB)
+      *bestPosB = -1000.0;
     if (!both) {
       for (const auto &c : clA)
         tryOne({c});
@@ -1861,13 +1880,16 @@ void THcLADKine::Do1DClusterTracking() {
     if (hpts.empty())
       continue; // hodo hit mandatory
 
+    // Winning-cluster lab positions from the single-GEM projections: x from the
+    // x-z (V) fit, y from the y (U) fit, per layer. GEM0 = front, GEM1 = back.
+    double px0 = -1000., px1 = -1000., py0 = -1000., py1 = -1000.;
     // x-z projection (V strips)
-    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts);
-    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts);
+    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts, &px0);
+    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts, &px1);
     double xzB = (frontV.empty() || backV.empty()) ? -1.0 : fitProjection(frontV, backV, true, true, hpts);
     // y projection (U strips)
-    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts);
-    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts);
+    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts, &py0);
+    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts, &py1);
     double yB = (frontU.empty() || backU.empty()) ? -1.0 : fitProjection(frontU, backU, true, false, hpts);
 
     gh->SetTrkChiSqr_1D_xz_GEM0(xz0);
@@ -1895,5 +1917,11 @@ void THcLADKine::Do1DClusterTracking() {
     gh->SetTrkNdof_1D_GEM0((xz0 >= 0 && y0 >= 0) ? 2 * dof_s : -1);
     gh->SetTrkNdof_1D_GEM1((xz1 >= 0 && y1 >= 0) ? 2 * dof_s : -1);
     gh->SetTrkNdof_1D_GEMboth((xzB >= 0 && yB >= 0) ? 2 * dof_b : -1);
+    // Winning-cluster lab (x,y) per GEM layer (x from the x-z fit, y from the y
+    // fit). Parallels the 2D trk.x1/y1 (GEM0) and trk.x2/y2 (GEM1). -1000 = none.
+    gh->SetTrk1DX0(px0);
+    gh->SetTrk1DY0(py0);
+    gh->SetTrk1DX1(px1);
+    gh->SetTrk1DY1(py1);
   }
 }
