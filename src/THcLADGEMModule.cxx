@@ -2482,7 +2482,7 @@ void THcLADGEMModule::Find2DHits() {
     for (int iu = 0; iu < nclustU; iu++) {
       for (int iv = 0; iv < nclustV; iv++) {
 
-        double upos = fClustersU[iu].GetPos(); // already wrapped in FindClusters1D()
+        double upos = fClustersU[iu].GetPos(); // physical: clustering runs in physical strip space
         double vpos = fClustersV[iv].GetPos();
         // double umom = fClustersU[iu].GetMoments();
         // double vmom = fClustersV[iv].GetMoments();
