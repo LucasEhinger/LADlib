@@ -59,6 +59,12 @@ public:
     trk1D_y0 = -1000.0;
     trk1D_x1 = -1000.0;
     trk1D_y1 = -1000.0;
+    // ADC sum of the same winning 1D clusters (adcx from the V/x-z cluster, adcy
+    // from the U/y cluster), per GEM layer. Sentinel -1000 = no cluster.
+    trk1D_adcx0 = -1000.0;
+    trk1D_adcy0 = -1000.0;
+    trk1D_adcx1 = -1000.0;
+    trk1D_adcy1 = -1000.0;
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -111,6 +117,10 @@ public:
   void SetTrk1DY0(Double_t v) { trk1D_y0 = v; }
   void SetTrk1DX1(Double_t v) { trk1D_x1 = v; }
   void SetTrk1DY1(Double_t v) { trk1D_y1 = v; }
+  void SetTrk1DAdcX0(Double_t v) { trk1D_adcx0 = v; }
+  void SetTrk1DAdcY0(Double_t v) { trk1D_adcy0 = v; }
+  void SetTrk1DAdcX1(Double_t v) { trk1D_adcx1 = v; }
+  void SetTrk1DAdcY1(Double_t v) { trk1D_adcy1 = v; }
   void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
     is_proton[hit] = value;
@@ -255,6 +265,10 @@ public:
   Double_t GetTrk1DY0() const { return trk1D_y0; }
   Double_t GetTrk1DX1() const { return trk1D_x1; }
   Double_t GetTrk1DY1() const { return trk1D_y1; }
+  Double_t GetTrk1DAdcX0() const { return trk1D_adcx0; }
+  Double_t GetTrk1DAdcY0() const { return trk1D_adcy0; }
+  Double_t GetTrk1DAdcX1() const { return trk1D_adcx1; }
+  Double_t GetTrk1DAdcY1() const { return trk1D_adcy1; }
 
   Double_t GetIsProtonHit0() const { return is_proton[0]; }
   Double_t GetIsProtonHit1() const { return is_proton[1]; }
@@ -339,6 +353,10 @@ protected:
   Double_t trk1D_y0;                 // GEM0 y from the 1D y projective fit
   Double_t trk1D_x1;                 // GEM1 x from the 1D x-z projective fit
   Double_t trk1D_y1;                 // GEM1 y from the 1D y projective fit
+  Double_t trk1D_adcx0;              // GEM0 winning V/x-z cluster ADC sum
+  Double_t trk1D_adcy0;              // GEM0 winning U/y   cluster ADC sum
+  Double_t trk1D_adcx1;              // GEM1 winning V/x-z cluster ADC sum
+  Double_t trk1D_adcy1;              // GEM1 winning U/y   cluster ADC sum
   Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];

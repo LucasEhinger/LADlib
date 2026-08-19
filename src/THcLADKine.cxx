@@ -1807,9 +1807,11 @@ void THcLADKine::Do1DClusterTracking() {
   // the winning cluster on layer A (front) / layer B (back): the x-z projection
   // reports the lab x, the y projection reports the lab y. Set to -1000 when no
   // fit is formed. The measured lab point of a cluster is origin + meas*axisHat.
+  // bestAdcA/B (when non-null) likewise receive the winning cluster's ADC sum.
   auto fitProjection = [&](const std::vector<GEM1DMeas> &clA, const std::vector<GEM1DMeas> &clB, bool both, bool isXZ,
                            const std::vector<TVector3> &hpts, double *bestPosA = nullptr,
-                           double *bestPosB = nullptr) -> double {
+                           double *bestPosB = nullptr, double *bestAdcA = nullptr,
+                           double *bestAdcB = nullptr) -> double {
     double sigHodo = isXZ ? fSigma_Hodo_x : fSigma_Hodo_y;
     bool zeroXZ    = isXZ; // only the coarse x-z (paddle) hodo residual is optionally zeroed
     double bestchi = -1.0;
@@ -1844,12 +1846,20 @@ void THcLADKine::Do1DClusterTracking() {
           *bestPosA = coordOf(gm[0]);
         if (bestPosB)
           *bestPosB = (gm.size() > 1) ? coordOf(gm[1]) : -1000.0;
+        if (bestAdcA)
+          *bestAdcA = gm[0].adc;
+        if (bestAdcB)
+          *bestAdcB = (gm.size() > 1) ? gm[1].adc : -1000.0;
       }
     };
     if (bestPosA)
       *bestPosA = -1000.0;
     if (bestPosB)
       *bestPosB = -1000.0;
+    if (bestAdcA)
+      *bestAdcA = -1000.0;
+    if (bestAdcB)
+      *bestAdcB = -1000.0;
     if (!both) {
       for (const auto &c : clA)
         tryOne({c});
@@ -1880,16 +1890,18 @@ void THcLADKine::Do1DClusterTracking() {
     if (hpts.empty())
       continue; // hodo hit mandatory
 
-    // Winning-cluster lab positions from the single-GEM projections: x from the
-    // x-z (V) fit, y from the y (U) fit, per layer. GEM0 = front, GEM1 = back.
+    // Winning-cluster lab positions (px/py) and ADC sums (ax/ay) from the
+    // single-GEM projections: x from the x-z (V) fit, y from the y (U) fit, per
+    // layer. GEM0 = front, GEM1 = back.
     double px0 = -1000., px1 = -1000., py0 = -1000., py1 = -1000.;
+    double ax0 = -1000., ax1 = -1000., ay0 = -1000., ay1 = -1000.;
     // x-z projection (V strips)
-    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts, &px0);
-    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts, &px1);
+    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts, &px0, nullptr, &ax0);
+    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts, &px1, nullptr, &ax1);
     double xzB = (frontV.empty() || backV.empty()) ? -1.0 : fitProjection(frontV, backV, true, true, hpts);
     // y projection (U strips)
-    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts, &py0);
-    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts, &py1);
+    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts, &py0, nullptr, &ay0);
+    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts, &py1, nullptr, &ay1);
     double yB = (frontU.empty() || backU.empty()) ? -1.0 : fitProjection(frontU, backU, true, false, hpts);
 
     gh->SetTrkChiSqr_1D_xz_GEM0(xz0);
@@ -1923,5 +1935,11 @@ void THcLADKine::Do1DClusterTracking() {
     gh->SetTrk1DY0(py0);
     gh->SetTrk1DX1(px1);
     gh->SetTrk1DY1(py1);
+    // ADC sums of those same winning clusters (adcx from the V/x-z cluster, adcy
+    // from the U/y cluster), per GEM layer. -1000 = no cluster.
+    gh->SetTrk1DAdcX0(ax0);
+    gh->SetTrk1DAdcY0(ay0);
+    gh->SetTrk1DAdcX1(ax1);
+    gh->SetTrk1DAdcY1(ay1);
   }
 }
