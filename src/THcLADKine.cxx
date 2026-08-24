@@ -1803,12 +1803,18 @@ void THcLADKine::Do1DClusterTracking() {
   // Run one projection (x-z or y) for one GEM set, trying every cluster (or
   // cluster pair for "both") and keeping the smallest chi-square. Returns -1 if
   // no fit could be formed.
+  // bestClIdxA/B (when non-null) receive the CLIndex of the winning cluster on
+  // layer A (front) / layer B (back). Set to -1 when no fit is formed. The
+  // CLIndex indexes the clust.* output at the row with matching clust.layer +
+  // clust.axis, so any per-cluster quantity (ADC, lab position, APV, ...) is
+  // recovered from clust.* rather than stored per good hit.
   auto fitProjection = [&](const std::vector<GEM1DMeas> &clA, const std::vector<GEM1DMeas> &clB, bool both, bool isXZ,
-                           const std::vector<TVector3> &hpts) -> double {
+                           const std::vector<TVector3> &hpts, int *bestClIdxA = nullptr,
+                           int *bestClIdxB = nullptr) -> double {
     double sigHodo = isXZ ? fSigma_Hodo_x : fSigma_Hodo_y;
     bool zeroXZ    = isXZ; // only the coarse x-z (paddle) hodo residual is optionally zeroed
     double bestchi = -1.0;
-    auto tryOne    = [&](const std::vector<GEM1DMeas> &gm) {
+    auto tryOne = [&](const std::vector<GEM1DMeas> &gm) {
       if (nFits >= maxFits || gm.empty())
         return;
       nFits++;
@@ -1828,9 +1834,19 @@ void THcLADKine::Do1DClusterTracking() {
       TVector3 exz  = seed.Cross(ey).Unit(); // transverse direction in the x-z plane
       TVector3 tdir = isXZ ? exz : ey;
       double chi    = FitProj(vtx, seed, tdir, gm, hpts, sigHodo, zeroXZ);
-      if (chi >= 0 && (bestchi < 0 || chi < bestchi))
+      if (chi >= 0 && (bestchi < 0 || chi < bestchi)) {
         bestchi = chi;
+        // gm[0] is the layer-A (front) cluster; for "both", gm[1] is layer-B (back).
+        if (bestClIdxA)
+          *bestClIdxA = gm[0].clusID;
+        if (bestClIdxB)
+          *bestClIdxB = (gm.size() > 1) ? gm[1].clusID : -1;
+      }
     };
+    if (bestClIdxA)
+      *bestClIdxA = -1;
+    if (bestClIdxB)
+      *bestClIdxB = -1;
     if (!both) {
       for (const auto &c : clA)
         tryOne({c});
@@ -1861,13 +1877,16 @@ void THcLADKine::Do1DClusterTracking() {
     if (hpts.empty())
       continue; // hodo hit mandatory
 
+    // Winning-cluster CLIndex from the single-GEM projections: x from the x-z (V)
+    // fit, y from the y (U) fit, per layer. GEM0 = front, GEM1 = back.
+    int ci_x0 = -1, ci_x1 = -1, ci_y0 = -1, ci_y1 = -1;
     // x-z projection (V strips)
-    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts);
-    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts);
+    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts, &ci_x0);
+    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts, &ci_x1);
     double xzB = (frontV.empty() || backV.empty()) ? -1.0 : fitProjection(frontV, backV, true, true, hpts);
     // y projection (U strips)
-    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts);
-    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts);
+    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts, &ci_y0);
+    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts, &ci_y1);
     double yB = (frontU.empty() || backU.empty()) ? -1.0 : fitProjection(frontU, backU, true, false, hpts);
 
     gh->SetTrkChiSqr_1D_xz_GEM0(xz0);
@@ -1895,5 +1914,14 @@ void THcLADKine::Do1DClusterTracking() {
     gh->SetTrkNdof_1D_GEM0((xz0 >= 0 && y0 >= 0) ? 2 * dof_s : -1);
     gh->SetTrkNdof_1D_GEM1((xz1 >= 0 && y1 >= 0) ? 2 * dof_s : -1);
     gh->SetTrkNdof_1D_GEMboth((xzB >= 0 && yB >= 0) ? 2 * dof_b : -1);
+    // Winning-cluster lab (x,y) per GEM layer (x from the x-z fit, y from the y
+    // fit). Parallels the 2D trk.x1/y1 (GEM0) and trk.x2/y2 (GEM1). -1000 = none.
+    // CLIndex of those winning clusters (index into clust.* via clust.layer +
+    // clust.axis + clust.index). ADC, lab position, APV, etc. are looked up
+    // downstream from clust.* rather than stored per good hit.
+    gh->SetTrk1DClIdxX0(ci_x0);
+    gh->SetTrk1DClIdxX1(ci_x1);
+    gh->SetTrk1DClIdxY0(ci_y0);
+    gh->SetTrk1DClIdxY1(ci_y1);
   }
 }

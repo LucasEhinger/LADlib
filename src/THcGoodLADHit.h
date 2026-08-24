@@ -51,6 +51,17 @@ public:
     trk_ndof_1D_GEM0       = -1;
     trk_ndof_1D_GEM1       = -1;
     trk_ndof_1D_GEMboth    = -1;
+    // Lab-frame (x,y) of the best 1D-cluster used by the single-GEM projective
+    // fits: x from the winning V-strip (x-z) cluster, y from the winning U-strip
+    // (y) cluster, per GEM layer. Parallels the 2D track space points
+    // (trk.x1/y1 = GEM0, trk.x2/y2 = GEM1). Sentinel -1000 = no cluster.
+    // CLIndex of the winning 1D clusters (index into clust.* at the matching
+    // clust.layer/clust.axis row): clidx_x* from the V/x-z cluster, clidx_y*
+    // from the U/y cluster; x0/y0 = GEM0/front, x1/y1 = GEM1/back. -1 = none.
+    trk1D_clidx_x0 = -1;
+    trk1D_clidx_x1 = -1;
+    trk1D_clidx_y0 = -1;
+    trk1D_clidx_y1 = -1;
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -99,6 +110,10 @@ public:
   void SetTrkNdof_1D_GEM0(Int_t v) { trk_ndof_1D_GEM0 = v; }
   void SetTrkNdof_1D_GEM1(Int_t v) { trk_ndof_1D_GEM1 = v; }
   void SetTrkNdof_1D_GEMboth(Int_t v) { trk_ndof_1D_GEMboth = v; }
+  void SetTrk1DClIdxX0(Int_t v) { trk1D_clidx_x0 = v; }
+  void SetTrk1DClIdxX1(Int_t v) { trk1D_clidx_x1 = v; }
+  void SetTrk1DClIdxY0(Int_t v) { trk1D_clidx_y0 = v; }
+  void SetTrk1DClIdxY1(Int_t v) { trk1D_clidx_y1 = v; }
   void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
     is_proton[hit] = value;
@@ -239,6 +254,10 @@ public:
   Int_t GetTrkNdof_1D_GEM0() const { return trk_ndof_1D_GEM0; }
   Int_t GetTrkNdof_1D_GEM1() const { return trk_ndof_1D_GEM1; }
   Int_t GetTrkNdof_1D_GEMboth() const { return trk_ndof_1D_GEMboth; }
+  Int_t GetTrk1DClIdxX0() const { return trk1D_clidx_x0; }
+  Int_t GetTrk1DClIdxX1() const { return trk1D_clidx_x1; }
+  Int_t GetTrk1DClIdxY0() const { return trk1D_clidx_y0; }
+  Int_t GetTrk1DClIdxY1() const { return trk1D_clidx_y1; }
 
   Double_t GetIsProtonHit0() const { return is_proton[0]; }
   Double_t GetIsProtonHit1() const { return is_proton[1]; }
@@ -316,6 +335,16 @@ protected:
   Int_t trk_ndof_1D_GEM0;            // dof of trk_chiSqr_1D_GEM0 (= xz + y)
   Int_t trk_ndof_1D_GEM1;            // dof of trk_chiSqr_1D_GEM1 (= xz + y)
   Int_t trk_ndof_1D_GEMboth;         // dof of trk_chiSqr_1D_GEMboth (= xz + y)
+  // CLIndex of the winning 1D-cluster per GEM layer (x from the best V/x-z
+  // cluster, y from the best U/y cluster). GEM0 = front (layer 0), GEM1 = back
+  // (layer 1). Index into the clust.* output at the row with matching
+  // clust.layer + clust.axis + clust.index (per-layer unique). -1 = no cluster.
+  // All the per-cluster info (ADC, lab position, APV, time, ...) is looked up
+  // from clust.* via this index instead of stored on each good hit.
+  Int_t trk1D_clidx_x0;              // GEM0 winning V/x-z cluster CLIndex
+  Int_t trk1D_clidx_x1;              // GEM1 winning V/x-z cluster CLIndex
+  Int_t trk1D_clidx_y0;              // GEM0 winning U/y   cluster CLIndex
+  Int_t trk1D_clidx_y1;              // GEM1 winning U/y   cluster CLIndex
   Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];
