@@ -145,6 +145,10 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
       {"clust.maxsamp", "Time sample with max ADC", "fClusOutData.maxsamp"},
       {"clust.maxadc", "Max strip ADC", "fClusOutData.maxadc"},
       {"clust.apvGain", "APV gain correction factor", "fClusOutData.apvGain"},
+      {"clust.apv", "APV adc id of the cluster max strip", "fClusOutData.apv"},
+      {"clust.labx", "Cluster lab-frame x (origin + pos*axisHat)", "fClusOutData.labx"},
+      {"clust.laby", "Cluster lab-frame y (origin + pos*axisHat)", "fClusOutData.laby"},
+      {"clust.labz", "Cluster lab-frame z (origin + pos*axisHat)", "fClusOutData.labz"},
       {0}};
 
   DefineVarsFromList(vars_clus, mode);
@@ -420,6 +424,14 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         fClusOutData.apvGain.push_back(
             module->GetAPVGain(cluster.GetStripMaxReal() / 128,
                                cluster.GetAxis())); // FIXME: Assumes 128 strips per APV, should get from module
+        fClusOutData.apv.push_back(cluster.GetAPV());
+        // Lab-frame position of the cluster's measured coordinate (same
+        // origin + meas*axisHat used by the 1D tracking's GEM1DMeas). Lets any
+        // consumer recover a 1D cluster's lab x/y via the clust.index linkage.
+        TVector3 clab = module->GetOriginLab() + cluster.GetPos() * module->GetAxisHatLab((int)cluster.GetAxis());
+        fClusOutData.labx.push_back(clab.X());
+        fClusOutData.laby.push_back(clab.Y());
+        fClusOutData.labz.push_back(clab.Z());
         fNClusters++;
       }
     }

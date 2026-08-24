@@ -27,6 +27,10 @@ struct ClusterOutputData {
   std::vector<Double_t> maxsamp; // max time sample
   std::vector<Double_t> maxadc;  // max adc
   std::vector<Double_t> apvGain; // apv gain correction factor
+  std::vector<Int_t> apv;        // APV adc id of the cluster's max strip
+  std::vector<Double_t> labx;    // lab-frame x of the cluster (origin + pos*axisHat)
+  std::vector<Double_t> laby;    // lab-frame y of the cluster
+  std::vector<Double_t> labz;    // lab-frame z of the cluster
 
   void clear() {
     layer.clear();
@@ -45,6 +49,10 @@ struct ClusterOutputData {
     maxsamp.clear();
     maxadc.clear();
     apvGain.clear();
+    apv.clear();
+    labx.clear();
+    laby.clear();
+    labz.clear();
   }
 };
 
