@@ -25,8 +25,9 @@ THcLADGEM::THcLADGEM(const char *name, const char *description, THaApparatus *ap
   fNModules = 0;
   fNLayers  = 0;
   fNhits    = 0;
+  fMaxTracks = 10000;
 
-  fGEMTracks    = new TClonesArray("THcLADGEMTrack", MAXTRACKS);
+  fGEMTracks    = new TClonesArray("THcLADGEMTrack", fMaxTracks);
   fVertexModule = nullptr;
   fIgnoreVertex = false;
 }
@@ -311,11 +312,13 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   fPedFilename     = "";
   fCMFilename      = "";
   fPedestalMode    = 0;
+  fMaxTracks       = 10000;
   DBRequest list[] = {{"gem_num_modules", &fNModules, kInt}, // should be defined in DB file
                       {"gem_num_layers", &fNLayers, kInt},
                       {"gem_pedfile", &fPedFilename, kString, 0, 1},
                       {"gem_cmfile", &fCMFilename, kString, 0, 1},
                       {"gem_d0_cut", &fD0Cut,  kDouble, 0, 1},
+                      {"gem_max_tracks", &fMaxTracks, kInt, 0, 1},
                       {0}
 
   };
@@ -362,7 +365,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
   fNTracks = 0;
   fGEMTracks->Delete();
   // delete fGEMTracks;
-  // fGEMTracks = new TClonesArray("THcLADGEMTrack", MAXTRACKS);
+  // fGEMTracks = new TClonesArray("THcLADGEMTrack", fMaxTracks);
 
   fNlayers_hit   = 0;
   fNlayers_hitU  = 0;
@@ -584,7 +587,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       gemhit1.trackID = fNTracks;
       gemhit2.trackID = fNTracks;
 
-      if (fNTracks < MAXTRACKS) {
+      if (fNTracks < fMaxTracks) {
         // Add track object
         THcLADGEMTrack *theGEMTrack = new ((*fGEMTracks)[fNTracks]) THcLADGEMTrack(fNLayers);
         theGEMTrack->SetTrackID(fNTracks);
@@ -595,7 +598,7 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         theGEMTrack->SetZVertex(vpz);
         theGEMTrack->SetYVertex(vpy);
       }else{
-        cout<<"Too many tracks!!! "<< fNTracks << " > "<<MAXTRACKS<<endl;
+        cout<<"Too many tracks!!! "<< fNTracks << " >= "<<fMaxTracks<<endl;
       }
       fNTracks++;
       gemhit2_id++;
@@ -639,7 +642,7 @@ GEM2DHits *THcLADGEM::Add2DHits(Int_t ilayer, Double_t x, Double_t y, Double_t z
 Int_t THcLADGEM::FineProcess(TClonesArray &tracks) {
   //  cout << "THcLADGEM::FineProcess" << endl;
 
-  // for (Int_t i = 0; i < std::min(fNTracks, MAXTRACKS); i++) {
+  // for (Int_t i = 0; i < std::min(fNTracks, fMaxTracks); i++) {
   //   delete fGEMTracks->At(i);
   // }
 
