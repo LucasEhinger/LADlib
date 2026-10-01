@@ -55,7 +55,8 @@ ClassImp(THcLADKine)
   fDoNoVertexTracking    = 1; // run the no-vertex tracking pass by default
   fDoXZTracking          = 0; // x-z (no-y) tracking off by default
   fDo1DClusterTracking   = 0; // 1D-cluster tracking off by default
-  fMax1DClusterPerSlot   = 3;    // max clusters per (layer,axis) slot
+  f1DClusterRoad         = 10.0; // cm, candidate road around the vertex->hodo prediction
+  fMax1DClusterPerSlot   = 0;    // max candidates per (layer,axis) slot and hit (no cap)
   fMax1DCandidates       = 2000; // max projective fits attempted per event
   fSigma_Hodo_x          = 6.0;  // cm, x-z / paddle-direction resolution
   fSigma_Hodo_y          = 3.0;  // cm, along-paddle (y) resolution
@@ -168,7 +169,8 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   fDoNoVertexTracking  = 1;    // default: no-vertex tracking on
   fDoXZTracking        = 0;    // default: x-z (no-y) tracking off
   fDo1DClusterTracking = 0;    // default: 1D-cluster tracking off
-  fMax1DClusterPerSlot = 3;    // default: keep 3 clusters per (layer,axis) slot
+  f1DClusterRoad       = 10.0; // default: 10 cm road around the vertex->hodo prediction
+  fMax1DClusterPerSlot = 0;    // default: no cap on candidates per (layer,axis) slot
   fMax1DCandidates     = 2000; // default: cap projective fits per event
   fSigma_Hodo_x        = 6.0;  // default: x-z / paddle-direction resolution (cm)
   fSigma_Hodo_y        = 3.0;  // default: along-paddle (y) resolution (cm)
@@ -184,6 +186,7 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
                       {"do_noVertex_tracking", &fDoNoVertexTracking, kInt, 0, 1},
                       {"do_xz_tracking", &fDoXZTracking, kInt, 0, 1},
                       {"do_1Dcluster_tracking", &fDo1DClusterTracking, kInt, 0, 1},
+                      {"road_1Dcluster", &f1DClusterRoad, kDouble, 0, 1},
                       {"max_1Dcluster_per_slot", &fMax1DClusterPerSlot, kInt, 0, 1},
                       {"max_1Dcluster_candidates", &fMax1DCandidates, kInt, 0, 1},
                       {"sigma_hodo_x", &fSigma_Hodo_x, kDouble, 0, 1},
@@ -1754,7 +1757,8 @@ void THcLADKine::Do1DClusterTracking() {
   // strips) for three GEM sets: front only (GEM0), back only (GEM1), and both.
   // The nine chi-squares (xz/y/combined x GEM0/GEM1/both) are stored on the good
   // hit. Hypotheses with no usable cluster keep the -1 sentinel, so the many
-  // hodo hits that have no real track simply carry -1.
+  // hodo hits that have no real track simply carry -1. The clusters tried for a
+  // hit are those within a road (f1DClusterRoad) of the vertex -> hodo line.
   if (fGEM == nullptr || fHodoscope == nullptr)
     return;
 
@@ -1780,22 +1784,48 @@ void THcLADKine::Do1DClusterTracking() {
     vtx.SetZ(bz);
   }
 
-  // Collect per-(layer,axis) clusters, capped at fMax1DClusterPerSlot (highest ADC).
-  const Int_t maxPerSlot = (fMax1DClusterPerSlot > 0) ? fMax1DClusterPerSlot : std::numeric_limits<Int_t>::max();
+  // All clusters per (layer,axis) slot. Candidates are chosen per hodo hit below
+  // (road around the vertex -> hodo prediction), not per event: a busy GEM plane
+  // has ~10-30 clusters per slot and a proton's own cluster is usually not among
+  // the highest-ADC ones, so an event-wide ADC ranking would drop it.
   auto collect = [&](Int_t layer, Int_t axis) {
     std::vector<GEM1DMeas> v;
     for (const auto &m : fGEM->Get1DMeas(layer))
       if (m.axis == axis)
         v.push_back(m);
-    std::sort(v.begin(), v.end(), [](const GEM1DMeas &a, const GEM1DMeas &b) { return a.adc > b.adc; });
-    if ((Int_t)v.size() > maxPerSlot)
-      v.resize(maxPerSlot);
     return v;
   };
-  std::vector<GEM1DMeas> frontV = collect(layFront, LADGEM::kVaxis); // x-z strips, front
-  std::vector<GEM1DMeas> backV  = collect(layBack, LADGEM::kVaxis);  // x-z strips, back
-  std::vector<GEM1DMeas> frontU = collect(layFront, LADGEM::kUaxis); // y strips, front
-  std::vector<GEM1DMeas> backU  = collect(layBack, LADGEM::kUaxis);  // y strips, back
+  const std::vector<GEM1DMeas> allFrontV = collect(layFront, LADGEM::kVaxis); // x-z strips, front
+  const std::vector<GEM1DMeas> allBackV  = collect(layBack, LADGEM::kVaxis);  // x-z strips, back
+  const std::vector<GEM1DMeas> allFrontU = collect(layFront, LADGEM::kUaxis); // y strips, front
+  const std::vector<GEM1DMeas> allBackU  = collect(layBack, LADGEM::kUaxis);  // y strips, back
+
+  // Candidates of one slot for one hodo hit: the clusters within f1DClusterRoad of
+  // where the straight line vertex -> hodo point (dpred) crosses the module plane,
+  // measured along the strip axis, nearest first and capped at
+  // fMax1DClusterPerSlot. A road <= 0 keeps every cluster (still nearest first).
+  const Int_t maxPerSlot = (fMax1DClusterPerSlot > 0) ? fMax1DClusterPerSlot : std::numeric_limits<Int_t>::max();
+  auto inRoad = [&](const std::vector<GEM1DMeas> &all, const TVector3 &dpred) {
+    std::vector<std::pair<double, size_t>> near; // (|meas - prediction|, index)
+    for (size_t k = 0; k < all.size(); k++) {
+      const GEM1DMeas &m = all[k];
+      double nd = m.normal.Dot(dpred);
+      if (fabs(nd) < 1e-9)
+        continue;
+      TVector3 P  = vtx + (m.normal.Dot(m.origin - vtx) / nd) * dpred; // line / plane crossing
+      double dist = fabs(m.meas - m.axisHat.Dot(P - m.origin));
+      if (f1DClusterRoad <= 0 || dist < f1DClusterRoad)
+        near.emplace_back(dist, k);
+    }
+    std::sort(near.begin(), near.end());
+    if ((Int_t)near.size() > maxPerSlot)
+      near.resize(maxPerSlot);
+    std::vector<GEM1DMeas> v;
+    v.reserve(near.size());
+    for (const auto &nk : near)
+      v.push_back(all[nk.second]);
+    return v;
+  };
 
   const Int_t maxFits = (fMax1DCandidates > 0) ? fMax1DCandidates : std::numeric_limits<Int_t>::max();
   Int_t nFits         = 0;
@@ -1876,6 +1906,14 @@ void THcLADKine::Do1DClusterTracking() {
       hpts.push_back(fHodoscope->GetHitPositionLab(gh->GetPlaneHit1(), gh->GetPaddleHit1(), gh->GetHitYPosHit1()));
     if (hpts.empty())
       continue; // hodo hit mandatory
+
+    // Candidate clusters for this hit: road around the line vertex -> hodo point
+    // (the back-plane point when both planes are hit: longest lever arm).
+    const TVector3 dpred                = hpts.back() - vtx;
+    const std::vector<GEM1DMeas> frontV = inRoad(allFrontV, dpred);
+    const std::vector<GEM1DMeas> backV  = inRoad(allBackV, dpred);
+    const std::vector<GEM1DMeas> frontU = inRoad(allFrontU, dpred);
+    const std::vector<GEM1DMeas> backU  = inRoad(allBackU, dpred);
 
     // Winning-cluster CLIndex from the single-GEM projections: x from the x-z (V)
     // fit, y from the y (U) fit, per layer. GEM0 = front, GEM1 = back.

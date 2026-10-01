@@ -99,10 +99,13 @@ protected:
   Int_t fDoXZTracking;         // 1 = run the x-z (no-y) tracking passes (default 0)
   Int_t fDo1DClusterTracking;  // 1 = run the 1D-cluster (unpaired U/V) tracking pass (default 0)
 
-  // 1D-cluster tracking combinatorics limits (DB keys lmax_1Dcluster_per_slot /
-  // lmax_1Dcluster_candidates). PerSlot caps clusters kept per (layer,axis);
+  // 1D-cluster tracking candidate selection (DB keys lroad_1Dcluster /
+  // lmax_1Dcluster_per_slot / lmax_1Dcluster_candidates). For each hodo hit, the
+  // clusters of a (layer,axis) slot are candidates if they lie within the road
+  // around the vertex -> hodo prediction; PerSlot then caps them, nearest first;
   // Candidates caps the total projective fits attempted per event (safety).
-  Int_t fMax1DClusterPerSlot;  // max clusters kept per (layer,axis) slot, highest ADC first (default 3)
+  Double_t f1DClusterRoad;     // road half-width (cm) along the strip axis; <= 0 = no road (default 10)
+  Int_t fMax1DClusterPerSlot;  // max candidates per (layer,axis) slot and hit, nearest first; <= 0 = no cap (default 0)
   Int_t fMax1DCandidates;      // max projective fits attempted per event (default 2000)
 
   virtual Int_t DefineVariables(EMode mode = kDefine);
