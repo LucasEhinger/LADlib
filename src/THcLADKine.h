@@ -54,7 +54,7 @@ protected:
   Double_t fTrk_dtCut;
   Int_t fNfixed_z;
   Double_t *fFixed_z;
-  Double_t fglobal_time_offset;
+  Double_t fglobal_time_offset; // LAD ToF offset (ns) for this spectrometer (global_time_offset_shms/_hms, else global_time_offset)
   Double_t fTVertex;
   Double_t fRFTime;
   Double_t fTVertex_RFcorr;

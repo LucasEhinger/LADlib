@@ -175,6 +175,22 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
                       {0}};
   gHcParms->LoadParmValues((DBRequest *)&list, prefix);
 
+  // Per-spectrometer LAD ToF offset. The LAD hit time is referenced to the vertex
+  // time of this spectrometer, and the SHMS and HMS vertex times differ, so each
+  // needs its own offset to put the photon peak at tof = L/c. Optional: when the
+  // key for this spectrometer is absent, the shared global_time_offset is used.
+  Double_t offset_shms = kBig, offset_hms = kBig;
+  DBRequest list_offsets[] = {{"global_time_offset_shms", &offset_shms, kDouble, 0, 1},
+                              {"global_time_offset_hms", &offset_hms, kDouble, 0, 1},
+                              {0}};
+  gHcParms->LoadParmValues((DBRequest *)&list_offsets, prefix);
+  const char spec_prefix = tolower(fSpecName[0]);
+  const Double_t spec_offset = (spec_prefix == 'p') ? offset_shms : (spec_prefix == 'h') ? offset_hms : kBig;
+  if (spec_offset < 0.1 * kBig)
+    fglobal_time_offset = spec_offset;
+  cout << "  " << GetName() << ": LAD ToF offset = " << fglobal_time_offset << " ns"
+       << (spec_offset < 0.1 * kBig ? "" : " (shared global_time_offset)") << endl;
+
   DBRequest list_rf[] = {{"_nr_rf_offsets", &n_rf_offsets, kInt, 0, 1}, {0}};
   gHcParms->LoadParmValues((DBRequest *)&list_rf, prefix);
   rf_offset = new Double_t[n_rf_offsets * 3];
