@@ -55,7 +55,10 @@ protected:
   Int_t fNfixed_z;
   Double_t *fFixed_z;
   Double_t fglobal_time_offset; // LAD ToF offset (ns) for this spectrometer (global_time_offset_shms/_hms, else global_time_offset)
-  Double_t fTVertex;
+  Double_t fTVertex;        // electron interaction time at the vertex (ns)
+  Double_t fVertexZMax;     // |vertex z| limit (cm) for the ToF corrections; <= 0 = no limit
+  Int_t fRejectBadZ;        // 1: no ToF when the vertex is outside the limit; 0: use the target centre instead
+  Double_t fZTof;           // vertex z used for the ToF corrections (cm): reaction point, 0 if none, kBig if rejected
   Double_t fRFTime;
   Double_t fTVertex_RFcorr;
   Int_t n_rf_offsets;
