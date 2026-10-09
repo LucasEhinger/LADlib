@@ -528,25 +528,6 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
       // we want to get the prima(0., 0., 0.);
 
       // v_prim (the primary vertex) is computed once per event before this loop.
-      double numer = ((v_prim - v_hit1).Cross((v_prim - v_hit2))).Mag();
-      double denom = (v_hit2 - v_hit1).Mag();
-      // LHE: Uncomment the lines below when runtime starts. Curently ok (doesn't cause crash, but throws many errors)
-      TVector3 v_prim;
-      TString fVertexModuleName = TString(GetApparatus()->GetName()) + ".react"; // Name is currently hard-coded to
-      // be "react". Probably not worth changing
-
-      if (fIgnoreVertex) {
-        v_prim.SetXYZ(0., 0., 0.);
-      } else {
-        fVertexModule = dynamic_cast<THcReactionPoint *>(FindModule(fVertexModuleName.Data(), "THcReactionPoint"));
-
-        if (fVertexModule && fVertexModule->HasVertex()) {
-          v_prim = fVertexModule->GetVertex();
-        } else {
-          // Need to be carful that 0,0,0 doesn't get called during the run (or doesn't make it into the data)
-          v_prim.SetXYZ(0., 0., 0.);
-        }
-      }
 
       double t = (v_prim - v_hit1).Dot(v_hit2 - v_hit1) / (v_hit2 - v_hit1).Mag2();
       TVector3 v_closest = v_hit1 + t * (v_hit2 - v_hit1);
