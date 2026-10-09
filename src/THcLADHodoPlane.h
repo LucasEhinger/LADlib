@@ -200,6 +200,7 @@ protected:
   Double_t fTrackXPosition;
   Double_t fTrackYPosition;
   Double_t *fPosCenter; /* array with centers for all scintillators in the plane */
+  Int_t *fPaddleDisabled; // per paddle: 1 = form no hits (raw and per-PMT data kept)
 
   Int_t fDebugAdc;
   Int_t fADCMode;

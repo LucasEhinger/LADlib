@@ -24,6 +24,7 @@ THcLADHodoPlane::THcLADHodoPlane(const char *name, const char *description, cons
   fPosCenter = 0;
   fPosBtm    = 0;
   fPosTop    = 0;
+  fPaddleDisabled = 0;
 
   fHodoHits = new TClonesArray("THcLADHodoHit", MAX_HITS);
 
@@ -171,6 +172,8 @@ THcLADHodoPlane::~THcLADHodoPlane() {
 
   delete[] fPosCenter;
   fPosCenter = 0;
+  delete[] fPaddleDisabled;
+  fPaddleDisabled = 0;
   delete[] fPosBtm;
   fPosBtm = 0;
   delete[] fPosTop;
@@ -431,6 +434,10 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fPosBtm = new Double_t[fNelem];
   delete[] fPosTop;
   fPosTop = new Double_t[fNelem];
+  delete[] fPaddleDisabled;
+  fPaddleDisabled = new Int_t[fNelem];
+  for (Int_t i = 0; i < fNelem; i++)
+    fPaddleDisabled[i] = 0;
 
   DBRequest list[] = {{Form("ladhodo_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("ladhodo_%s_dzpos", GetName()), &fDzpos, kDouble},
@@ -441,6 +448,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
                       {Form("ladhodo_%s_%s", GetName(), "top"), fPosTop, kDouble, static_cast<UInt_t>(fNelem)},
                       {Form("ladhodo_%s_offset", GetName()), &fPosOffset, kDouble},
                       {Form("ladhodo_%s_center", GetName()), fPosCenter, kDouble, static_cast<UInt_t>(fNelem)},
+                      {Form("ladhodo_%s_disable", GetName()), fPaddleDisabled, kInt, static_cast<UInt_t>(fNelem), 1},
                       {"ladhodo_adc_mode", &fADCMode, kInt, 0, 1},
                       {"ladhodo_adc_diag_cut", &fADCDiagCut, kInt, 0, 1},
                       {"cosmicflag", &fCosmicFlag, kInt, 0, 1},
@@ -1508,6 +1516,11 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         n_top_hit_full++;
       }
     }
+
+    // A disabled paddle (ladhodo_<plane>_disable) keeps its raw and per-PMT Good* data but forms no hits, so it
+    // never reaches the good hits, the tracking or the ToF.
+    if (fPaddleDisabled[padnum - 1])
+      n_top_hit_full = 0;
 
     //////////////////////////////////////////////////////
     // All full hits matched by here. Now perform time walk, and other calibrations.
