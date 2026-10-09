@@ -1185,20 +1185,27 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     if (goodhit == nullptr)
       continue;
 
-    Double_t tof, tof_rfcorr, beta, alpha;
-    if (goodhit->GetPlaneHit0() >= 0 && goodhit->GetPlaneHit0() < 999) {
-      tof = CalculateToF(goodhit->GetHitTimeHit0());
-      goodhit->SetHitTOF(0, tof);
-      tof_rfcorr = CalculateTOFRFcorr(goodhit->GetHitTimeHit0());
-      goodhit->SetHitTOFRFcorr(0, tof_rfcorr);
-      // Calculate beta, alpha, etc. for the first plane
-    }
-    if (goodhit->GetPlaneHit1() >= 0 && goodhit->GetPlaneHit1() < 999) {
-      tof = CalculateToF(goodhit->GetHitTimeHit1());
-      goodhit->SetHitTOF(1, tof);
-      tof_rfcorr = CalculateTOFRFcorr(goodhit->GetHitTimeHit1());
-      goodhit->SetHitTOFRFcorr(1, tof_rfcorr);
-      // Calculate beta, alpha, etc. for the second plane
+    for (int s = 0; s < 2; s++) {
+      const Int_t plane = s ? goodhit->GetPlaneHit1() : goodhit->GetPlaneHit0();
+      if (plane < 0 || plane >= 999)
+        continue;
+      const Double_t t     = s ? goodhit->GetHitTimeHit1() : goodhit->GetHitTimeHit0();
+      Double_t tof         = CalculateToF(t);
+      Double_t tof_rfcorr  = CalculateTOFRFcorr(t);
+      goodhit->SetHitTOF(s, tof);
+      goodhit->SetHitTOFRFcorr(s, tof_rfcorr);
+      // Path from the vertex to the hit (paddle centre, measured y, plane position): no GEM track needed.
+      const Int_t paddle = s ? goodhit->GetPaddleHit1() : goodhit->GetPaddleHit0();
+      const Double_t y   = s ? goodhit->GetHitYPosHit1() : goodhit->GetHitYPosHit0();
+      const Double_t path = (fHodoscope->GetHitPositionLab(plane, paddle, y) - vertex).Mag(); // cm
+      goodhit->SetHitPath(s, path);
+      if (path > 0 && fabs(tof) < 1e9)
+        goodhit->SetHitTOFperM(s, tof / (0.01 * path));
+      if (path > 0 && fabs(tof_rfcorr) < 1e9) {
+        goodhit->SetHitTOFperMRFcorr(s, tof_rfcorr / (0.01 * path));
+        if (tof_rfcorr != 0)
+          goodhit->SetHitBeta(s, path / (tof_rfcorr * 29.9792458));
+      }
     }
   }
 

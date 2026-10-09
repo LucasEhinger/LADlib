@@ -10,6 +10,7 @@ public:
       plane[i] = paddle[i] = -1;
       hit_tof[i] = hit_tof_rfcorr[i] = hit_time[i] = hit_theta[i] = hit_phi[i] = hit_edep[i] = hit_edep_mev[i] =
           hit_edep_amp[i] = hit_edep_amp_mev[i] = hit_yPos[i] = hit_alpha[i] = hit_beta[i] = 1e30;
+      hit_path[i] = hit_tof_per_m[i] = hit_tof_per_m_rfcorr[i] = 1e30;
       is_proton[i]                                                                         = false;
     }
     trk_chiSqr = 1e30;
@@ -100,6 +101,18 @@ public:
     CheckHitIndex(hit);
     hit_beta[hit] = value;
   }
+  void SetHitPath(Int_t hit, Double_t value) {
+    CheckHitIndex(hit);
+    hit_path[hit] = value;
+  }
+  void SetHitTOFperM(Int_t hit, Double_t value) {
+    CheckHitIndex(hit);
+    hit_tof_per_m[hit] = value;
+  }
+  void SetHitTOFperMRFcorr(Int_t hit, Double_t value) {
+    CheckHitIndex(hit);
+    hit_tof_per_m_rfcorr[hit] = value;
+  }
 
   void CopyHit(Int_t this_plane, Int_t copy_plane, THcGoodLADHit *copyhit) {
     if (copy_plane == 0) {
@@ -119,6 +132,10 @@ public:
       SetHitYPos(this_plane, copyhit->GetHitYPosHit0());
       SetHitTOF(this_plane, copyhit->GetHitTOFHit0());
       SetHitTOFRFcorr(this_plane, copyhit->GetHitTOFRFcorrHit0());
+      SetHitBeta(this_plane, copyhit->GetBetaHit0());
+      SetHitPath(this_plane, copyhit->GetHitPathHit0());
+      SetHitTOFperM(this_plane, copyhit->GetHitTOFperMHit0());
+      SetHitTOFperMRFcorr(this_plane, copyhit->GetHitTOFperMRFcorrHit0());
     } else if (copy_plane == 1) {
       SetPlane(this_plane, copyhit->GetPlaneHit1());
       SetPaddle(this_plane, copyhit->GetPaddleHit1());
@@ -136,6 +153,10 @@ public:
       SetHitYPos(this_plane, copyhit->GetHitYPosHit1());
       SetHitTOF(this_plane, copyhit->GetHitTOFHit1());
       SetHitTOFRFcorr(this_plane, copyhit->GetHitTOFRFcorrHit1());
+      SetHitBeta(this_plane, copyhit->GetBetaHit1());
+      SetHitPath(this_plane, copyhit->GetHitPathHit1());
+      SetHitTOFperM(this_plane, copyhit->GetHitTOFperMHit1());
+      SetHitTOFperMRFcorr(this_plane, copyhit->GetHitTOFperMRFcorrHit1());
     } else {
       throw std::out_of_range("Invalid copy_plane index. Must be 0 or 1.");
     }
@@ -199,6 +220,13 @@ public:
   Double_t GetHitTOFRFcorrHit0() const { return hit_tof_rfcorr[0]; }
   Double_t GetHitTOFRFcorrHit1() const { return hit_tof_rfcorr[1]; }
 
+  Double_t GetHitPathHit0() const { return hit_path[0]; }
+  Double_t GetHitPathHit1() const { return hit_path[1]; }
+  Double_t GetHitTOFperMHit0() const { return hit_tof_per_m[0]; }
+  Double_t GetHitTOFperMHit1() const { return hit_tof_per_m[1]; }
+  Double_t GetHitTOFperMRFcorrHit0() const { return hit_tof_per_m_rfcorr[0]; }
+  Double_t GetHitTOFperMRFcorrHit1() const { return hit_tof_per_m_rfcorr[1]; }
+
 protected:
   Int_t plane[2];
   Int_t paddle[2];
@@ -221,6 +249,9 @@ protected:
   Double_t hit_edep_amp_mev[2];
   Double_t hit_tof[2];
   Double_t hit_tof_rfcorr[2];
+  Double_t hit_path[2];             // vertex -> hit (paddle centre, measured y) distance, cm; no track needed
+  Double_t hit_tof_per_m[2];        // hit_tof / path, ns/m
+  Double_t hit_tof_per_m_rfcorr[2]; // hit_tof_rfcorr / path, ns/m
   Double_t hit_yPos[2];
   Double_t hit_alpha[2];
 
