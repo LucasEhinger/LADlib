@@ -102,8 +102,8 @@ THaAnalysisObject::EStatus THcLADKine::Init(const TDatime &run_time) {
       fGEM = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
     }
     if (fGEM == nullptr) {
-      Error("Init", "No GEM module found in spectrometer");
-      return kInitError;
+      // No GEM (e.g. a no-GEM replay): skip GEM track matching, keep t_vertex, z_tof and the hit ToF
+      Warning("Init", "No GEM module found in spectrometer %s: GEM track matching disabled", fSpecName.Data());
     }
   }
 
@@ -239,8 +239,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
   goodhit_n                        = 0;
   //////////////////////////////////////////////////////////////////////////////
   // Check track projection to vertex
-  fGEMTracks    = fGEM->GetTracks();
-  Int_t ntracks = fGEMTracks->GetLast() + 1;
+  fGEMTracks    = fGEM ? fGEM->GetTracks() : nullptr;
+  Int_t ntracks = fGEMTracks ? fGEMTracks->GetLast() + 1 : 0; // no GEM: all GEM-track loops are skipped
   std::vector<bool> isGoodTrack(ntracks, false);
   for (Int_t iTrack = 0; iTrack < ntracks; iTrack++) {
     THcLADGEMTrack *track = static_cast<THcLADGEMTrack *>(fGEMTracks->At(iTrack));

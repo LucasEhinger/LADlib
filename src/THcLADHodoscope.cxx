@@ -489,16 +489,10 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
 
   fSpectro = dynamic_cast<THaApparatus *>(GetApparatus());
   fGEM     = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
-  if (!fGEM) {
-    return 0;
-  }
-  TClonesArray *fGEMTracks = fGEM->GetTracks();
+  // The hit pairing below does not use GEM tracks, so a no-GEM replay still gets good hits
+  TClonesArray *fGEMTracks = fGEM ? fGEM->GetTracks() : nullptr;
 
-  if (!fGEMTracks) {
-    return 0;
-  }
-
-  Int_t ntracks = fGEMTracks->GetLast() + 1;
+  Int_t ntracks = fGEMTracks ? fGEMTracks->GetLast() + 1 : 0;
 
   vector<Double_t> nPmtHit(ntracks);
   vector<Double_t> timeAtFP(ntracks);
