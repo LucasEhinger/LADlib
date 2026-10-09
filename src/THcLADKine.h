@@ -100,6 +100,10 @@ protected:
   // use_y = true  -> full 3D perpendicular residual (x, y, z) as before.
   // use_y = false -> the (dy)^2 term is dropped, so only the x and z residuals
   //                  enter the chi-square ("x-z tracking").
+  // true if a track with (chi2, ndof) should replace the one a hodo hit holds (oldchi2, oldndof; ndof <= 0 = none)
+  static bool BetterTrack(Double_t chi2, Int_t ndof, Double_t oldchi2, Int_t oldndof) {
+    return oldndof <= 0 || chi2 / (ndof > 0 ? ndof : 1) < oldchi2 / oldndof;
+  }
   Double_t FitTrack(TVector3 vertex, std::vector<TVector3> sp_positions, std::vector<double> sp_resolutions,
                     double dir[3], bool use_y = true);
   // No-vertex variant: fit a free 3D line (4 DOF) through the GEM + hodoscope

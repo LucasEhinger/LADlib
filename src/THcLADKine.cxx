@@ -450,72 +450,45 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       // only fit
       hit_index_for_best_chisq = 0 * 3 + 0;
     }
-    track->SetChisq(bestchisq[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3]);
-    track->SetAngles(best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][0],
-                     best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][1]);
-    track->SetProjVertex(vertex.X(), vertex.Y(),
-                         best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][2]);
-    Double_t d0 = fabs(vertex.Z() - best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][2]);
+    const int cat = hit_index_for_best_chisq / 3, sub = hit_index_for_best_chisq % 3;
+    track->SetChisq(bestchisq[cat][sub]);
+    track->SetAngles(best_gemdir[cat][sub][0], best_gemdir[cat][sub][1]);
+    track->SetProjVertex(vertex.X(), vertex.Y(), best_gemdir[cat][sub][2]);
+    Double_t d0 = fabs(vertex.Z() - best_gemdir[cat][sub][2]);
     track->SetD0(d0);
 
-    track->SetHasHodoHit(hit_index_for_best_chisq / 3);
-    if (hit_index_for_best_chisq >= 1) {
-      THcGoodLADHit *besthit = static_cast<THcGoodLADHit *>(
-          LADHits_unfiltered->At(bestHodoHitIndex[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3]));
-      // THcGoodLADHit *newhit  = static_cast<THcGoodLADHit *>(fGoodLADHits->ConstructedAt(goodhit_n));
+    // Track cuts first, so that a track they reject cannot claim a hodo hit below.
+    bool trackOK = track->GetGoodD0() ? (d0 > 0 && d0 < fD0Cut_wVertex) : (d0 > 0 && d0 < fD0Cut_noVertex);
+    if (track->GetChisq() < 0 || track->GetdT() > fTrk_dtCut)
+      trackOK = false;
+
+    track->SetHasHodoHit(cat);
+    track->SetBestHodoHit(nullptr);
+    if (cat >= 1) {
+      THcGoodLADHit *besthit = static_cast<THcGoodLADHit *>(LADHits_unfiltered->At(bestHodoHitIndex[cat][sub]));
       goodhit_n++;
       if (besthit == nullptr) {
-        track->SetBestHodoHit(nullptr);
-        continue;
-      }
-      if (goodhit_n <= MAXGOODHITS) {
-        if (hit_index_for_best_chisq / 3 == 2) {
-          int ntmp = 0;
-          if (hit_index_for_best_chisq % 3 == 1 || hit_index_for_best_chisq % 3 == 0) {
-            ntmp++;
-          }
-          if (hit_index_for_best_chisq % 3 == 2 || hit_index_for_best_chisq % 3 == 0) {
-            ntmp++;
-          }
-          track->SetHasHodoHit(ntmp);
+        trackOK = false;
+      } else if (goodhit_n > MAXGOODHITS) {
+        cout << "THcLADKine::Process: Exceeded maximum number of good hits (" << goodhit_n << "/" << MAXGOODHITS
+             << "), skipping hit." << endl;
+        trackOK = false;
+      } else {
+        const int nhodo = (cat == 2 && sub == 0) ? 2 : 1;
+        // dof = 3*(#GEM + #hodo) - 3 params (full 3D residual, vertex-constrained)
+        const int ndof = 3 * (2 + nhodo) - 3;
+        track->SetHasHodoHit(nhodo);
+        track->SetBestHodoHit(besthit);
+        // Several tracks can pick the same hit as their best; the hit keeps the good one with the lowest
+        // chi2/ndof (it used to keep the last one in the loop, including tracks rejected by the cuts above).
+        if (trackOK && BetterTrack(track->GetChisq(), ndof, besthit->GetTrkChiSqr(), besthit->GetTrkNdof())) {
           besthit->SetTrackID(track->GetTrackID());
           besthit->SetTrkChiSqr(track->GetChisq());
-          // dof = 3*(#GEM + #hodo) - 3 params (full 3D residual, vertex-constrained)
-          besthit->SetTrkNdof(3 * (2 + ntmp) - 3);
-        } else if (hit_index_for_best_chisq / 3 == 1) {
-          besthit->SetTrackID(track->GetTrackID());
-          besthit->SetTrkChiSqr(track->GetChisq());
-          besthit->SetTrkNdof(3 * (2 + 1) - 3);
-          track->SetHasHodoHit(1);
+          besthit->SetTrkNdof(ndof);
         }
-        if (hit_index_for_best_chisq / 3 != 0) {
-          track->SetBestHodoHit(besthit);
-          isGoodTrack[iTrack] = true;
-        }
-      }else{
-        cout<<"THcLADKine::Process: Exceeded maximum number of good hits ("<<goodhit_n<<"/"<<MAXGOODHITS<<"), skipping hit."<<endl;
-      }
-    } else {
-      track->SetBestHodoHit(nullptr);
-      track->SetHasHodoHit(0);
-      isGoodTrack[iTrack] = true;
-    }
-
-    if (track->GetGoodD0()) {
-      if (!(track->GetD0() > 0 && track->GetD0() < fD0Cut_wVertex)) {
-        isGoodTrack[iTrack] = false; // reject tracks whose D0 is outside the allowed range
-      }
-    } else {
-      if (!(track->GetD0() > 0 && track->GetD0() < fD0Cut_noVertex)) {
-        isGoodTrack[iTrack] = false;
       }
     }
-    if (track->GetChisq() < 0) {
-      isGoodTrack[iTrack] = false;
-    }
-    if (track->GetdT() > fTrk_dtCut) {
-      isGoodTrack[iTrack] = false;
-    }
+    isGoodTrack[iTrack] = trackOK;
     track->SetIsGoodTrack(isGoodTrack[iTrack]);
   }
 
@@ -711,14 +684,6 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     track->SetHasHodoHit_noTrackVertex(nplanes);
     THcGoodLADHit *besthit = static_cast<THcGoodLADHit *>(LADHits_unfiltered->At(bestHodoHitIndex[cat][sub]));
     track->SetBestHodoHit_noTrackVertex(besthit);
-    if (besthit) {
-      // per-hit association from the no-vertex fit (parallel to the vertex-based track_id / trk_chiSqr)
-      besthit->SetTrackID_noTrackVertex(track->GetTrackID());
-      besthit->SetTrkChiSqr_noTrackVertex(track->GetChisq_noTrackVertex());
-      // dof = 3*(#GEM + #hodo) - 4 params (full 3D residual, free line, no vertex)
-      besthit->SetTrkNdof_noTrackVertex(3 * (2 + nplanes) - 4);
-    }
-
     bool good     = kTRUE;
     Double_t d0nv = track->GetD0_noTrackVertex();
     if (!(d0nv > 0 && d0nv < fD0Cut_noVertex))
@@ -728,6 +693,17 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     if (track->GetdT() > fTrk_dtCut)
       good = kFALSE;
     track->SetIsGoodTrack_noTrackVertex(good);
+
+    // dof = 3*(#GEM + #hodo) - 4 params (full 3D residual, free line, no vertex)
+    const int ndof_nv = 3 * (2 + nplanes) - 4;
+    // per-hit association from the no-vertex fit: the hit keeps the good track with the lowest chi2/ndof
+    if (besthit && good &&
+        BetterTrack(track->GetChisq_noTrackVertex(), ndof_nv, besthit->GetTrkChiSqr_noTrackVertex(),
+                    besthit->GetTrkNdof_noTrackVertex())) {
+      besthit->SetTrackID_noTrackVertex(track->GetTrackID());
+      besthit->SetTrkChiSqr_noTrackVertex(track->GetChisq_noTrackVertex());
+      besthit->SetTrkNdof_noTrackVertex(ndof_nv);
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -914,66 +890,39 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
                                      bestchisq[0][0]) > fchisq_cut[1]) {
       hit_index_for_best_chisq = 0 * 3 + 0;
     }
-    track->SetChisq_xz(bestchisq[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3]);
-    track->SetAngles_xz(best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][0],
-                        best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][1]);
-    track->SetProjVertex_xz(vertex.X(), vertex.Y(),
-                            best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][2]);
-    Double_t d0_xz = fabs(vertex.Z() - best_gemdir[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3][2]);
+    const int cat = hit_index_for_best_chisq / 3, sub = hit_index_for_best_chisq % 3;
+    track->SetChisq_xz(bestchisq[cat][sub]);
+    track->SetAngles_xz(best_gemdir[cat][sub][0], best_gemdir[cat][sub][1]);
+    track->SetProjVertex_xz(vertex.X(), vertex.Y(), best_gemdir[cat][sub][2]);
+    Double_t d0_xz = fabs(vertex.Z() - best_gemdir[cat][sub][2]);
     track->SetD0_xz(d0_xz);
 
-    track->SetHasHodoHit_xz(hit_index_for_best_chisq / 3);
-    if (hit_index_for_best_chisq >= 1) {
-      THcGoodLADHit *besthit = static_cast<THcGoodLADHit *>(
-          LADHits_unfiltered->At(bestHodoHitIndex[hit_index_for_best_chisq / 3][hit_index_for_best_chisq % 3]));
-      if (besthit == nullptr) {
-        track->SetBestHodoHit_xz(nullptr);
-        continue;
-      }
-      if (hit_index_for_best_chisq / 3 == 2) {
-        int ntmp = 0;
-        if (hit_index_for_best_chisq % 3 == 1 || hit_index_for_best_chisq % 3 == 0) {
-          ntmp++;
-        }
-        if (hit_index_for_best_chisq % 3 == 2 || hit_index_for_best_chisq % 3 == 0) {
-          ntmp++;
-        }
-        track->SetHasHodoHit_xz(ntmp);
-        besthit->SetTrackID_xz(track->GetTrackID());
-        besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
-        // dof = 2*(#GEM + #hodo) - 3 params (x-z residual only, vertex-constrained)
-        besthit->SetTrkNdof_xz(2 * (2 + ntmp) - 3);
-      } else if (hit_index_for_best_chisq / 3 == 1) {
-        besthit->SetTrackID_xz(track->GetTrackID());
-        besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
-        besthit->SetTrkNdof_xz(2 * (2 + 1) - 3);
-        track->SetHasHodoHit_xz(1);
-      }
-      if (hit_index_for_best_chisq / 3 != 0) {
-        track->SetBestHodoHit_xz(besthit);
-        isGoodTrack_xz[iTrack] = true;
-      }
-    } else {
-      track->SetBestHodoHit_xz(nullptr);
-      track->SetHasHodoHit_xz(0);
-      isGoodTrack_xz[iTrack] = true;
-    }
+    // Track cuts first, so that a track they reject cannot claim a hodo hit below.
+    bool trackOK = track->GetGoodD0() ? (d0_xz > 0 && d0_xz < fD0Cut_wVertex) : (d0_xz > 0 && d0_xz < fD0Cut_noVertex);
+    if (track->GetChisq_xz() < 0 || track->GetdT() > fTrk_dtCut)
+      trackOK = false;
 
-    if (track->GetGoodD0()) {
-      if (!(track->GetD0_xz() > 0 && track->GetD0_xz() < fD0Cut_wVertex)) {
-        isGoodTrack_xz[iTrack] = false;
+    track->SetHasHodoHit_xz(cat);
+    track->SetBestHodoHit_xz(nullptr);
+    if (cat >= 1) {
+      THcGoodLADHit *besthit = static_cast<THcGoodLADHit *>(LADHits_unfiltered->At(bestHodoHitIndex[cat][sub]));
+      if (besthit == nullptr) {
+        trackOK = false;
+      } else {
+        const int nhodo = (cat == 2 && sub == 0) ? 2 : 1;
+        // dof = 2*(#GEM + #hodo) - 3 params (x-z residual only, vertex-constrained)
+        const int ndof = 2 * (2 + nhodo) - 3;
+        track->SetHasHodoHit_xz(nhodo);
+        track->SetBestHodoHit_xz(besthit);
+        // the hit keeps the good track with the lowest chi2/ndof (see the vertex-constrained pass)
+        if (trackOK && BetterTrack(track->GetChisq_xz(), ndof, besthit->GetTrkChiSqr_xz(), besthit->GetTrkNdof_xz())) {
+          besthit->SetTrackID_xz(track->GetTrackID());
+          besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
+          besthit->SetTrkNdof_xz(ndof);
+        }
       }
-    } else {
-      if (!(track->GetD0_xz() > 0 && track->GetD0_xz() < fD0Cut_noVertex)) {
-        isGoodTrack_xz[iTrack] = false;
-      }
     }
-    if (track->GetChisq_xz() < 0) {
-      isGoodTrack_xz[iTrack] = false;
-    }
-    if (track->GetdT() > fTrk_dtCut) {
-      isGoodTrack_xz[iTrack] = false;
-    }
+    isGoodTrack_xz[iTrack] = trackOK;
     track->SetIsGoodTrack_xz(isGoodTrack_xz[iTrack]);
   }
 
@@ -1160,14 +1109,6 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     track->SetHasHodoHit_noTrackVertex_xz(nplanes);
     THcGoodLADHit *besthit = static_cast<THcGoodLADHit *>(LADHits_unfiltered->At(bestHodoHitIndex[cat][sub]));
     track->SetBestHodoHit_noTrackVertex_xz(besthit);
-    if (besthit) {
-      // per-hit association from the no-vertex x-z fit
-      besthit->SetTrackID_noTrackVertex_xz(track->GetTrackID());
-      besthit->SetTrkChiSqr_noTrackVertex_xz(track->GetChisq_noTrackVertex_xz());
-      // dof = 2*(#GEM + #hodo) - 4 params (x-z residual only, free line, no vertex)
-      besthit->SetTrkNdof_noTrackVertex_xz(2 * (2 + nplanes) - 4);
-    }
-
     bool good     = kTRUE;
     Double_t d0nv = track->GetD0_noTrackVertex_xz();
     if (!(d0nv > 0 && d0nv < fD0Cut_noVertex))
@@ -1177,6 +1118,17 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
     if (track->GetdT() > fTrk_dtCut)
       good = kFALSE;
     track->SetIsGoodTrack_noTrackVertex_xz(good);
+
+    // dof = 2*(#GEM + #hodo) - 4 params (x-z residual only, free line, no vertex)
+    const int ndof_nv = 2 * (2 + nplanes) - 4;
+    // per-hit association from the no-vertex x-z fit: the hit keeps the good track with the lowest chi2/ndof
+    if (besthit && good &&
+        BetterTrack(track->GetChisq_noTrackVertex_xz(), ndof_nv, besthit->GetTrkChiSqr_noTrackVertex_xz(),
+                    besthit->GetTrkNdof_noTrackVertex_xz())) {
+      besthit->SetTrackID_noTrackVertex_xz(track->GetTrackID());
+      besthit->SetTrkChiSqr_noTrackVertex_xz(track->GetChisq_noTrackVertex_xz());
+      besthit->SetTrkNdof_noTrackVertex_xz(ndof_nv);
+    }
   }
 
   // Refresh the event vertex for the hit ToF RF correction. The per-track loops
