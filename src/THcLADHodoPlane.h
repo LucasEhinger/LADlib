@@ -242,6 +242,8 @@ protected:
   Double_t *fHodoBtm_c1;
   Double_t *fHodoTop_c2;
   Double_t *fHodoBtm_c2;
+  Double_t *fHodoTop_c3;
+  Double_t *fHodoBtm_c3;
   Double_t fTdc_Thrs;
 
   Double_t tw_corr_top;
