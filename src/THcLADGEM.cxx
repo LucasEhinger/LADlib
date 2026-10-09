@@ -313,12 +313,16 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   fCMFilename      = "";
   fPedestalMode    = 0;
   fMaxTracks       = 10000;
+  fTrkDtCut        = 1e30; // no cut unless ltrk_dt_cut is set
   DBRequest list[] = {{"gem_num_modules", &fNModules, kInt}, // should be defined in DB file
                       {"gem_num_layers", &fNLayers, kInt},
                       {"gem_pedfile", &fPedFilename, kString, 0, 1},
                       {"gem_cmfile", &fCMFilename, kString, 0, 1},
                       {"gem_d0_cut", &fD0Cut,  kDouble, 0, 1},
                       {"gem_max_tracks", &fMaxTracks, kInt, 0, 1},
+                      // the same parameter THcLADKine uses to reject tracks; applied here too so that pairs it would
+                      // reject never fill the (capped) track array in busy events
+                      {"trk_dt_cut", &fTrkDtCut, kDouble, 0, 1},
                       {0}
 
   };
@@ -515,6 +519,10 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         continue;
 
       double tdiff = gemhit1.TimeMean - gemhit2.TimeMean;         // time difference (TimeMean1 - TimeMean2)
+      // THcLADKine rejects every track with tdiff > ltrk_dt_cut (signed, as there), so skip such pairs before they
+      // take a place in the track array.
+      if (tdiff > fTrkDtCut)
+        continue;
       double tmean = (gemhit1.TimeMean + gemhit2.TimeMean) * 0.5; // average time
 
       TVector3 v_hit2(gemhit2.posX, gemhit2.posY, gemhit2.posZ);
@@ -578,8 +586,9 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         theGEMTrack->SetD0(d0);
         theGEMTrack->SetZVertex(vpz);
         theGEMTrack->SetYVertex(vpy);
-      }else{
-        cout<<"Too many tracks!!! "<< fNTracks << " >= "<<fMaxTracks<<endl;
+      } else if (fNTracks == fMaxTracks) {
+        cout << "THcLADGEM: more than " << fMaxTracks << " GEM tracks in this event (lgem_max_tracks); the rest are dropped"
+             << endl;
       }
       fNTracks++;
       gemhit2_id++;

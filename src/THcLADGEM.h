@@ -77,6 +77,7 @@ protected:
   Int_t fNClusters;
   Int_t fNTracks;
   Int_t fMaxTracks; // max GEM tracks stored per event (param lgem_max_tracks)
+  Double_t fTrkDtCut; // GEM0-GEM1 time difference above which a pair forms no track (param ltrk_dt_cut)
 
   std::string fPedFilename;
   std::string fCMFilename;
