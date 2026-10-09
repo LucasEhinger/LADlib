@@ -389,8 +389,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"ladhodo_c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c3_Top", &fHodoTop_c3[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c3_Btm", &fHodoBtm_c3[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"ladhodo_adcAmp2MeV", &fEdep2MeV_int[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"ladhodo_adcInt2MeV", &fEdep2MeV_amp[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_adcAmp2MeV", &fEdep2MeV_amp[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_adcInt2MeV", &fEdep2MeV_int[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"TDC_threshold", &fTdc_Thrs, kDouble, 0, 1},
                        {0}};
 

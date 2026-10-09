@@ -50,7 +50,7 @@ public:
   Double_t GetPosCenter(Int_t PaddleNo) { return fPosCenter[PaddleNo]; }; // counting from zero!
   Double_t GetEdep2MeV_int(Int_t PaddleNo) {
     return fEdep2MeV_int[PaddleNo];
-  } // conversion factor for energy deposition to MeV
+  } // conversion factor for energy deposition to MeV (paddle counting from zero)
   Double_t GetEdep2MeV_amp(Int_t PaddleNo) {
     return fEdep2MeV_amp[PaddleNo];
   } // conversion factor for energy deposition to MeV
