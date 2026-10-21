@@ -277,6 +277,15 @@ Int_t THcLADHodoscope::DefineVariables(EMode mode) {
        "fGoodLADHits.THcGoodLADHit.GetTrackID_noTrackVertex_xz()"},
       {"goodhit_chiSquare_noTrackVertex_xz", "Good hit chi-square (no vertex, x-z fit)",
        "fGoodLADHits.THcGoodLADHit.GetTrkChiSqr_noTrackVertex_xz()"},
+      // Degrees of freedom of each track chi-square above (residual terms - fit
+      // params; -1 = not computed). Divide chiSquare by this for a reduced chi2.
+      {"goodhit_chiSquare_ndof", "Good hit chi-square dof", "fGoodLADHits.THcGoodLADHit.GetTrkNdof()"},
+      {"goodhit_chiSquare_noTrackVertex_ndof", "Good hit chi-square dof (no vertex)",
+       "fGoodLADHits.THcGoodLADHit.GetTrkNdof_noTrackVertex()"},
+      {"goodhit_chiSquare_xz_ndof", "Good hit chi-square dof (x-z fit)",
+       "fGoodLADHits.THcGoodLADHit.GetTrkNdof_xz()"},
+      {"goodhit_chiSquare_noTrackVertex_xz_ndof", "Good hit chi-square dof (no vertex, x-z fit)",
+       "fGoodLADHits.THcGoodLADHit.GetTrkNdof_noTrackVertex_xz()"},
       {"good_hit_n_unique", "Number of unique good hits", "num_unique_good_hits"},
       {"all_hits_n_unique", "Number of all hits, not just with tracks", "num_unique_hits"},
       {0}};

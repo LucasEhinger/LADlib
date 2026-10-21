@@ -480,9 +480,12 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
           track->SetHasHodoHit(ntmp);
           besthit->SetTrackID(track->GetTrackID());
           besthit->SetTrkChiSqr(track->GetChisq());
+          // dof = 3*(#GEM + #hodo) - 3 params (full 3D residual, vertex-constrained)
+          besthit->SetTrkNdof(3 * (2 + ntmp) - 3);
         } else if (hit_index_for_best_chisq / 3 == 1) {
           besthit->SetTrackID(track->GetTrackID());
           besthit->SetTrkChiSqr(track->GetChisq());
+          besthit->SetTrkNdof(3 * (2 + 1) - 3);
           track->SetHasHodoHit(1);
         }
         if (hit_index_for_best_chisq / 3 != 0) {
@@ -712,6 +715,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       // per-hit association from the no-vertex fit (parallel to the vertex-based track_id / trk_chiSqr)
       besthit->SetTrackID_noTrackVertex(track->GetTrackID());
       besthit->SetTrkChiSqr_noTrackVertex(track->GetChisq_noTrackVertex());
+      // dof = 3*(#GEM + #hodo) - 4 params (full 3D residual, free line, no vertex)
+      besthit->SetTrkNdof_noTrackVertex(3 * (2 + nplanes) - 4);
     }
 
     bool good     = kTRUE;
@@ -936,9 +941,12 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
         track->SetHasHodoHit_xz(ntmp);
         besthit->SetTrackID_xz(track->GetTrackID());
         besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
+        // dof = 2*(#GEM + #hodo) - 3 params (x-z residual only, vertex-constrained)
+        besthit->SetTrkNdof_xz(2 * (2 + ntmp) - 3);
       } else if (hit_index_for_best_chisq / 3 == 1) {
         besthit->SetTrackID_xz(track->GetTrackID());
         besthit->SetTrkChiSqr_xz(track->GetChisq_xz());
+        besthit->SetTrkNdof_xz(2 * (2 + 1) - 3);
         track->SetHasHodoHit_xz(1);
       }
       if (hit_index_for_best_chisq / 3 != 0) {
@@ -1156,6 +1164,8 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
       // per-hit association from the no-vertex x-z fit
       besthit->SetTrackID_noTrackVertex_xz(track->GetTrackID());
       besthit->SetTrkChiSqr_noTrackVertex_xz(track->GetChisq_noTrackVertex_xz());
+      // dof = 2*(#GEM + #hodo) - 4 params (x-z residual only, free line, no vertex)
+      besthit->SetTrkNdof_noTrackVertex_xz(2 * (2 + nplanes) - 4);
     }
 
     bool good     = kTRUE;

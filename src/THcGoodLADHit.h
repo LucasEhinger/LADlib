@@ -23,6 +23,11 @@ public:
     track_id_xz                 = -1;
     trk_chiSqr_noTrackVertex_xz = 1e30;
     track_id_noTrackVertex_xz   = -1;
+    // Number of degrees of freedom of the track chi-squares above. -1 = not computed.
+    trk_ndof                  = -1;
+    trk_ndof_noTrackVertex    = -1;
+    trk_ndof_xz               = -1;
+    trk_ndof_noTrackVertex_xz = -1;
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -48,6 +53,11 @@ public:
   void SetTrkChiSqr_xz(Double_t value) { trk_chiSqr_xz = value; }
   void SetTrackID_noTrackVertex_xz(Int_t value) { track_id_noTrackVertex_xz = value; }
   void SetTrkChiSqr_noTrackVertex_xz(Double_t value) { trk_chiSqr_noTrackVertex_xz = value; }
+  // Degrees of freedom of the corresponding track chi-square.
+  void SetTrkNdof(Int_t v) { trk_ndof = v; }
+  void SetTrkNdof_noTrackVertex(Int_t v) { trk_ndof_noTrackVertex = v; }
+  void SetTrkNdof_xz(Int_t v) { trk_ndof_xz = v; }
+  void SetTrkNdof_noTrackVertex_xz(Int_t v) { trk_ndof_noTrackVertex_xz = v; }
   void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
     is_proton[hit] = value;
@@ -120,6 +130,7 @@ public:
       SetPaddle(this_plane, copyhit->GetPaddleHit0());
       SetTrackID(copyhit->GetTrackID());
       SetTrkChiSqr(copyhit->GetTrkChiSqr());
+      SetTrkNdof(copyhit->GetTrkNdof());
       SetIsProton(this_plane, copyhit->GetIsProtonHit0());
       SetHitTime(this_plane, copyhit->GetHitTimeHit0());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit0());
@@ -141,6 +152,7 @@ public:
       SetPaddle(this_plane, copyhit->GetPaddleHit1());
       SetTrackID(copyhit->GetTrackID());
       SetTrkChiSqr(copyhit->GetTrkChiSqr());
+      SetTrkNdof(copyhit->GetTrkNdof());
       SetIsProton(this_plane, copyhit->GetIsProtonHit1());
       SetHitTime(this_plane, copyhit->GetHitTimeHit1());
       SetHitTheta(this_plane, copyhit->GetHitThetaHit1());
@@ -183,6 +195,10 @@ public:
   Double_t GetTrkChiSqr_noTrackVertex() const { return trk_chiSqr_noTrackVertex; }
   Double_t GetTrkChiSqr_xz() const { return trk_chiSqr_xz; }
   Double_t GetTrkChiSqr_noTrackVertex_xz() const { return trk_chiSqr_noTrackVertex_xz; }
+  Int_t GetTrkNdof() const { return trk_ndof; }
+  Int_t GetTrkNdof_noTrackVertex() const { return trk_ndof_noTrackVertex; }
+  Int_t GetTrkNdof_xz() const { return trk_ndof_xz; }
+  Int_t GetTrkNdof_noTrackVertex_xz() const { return trk_ndof_noTrackVertex_xz; }
 
   Double_t GetIsProtonHit0() const { return is_proton[0]; }
   Double_t GetIsProtonHit1() const { return is_proton[1]; }
@@ -238,6 +254,12 @@ protected:
   Double_t trk_chiSqr_xz;               // chi-square of the associated x-z (no-y) track
   Int_t track_id_noTrackVertex_xz;      // GEM track ID from the no-vertex x-z fit
   Double_t trk_chiSqr_noTrackVertex_xz; // chi-square of the associated no-vertex x-z track
+  // Degrees of freedom of each track chi-square = k*(#GEM + #hodo points) - nParams,
+  // with k = 3 (full 3D residual) or 2 (x-z only), nParams = 3 (vertex) or 4 (no vertex).
+  Int_t trk_ndof;                  // dof of trk_chiSqr
+  Int_t trk_ndof_noTrackVertex;    // dof of trk_chiSqr_noTrackVertex
+  Int_t trk_ndof_xz;               // dof of trk_chiSqr_xz
+  Int_t trk_ndof_noTrackVertex_xz; // dof of trk_chiSqr_noTrackVertex_xz
   Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];
