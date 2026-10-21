@@ -2030,8 +2030,11 @@ void THcLADGEMModule::FindClusters1D(LADGEM::GEMaxis_t axis, Int_t pass) {
 
       if (newstrip) { // should always be true:
         hitindex[cs] = ihit;
+        // The pedestal RMS is looked up by the RAW strip number (fStrip), but stored
+        // under the chain index cs like everything else here, because clustering
+        // reads it back as pedrms_strip[stripmax].
         if (axis == LADGEM::kUaxis) {
-          pedrms_strip[cs] = fPedRMSU[fStrip[ihit]]; // pedestals index by real strip
+          pedrms_strip[cs] = fPedRMSU[fStrip[ihit]];
         } else {
           pedrms_strip[cs] = fPedRMSV[fStrip[ihit]];
         }
