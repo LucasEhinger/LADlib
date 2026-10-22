@@ -24,6 +24,7 @@ THcLADHodoPlane::THcLADHodoPlane(const char *name, const char *description, cons
   fPosCenter = 0;
   fPosBtm    = 0;
   fPosTop    = 0;
+  fPaddleDisabled = 0;
 
   fHodoHits = new TClonesArray("THcLADHodoHit", MAX_HITS);
 
@@ -171,6 +172,8 @@ THcLADHodoPlane::~THcLADHodoPlane() {
 
   delete[] fPosCenter;
   fPosCenter = 0;
+  delete[] fPaddleDisabled;
+  fPaddleDisabled = 0;
   delete[] fPosBtm;
   fPosBtm = 0;
   delete[] fPosTop;
@@ -216,6 +219,10 @@ THcLADHodoPlane::~THcLADHodoPlane() {
   fHodoTop_c2 = NULL;
   delete[] fHodoBtm_c2;
   fHodoBtm_c2 = NULL;
+  delete[] fHodoTop_c3;
+  fHodoTop_c3 = NULL;
+  delete[] fHodoBtm_c3;
+  fHodoBtm_c3 = NULL;
 
   delete[] fHodoVelLight;
   fHodoVelLight = NULL;
@@ -427,6 +434,10 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fPosBtm = new Double_t[fNelem];
   delete[] fPosTop;
   fPosTop = new Double_t[fNelem];
+  delete[] fPaddleDisabled;
+  fPaddleDisabled = new Int_t[fNelem];
+  for (Int_t i = 0; i < fNelem; i++)
+    fPaddleDisabled[i] = 0;
 
   DBRequest list[] = {{Form("ladhodo_%s_zpos", GetName()), &fZpos, kDouble},
                       {Form("ladhodo_%s_dzpos", GetName()), &fDzpos, kDouble},
@@ -437,6 +448,7 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
                       {Form("ladhodo_%s_%s", GetName(), "top"), fPosTop, kDouble, static_cast<UInt_t>(fNelem)},
                       {Form("ladhodo_%s_offset", GetName()), &fPosOffset, kDouble},
                       {Form("ladhodo_%s_center", GetName()), fPosCenter, kDouble, static_cast<UInt_t>(fNelem)},
+                      {Form("ladhodo_%s_disable", GetName()), fPaddleDisabled, kInt, static_cast<UInt_t>(fNelem), 1},
                       {"ladhodo_adc_mode", &fADCMode, kInt, 0, 1},
                       {"ladhodo_adc_diag_cut", &fADCDiagCut, kInt, 0, 1},
                       {"cosmicflag", &fCosmicFlag, kInt, 0, 1},
@@ -519,6 +531,8 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
   fHodoBtm_c1   = new Double_t[fNelem];
   fHodoTop_c2   = new Double_t[fNelem];
   fHodoBtm_c2   = new Double_t[fNelem];
+  fHodoTop_c3   = new Double_t[fNelem];
+  fHodoBtm_c3   = new Double_t[fNelem];
 
   fEdep2MeV_int = new Double_t[fNelem];
   fEdep2MeV_amp = new Double_t[fNelem];
@@ -549,6 +563,8 @@ Int_t THcLADHodoPlane::ReadDatabase(const TDatime &date) {
     fHodoBtm_c1[j]   = parent->GetHodoBtm_c1(index);
     fHodoTop_c2[j]   = parent->GetHodoTop_c2(index);
     fHodoBtm_c2[j]   = parent->GetHodoBtm_c2(index);
+    fHodoTop_c3[j]   = parent->GetHodoTop_c3(index);
+    fHodoBtm_c3[j]   = parent->GetHodoBtm_c3(index);
     // Double_t topsigma = parent->GetHodoTopSigma(index);
     // Double_t btmsigma = parent->GetHodoBtmSigma(index);
     // fHodoSigma[j] = TMath::Sqrt(topsigma*topsigma+btmsigma*btmsigma)/2.0;
@@ -1501,6 +1517,11 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
       }
     }
 
+    // A disabled paddle (ladhodo_<plane>_disable) keeps its raw and per-PMT Good* data but forms no hits, so it
+    // never reaches the good hits, the tracking or the ToF.
+    if (fPaddleDisabled[padnum - 1])
+      n_top_hit_full = 0;
+
     //////////////////////////////////////////////////////
     // All full hits matched by here. Now perform time walk, and other calibrations.
     //////////////////////////////////////////////////////
@@ -1529,8 +1550,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
         if (btdcraw_top[i_good_top_tdc_elem] && badcraw_top[i_good_top_adc_elem]) {
           fGoodTopTdcTimeUnCorr.at(padnum - 1) = tdc_top[i_good_top_tdc_elem] * fScinTdcToTime;
 
-          tw_corr_top = 1. / pow(adcamp_top[i_good_top_adc_elem] / fTdc_Thrs, fHodoTop_c2[padnum - 1]) -
-                        1. / pow(200. / fTdc_Thrs, fHodoTop_c2[padnum - 1]);
+          tw_corr_top = fHodoTop_c3[padnum - 1] * (1. / pow(adcamp_top[i_good_top_adc_elem] / fTdc_Thrs, fHodoTop_c2[padnum - 1]) -
+                                                   1. / pow(200. / fTdc_Thrs, fHodoTop_c2[padnum - 1]));
 
           fGoodTopTdcTimeWalkCorr.at(padnum - 1) = tdc_top[i_good_top_tdc_elem] * fScinTdcToTime - tw_corr_top;
         }
@@ -1540,8 +1561,8 @@ Int_t THcLADHodoPlane::ProcessHits(TClonesArray *rawhits, Int_t nexthit) {
           // tw_corr_btm = fHodoBtm_c1[padnum-1]/pow(adcamp_btm/fTdc_Thrs,fHodoBtm_c2[padnum-1]) -
           // fHodoBtm_c1[padnum-1]/pow(200./fTdc_Thrs, fHodoBtm_c2[padnum-1]);
 
-          tw_corr_btm = 1. / pow(adcamp_btm[i_good_btm_adc_elem] / fTdc_Thrs, fHodoBtm_c2[padnum - 1]) -
-                        1. / pow(200. / fTdc_Thrs, fHodoBtm_c2[padnum - 1]);
+          tw_corr_btm = fHodoBtm_c3[padnum - 1] * (1. / pow(adcamp_btm[i_good_btm_adc_elem] / fTdc_Thrs, fHodoBtm_c2[padnum - 1]) -
+                                                   1. / pow(200. / fTdc_Thrs, fHodoBtm_c2[padnum - 1]));
 
           fGoodBtmTdcTimeWalkCorr.at(padnum - 1) = tdc_btm[i_good_btm_tdc_elem] * fScinTdcToTime - tw_corr_btm;
         }

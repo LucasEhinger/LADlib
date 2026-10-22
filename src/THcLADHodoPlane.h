@@ -50,7 +50,7 @@ public:
   Double_t GetPosCenter(Int_t PaddleNo) { return fPosCenter[PaddleNo]; }; // counting from zero!
   Double_t GetEdep2MeV_int(Int_t PaddleNo) {
     return fEdep2MeV_int[PaddleNo];
-  } // conversion factor for energy deposition to MeV
+  } // conversion factor for energy deposition to MeV (paddle counting from zero)
   Double_t GetEdep2MeV_amp(Int_t PaddleNo) {
     return fEdep2MeV_amp[PaddleNo];
   } // conversion factor for energy deposition to MeV
@@ -200,6 +200,7 @@ protected:
   Double_t fTrackXPosition;
   Double_t fTrackYPosition;
   Double_t *fPosCenter; /* array with centers for all scintillators in the plane */
+  Int_t *fPaddleDisabled; // per paddle: 1 = form no hits (raw and per-PMT data kept)
 
   Int_t fDebugAdc;
   Int_t fADCMode;
@@ -242,6 +243,8 @@ protected:
   Double_t *fHodoBtm_c1;
   Double_t *fHodoTop_c2;
   Double_t *fHodoBtm_c2;
+  Double_t *fHodoTop_c3;
+  Double_t *fHodoBtm_c3;
   Double_t fTdc_Thrs;
 
   Double_t tw_corr_top;

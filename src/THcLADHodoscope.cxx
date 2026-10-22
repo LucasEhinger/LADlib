@@ -74,6 +74,10 @@ THcLADHodoscope::~THcLADHodoscope() {
   fHodoTop_c2 = NULL;
   delete[] fHodoBtm_c2;
   fHodoBtm_c2 = NULL;
+  delete[] fHodoTop_c3;
+  fHodoTop_c3 = NULL;
+  delete[] fHodoBtm_c3;
+  fHodoBtm_c3 = NULL;
 
   fGoodLADHits->Delete();
   delete fGoodLADHits;
@@ -346,6 +350,8 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
   fHodoBtm_c1        = new Double_t[fMaxHodoScin];
   fHodoTop_c2        = new Double_t[fMaxHodoScin];
   fHodoBtm_c2        = new Double_t[fMaxHodoScin];
+  fHodoTop_c3        = new Double_t[fMaxHodoScin];
+  fHodoBtm_c3        = new Double_t[fMaxHodoScin];
   fEdep2MeV_int      = new Double_t[fMaxHodoScin];
   fEdep2MeV_amp      = new Double_t[fMaxHodoScin];
 
@@ -402,8 +408,10 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
                        {"ladhodo_c1_Btm", &fHodoBtm_c1[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c2_Top", &fHodoTop_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"ladhodo_c2_Btm", &fHodoBtm_c2[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"ladhodo_adcAmp2MeV", &fEdep2MeV_int[0], kDouble, (UInt_t)fMaxHodoScin, 1},
-                       {"ladhodo_adcInt2MeV", &fEdep2MeV_amp[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_c3_Top", &fHodoTop_c3[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_c3_Btm", &fHodoBtm_c3[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_adcAmp2MeV", &fEdep2MeV_amp[0], kDouble, (UInt_t)fMaxHodoScin, 1},
+                       {"ladhodo_adcInt2MeV", &fEdep2MeV_int[0], kDouble, (UInt_t)fMaxHodoScin, 1},
                        {"TDC_threshold", &fTdc_Thrs, kDouble, 0, 1},
                        {0}};
 
@@ -416,6 +424,9 @@ Int_t THcLADHodoscope::ReadDatabase(const TDatime &date) {
     fHodoTop_c2[i] = 0.0;
     fHodoBtm_c1[i] = 0.0;
     fHodoBtm_c2[i] = 0.0;
+    // Time-walk amplitude: 1 reproduces the original form, tw = (A/thr)^-c2 - (200/thr)^-c2
+    fHodoTop_c3[i] = 1.0;
+    fHodoBtm_c3[i] = 1.0;
   }
   for (int i = 0; i < fMaxHodoScin; i++) {
     // Set scin Velocity/Cable to default
@@ -499,16 +510,10 @@ Int_t THcLADHodoscope::FineProcess(TClonesArray &tracks) {
 
   fSpectro = dynamic_cast<THaApparatus *>(GetApparatus());
   fGEM     = dynamic_cast<THcLADGEM *>(fSpectro->GetDetector("gem"));
-  if (!fGEM) {
-    return 0;
-  }
-  TClonesArray *fGEMTracks = fGEM->GetTracks();
+  // The hit pairing below does not use GEM tracks, so a no-GEM replay still gets good hits
+  TClonesArray *fGEMTracks = fGEM ? fGEM->GetTracks() : nullptr;
 
-  if (!fGEMTracks) {
-    return 0;
-  }
-
-  Int_t ntracks = fGEMTracks->GetLast() + 1;
+  Int_t ntracks = fGEMTracks ? fGEMTracks->GetLast() + 1 : 0;
 
   vector<Double_t> nPmtHit(ntracks);
   vector<Double_t> timeAtFP(ntracks);

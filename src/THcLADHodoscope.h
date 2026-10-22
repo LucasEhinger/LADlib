@@ -58,6 +58,8 @@ public:
   Double_t GetHodoBtm_c1(Int_t iii) const { return fHodoBtm_c1[iii]; }
   Double_t GetHodoTop_c2(Int_t iii) const { return fHodoTop_c2[iii]; }
   Double_t GetHodoBtm_c2(Int_t iii) const { return fHodoBtm_c2[iii]; }
+  Double_t GetHodoTop_c3(Int_t iii) const { return fHodoTop_c3[iii]; }
+  Double_t GetHodoBtm_c3(Int_t iii) const { return fHodoBtm_c3[iii]; }
   Double_t GetTDCThrs() const { return fTdc_Thrs; }
   Double_t GetEdep2MeV_int(Int_t iii) const { return fEdep2MeV_int[iii]; }
   Double_t GetEdep2MeV_amp(Int_t iii) const { return fEdep2MeV_amp[iii]; }
@@ -105,6 +107,8 @@ protected:
   Double_t *fHodoBtm_c1;
   Double_t *fHodoTop_c2;
   Double_t *fHodoBtm_c2;
+  Double_t *fHodoTop_c3; // time-walk amplitude (optional, default 1)
+  Double_t *fHodoBtm_c3;
   Double_t fTdc_Thrs;
 
   Int_t fAnalyzePedestals;
