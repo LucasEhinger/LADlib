@@ -5,6 +5,7 @@
 #include "TClonesArray.h"
 #include "THcLADGEMCluster.h"
 #include "TH2D.h"
+#include "TVector3.h"
 
 #include <vector>
 #include <set>
@@ -13,7 +14,12 @@
 #include <deque>
 
 namespace LADGEM {
-  enum GEMaxis_t { kUaxis=0, kVaxis }; // U=X, V=Y
+  // Generic strip-axis labels only. Which lab coordinate each axis measures is
+  // NOT fixed here -- it is set by the strip angle and strip count in the DB.
+  // In the active LAD config (uangle=90, vangle=180, nstripsU=1536, nstripsV=3072)
+  // U measures ~lab Y (narrow/vertical) and V measures the wide/horizontal
+  // coordinate (~lab X, but tilted ~52 deg from lab X by the ~127 deg plane tilt).
+  enum GEMaxis_t { kUaxis=0, kVaxis };
   enum APVmap_t { kINFN=0, kUVA_XY, kUVA_UV, kMC };
 }
 
@@ -37,6 +43,27 @@ struct stripSet{
   UInt_t axis;
 };
 
+// A single 1D GEM strip-cluster measurement expressed in the lab frame.
+// Instead of pairing a U cluster with a V cluster to form a 2D space point
+// (which requires BOTH coordinates to be present), each 1D cluster is kept as
+// an independent measurement of one in-plane coordinate. In the lab frame:
+//     meas = axisHat . ( P_hit - origin )
+// where P_hit is the point where a track crosses the module plane. This makes
+// tracking robust to a missing U or V cluster and handles the module tilt
+// exactly (no assumption that U/V align with lab X/Y).
+struct GEM1DMeas {
+  Int_t    layer  = -1;   // GEM layer (0 = upstream, 1 = downstream)
+  Int_t    axis   = -1;   // 0 = U strips, 1 = V strips (LADGEM::kUaxis/kVaxis)
+  Double_t meas   = 0.0;  // measured coordinate along axisHat (cm)
+  Double_t sigma  = 0.0;  // resolution along axisHat (cm); filled by the fitter
+  Double_t adc    = 0.0;  // cluster ADC sum (for ranking / matching)
+  Double_t time   = 0.0;  // cluster time
+  Int_t    clusID = -1;   // cluster index within its module/axis
+  TVector3 origin;        // module local-origin position in the lab frame (cm)
+  TVector3 axisHat;       // unit measurement axis in the lab frame
+  TVector3 normal;        // unit module-plane normal in the lab frame
+};
+
 class THcLADGEMModule : public THaSubDetector {
  public:
 
@@ -58,6 +85,17 @@ class THcLADGEMModule : public THaSubDetector {
     else
       return fClustersV;
   }
+
+  // Lab-frame geometry of this module, computed once from the survey position,
+  // GEM angle and rotation using the SAME transform as Find2DHits().
+  const TVector3& GetOriginLab() const { return fOriginLab; }
+  const TVector3& GetNormalLab() const { return fNormalLab; }
+  const TVector3& GetAxisHatLab(int axis) const { return (axis == LADGEM::kUaxis) ? fAxisHatU : fAxisHatV; }
+
+  // Build 1D lab-frame measurements from this module's current U and V clusters.
+  // Every cluster becomes one GEM1DMeas; U and V are NOT paired, so a plane with
+  // only one coordinate still contributes.
+  std::vector<GEM1DMeas> Get1DMeas();
 
   Int_t GetNClusters(int axis) {
     if( axis == LADGEM::kUaxis )
@@ -350,9 +388,15 @@ class THcLADGEMModule : public THaSubDetector {
   Double_t fPyU;            //U Strip Y projection = sin( UAngle );
   Double_t fPxV;            //V Strip X projection = cos( VAngle );
   Double_t fPyV;            //V Strip Y projection = sin( VAngle );
-  Double_t fCenter[3];      //Position center of the module in the local detector coord  
+  Double_t fCenter[3];      //Position center of the module in the local detector coord
   Double_t fGEMAngle[2];        //angle between centerline to the beam line
   Double_t fRotation[3];       //rotation around the center of the detector
+
+  // Cached lab-frame geometry (filled by ComputeLabGeometry(); see Get1DMeas()).
+  TVector3 fOriginLab;   //! lab position of the module local origin (cm)
+  TVector3 fAxisHatU;    //! lab unit vector along the coordinate measured by U strips
+  TVector3 fAxisHatV;    //! lab unit vector along the coordinate measured by V strips
+  TVector3 fNormalLab;   //! lab unit normal to the module plane
 
   Bool_t fIsMC;
 
@@ -367,6 +411,8 @@ class THcLADGEMModule : public THaSubDetector {
   virtual Int_t DefineVariables( EMode mode = kDefine );
 
   // Helper functions
+  void     ComputeLabGeometry();                    // fill cached lab-frame geometry
+  TVector3 LocalDirToLab( const TVector3 &d ) const; // rotate a local direction into the lab frame
   Double_t StripTSchi2(int hitindex);
   TVector2 UVtoXY( TVector2 UV );
   TVector2 XYtoUV( TVector2 XY );

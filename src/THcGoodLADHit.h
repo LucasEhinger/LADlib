@@ -23,11 +23,46 @@ public:
     track_id_xz                 = -1;
     trk_chiSqr_noTrackVertex_xz = 1e30;
     track_id_noTrackVertex_xz   = -1;
-    // Number of degrees of freedom of the track chi-squares above. -1 = not computed.
-    trk_ndof                  = -1;
-    trk_ndof_noTrackVertex    = -1;
-    trk_ndof_xz               = -1;
-    trk_ndof_noTrackVertex_xz = -1;
+    // 1D-cluster projective tracking chi-squares (target + this hodo hit + GEM
+    // clusters). Sentinel -1 = "not computed" (no usable cluster / no track);
+    // any value >= 0 is a real chi-square. GEM0 = front layer (nearer target),
+    // GEM1 = back layer, GEMboth = both. xz = V/x-z strips, y = U/y strips,
+    // and the unsuffixed pair is the like-to-like combined (xz + y).
+    trk_chiSqr_1D_xz_GEM0    = -1.0;
+    trk_chiSqr_1D_xz_GEM1    = -1.0;
+    trk_chiSqr_1D_xz_GEMboth = -1.0;
+    trk_chiSqr_1D_y_GEM0     = -1.0;
+    trk_chiSqr_1D_y_GEM1     = -1.0;
+    trk_chiSqr_1D_y_GEMboth  = -1.0;
+    trk_chiSqr_1D_GEM0       = -1.0;
+    trk_chiSqr_1D_GEM1       = -1.0;
+    trk_chiSqr_1D_GEMboth    = -1.0;
+    // Number of degrees of freedom of the track chi-square (see the member
+    // declarations). Parallel to each chiSqr above. Sentinel -1 = not computed.
+    trk_ndof                    = -1;
+    trk_ndof_noTrackVertex      = -1;
+    trk_ndof_xz                 = -1;
+    trk_ndof_noTrackVertex_xz   = -1;
+    trk_ndof_1D_xz_GEM0    = -1;
+    trk_ndof_1D_xz_GEM1    = -1;
+    trk_ndof_1D_xz_GEMboth = -1;
+    trk_ndof_1D_y_GEM0     = -1;
+    trk_ndof_1D_y_GEM1     = -1;
+    trk_ndof_1D_y_GEMboth  = -1;
+    trk_ndof_1D_GEM0       = -1;
+    trk_ndof_1D_GEM1       = -1;
+    trk_ndof_1D_GEMboth    = -1;
+    // Lab-frame (x,y) of the best 1D-cluster used by the single-GEM projective
+    // fits: x from the winning V-strip (x-z) cluster, y from the winning U-strip
+    // (y) cluster, per GEM layer. Parallels the 2D track space points
+    // (trk.x1/y1 = GEM0, trk.x2/y2 = GEM1). Sentinel -1000 = no cluster.
+    // CLIndex of the winning 1D clusters (index into clust.* at the matching
+    // clust.layer/clust.axis row): clidx_x* from the V/x-z cluster, clidx_y*
+    // from the U/y cluster; x0/y0 = GEM0/front, x1/y1 = GEM1/back. -1 = none.
+    trk1D_clidx_x0 = -1;
+    trk1D_clidx_x1 = -1;
+    trk1D_clidx_y0 = -1;
+    trk1D_clidx_y1 = -1;
   };
   virtual ~THcGoodLADHit() = default;
 
@@ -53,11 +88,33 @@ public:
   void SetTrkChiSqr_xz(Double_t value) { trk_chiSqr_xz = value; }
   void SetTrackID_noTrackVertex_xz(Int_t value) { track_id_noTrackVertex_xz = value; }
   void SetTrkChiSqr_noTrackVertex_xz(Double_t value) { trk_chiSqr_noTrackVertex_xz = value; }
+  void SetTrkChiSqr_1D_xz_GEM0(Double_t v) { trk_chiSqr_1D_xz_GEM0 = v; }
+  void SetTrkChiSqr_1D_xz_GEM1(Double_t v) { trk_chiSqr_1D_xz_GEM1 = v; }
+  void SetTrkChiSqr_1D_xz_GEMboth(Double_t v) { trk_chiSqr_1D_xz_GEMboth = v; }
+  void SetTrkChiSqr_1D_y_GEM0(Double_t v) { trk_chiSqr_1D_y_GEM0 = v; }
+  void SetTrkChiSqr_1D_y_GEM1(Double_t v) { trk_chiSqr_1D_y_GEM1 = v; }
+  void SetTrkChiSqr_1D_y_GEMboth(Double_t v) { trk_chiSqr_1D_y_GEMboth = v; }
+  void SetTrkChiSqr_1D_GEM0(Double_t v) { trk_chiSqr_1D_GEM0 = v; }
+  void SetTrkChiSqr_1D_GEM1(Double_t v) { trk_chiSqr_1D_GEM1 = v; }
+  void SetTrkChiSqr_1D_GEMboth(Double_t v) { trk_chiSqr_1D_GEMboth = v; }
   // Degrees of freedom of the corresponding track chi-square.
   void SetTrkNdof(Int_t v) { trk_ndof = v; }
   void SetTrkNdof_noTrackVertex(Int_t v) { trk_ndof_noTrackVertex = v; }
   void SetTrkNdof_xz(Int_t v) { trk_ndof_xz = v; }
   void SetTrkNdof_noTrackVertex_xz(Int_t v) { trk_ndof_noTrackVertex_xz = v; }
+  void SetTrkNdof_1D_xz_GEM0(Int_t v) { trk_ndof_1D_xz_GEM0 = v; }
+  void SetTrkNdof_1D_xz_GEM1(Int_t v) { trk_ndof_1D_xz_GEM1 = v; }
+  void SetTrkNdof_1D_xz_GEMboth(Int_t v) { trk_ndof_1D_xz_GEMboth = v; }
+  void SetTrkNdof_1D_y_GEM0(Int_t v) { trk_ndof_1D_y_GEM0 = v; }
+  void SetTrkNdof_1D_y_GEM1(Int_t v) { trk_ndof_1D_y_GEM1 = v; }
+  void SetTrkNdof_1D_y_GEMboth(Int_t v) { trk_ndof_1D_y_GEMboth = v; }
+  void SetTrkNdof_1D_GEM0(Int_t v) { trk_ndof_1D_GEM0 = v; }
+  void SetTrkNdof_1D_GEM1(Int_t v) { trk_ndof_1D_GEM1 = v; }
+  void SetTrkNdof_1D_GEMboth(Int_t v) { trk_ndof_1D_GEMboth = v; }
+  void SetTrk1DClIdxX0(Int_t v) { trk1D_clidx_x0 = v; }
+  void SetTrk1DClIdxX1(Int_t v) { trk1D_clidx_x1 = v; }
+  void SetTrk1DClIdxY0(Int_t v) { trk1D_clidx_y0 = v; }
+  void SetTrk1DClIdxY1(Int_t v) { trk1D_clidx_y1 = v; }
   void SetIsProton(Int_t hit, Bool_t value) {
     CheckHitIndex(hit);
     is_proton[hit] = value;
@@ -195,10 +252,33 @@ public:
   Double_t GetTrkChiSqr_noTrackVertex() const { return trk_chiSqr_noTrackVertex; }
   Double_t GetTrkChiSqr_xz() const { return trk_chiSqr_xz; }
   Double_t GetTrkChiSqr_noTrackVertex_xz() const { return trk_chiSqr_noTrackVertex_xz; }
+  Double_t GetTrkChiSqr_1D_xz_GEM0() const { return trk_chiSqr_1D_xz_GEM0; }
+  Double_t GetTrkChiSqr_1D_xz_GEM1() const { return trk_chiSqr_1D_xz_GEM1; }
+  Double_t GetTrkChiSqr_1D_xz_GEMboth() const { return trk_chiSqr_1D_xz_GEMboth; }
+  Double_t GetTrkChiSqr_1D_y_GEM0() const { return trk_chiSqr_1D_y_GEM0; }
+  Double_t GetTrkChiSqr_1D_y_GEM1() const { return trk_chiSqr_1D_y_GEM1; }
+  Double_t GetTrkChiSqr_1D_y_GEMboth() const { return trk_chiSqr_1D_y_GEMboth; }
+  Double_t GetTrkChiSqr_1D_GEM0() const { return trk_chiSqr_1D_GEM0; }
+  Double_t GetTrkChiSqr_1D_GEM1() const { return trk_chiSqr_1D_GEM1; }
+  Double_t GetTrkChiSqr_1D_GEMboth() const { return trk_chiSqr_1D_GEMboth; }
+
   Int_t GetTrkNdof() const { return trk_ndof; }
   Int_t GetTrkNdof_noTrackVertex() const { return trk_ndof_noTrackVertex; }
   Int_t GetTrkNdof_xz() const { return trk_ndof_xz; }
   Int_t GetTrkNdof_noTrackVertex_xz() const { return trk_ndof_noTrackVertex_xz; }
+  Int_t GetTrkNdof_1D_xz_GEM0() const { return trk_ndof_1D_xz_GEM0; }
+  Int_t GetTrkNdof_1D_xz_GEM1() const { return trk_ndof_1D_xz_GEM1; }
+  Int_t GetTrkNdof_1D_xz_GEMboth() const { return trk_ndof_1D_xz_GEMboth; }
+  Int_t GetTrkNdof_1D_y_GEM0() const { return trk_ndof_1D_y_GEM0; }
+  Int_t GetTrkNdof_1D_y_GEM1() const { return trk_ndof_1D_y_GEM1; }
+  Int_t GetTrkNdof_1D_y_GEMboth() const { return trk_ndof_1D_y_GEMboth; }
+  Int_t GetTrkNdof_1D_GEM0() const { return trk_ndof_1D_GEM0; }
+  Int_t GetTrkNdof_1D_GEM1() const { return trk_ndof_1D_GEM1; }
+  Int_t GetTrkNdof_1D_GEMboth() const { return trk_ndof_1D_GEMboth; }
+  Int_t GetTrk1DClIdxX0() const { return trk1D_clidx_x0; }
+  Int_t GetTrk1DClIdxX1() const { return trk1D_clidx_x1; }
+  Int_t GetTrk1DClIdxY0() const { return trk1D_clidx_y0; }
+  Int_t GetTrk1DClIdxY1() const { return trk1D_clidx_y1; }
 
   Double_t GetIsProtonHit0() const { return is_proton[0]; }
   Double_t GetIsProtonHit1() const { return is_proton[1]; }
@@ -254,12 +334,45 @@ protected:
   Double_t trk_chiSqr_xz;               // chi-square of the associated x-z (no-y) track
   Int_t track_id_noTrackVertex_xz;      // GEM track ID from the no-vertex x-z fit
   Double_t trk_chiSqr_noTrackVertex_xz; // chi-square of the associated no-vertex x-z track
-  // Degrees of freedom of each track chi-square = k*(#GEM + #hodo points) - nParams,
-  // with k = 3 (full 3D residual) or 2 (x-z only), nParams = 3 (vertex) or 4 (no vertex).
-  Int_t trk_ndof;                  // dof of trk_chiSqr
-  Int_t trk_ndof_noTrackVertex;    // dof of trk_chiSqr_noTrackVertex
-  Int_t trk_ndof_xz;               // dof of trk_chiSqr_xz
-  Int_t trk_ndof_noTrackVertex_xz; // dof of trk_chiSqr_noTrackVertex_xz
+  // 1D-cluster projective tracking chi-squares (see reset in the constructor).
+  Double_t trk_chiSqr_1D_xz_GEM0;       // x-z fit, front GEM V strip
+  Double_t trk_chiSqr_1D_xz_GEM1;       // x-z fit, back GEM V strip
+  Double_t trk_chiSqr_1D_xz_GEMboth;    // x-z fit, both GEM V strips
+  Double_t trk_chiSqr_1D_y_GEM0;        // y fit, front GEM U strip
+  Double_t trk_chiSqr_1D_y_GEM1;        // y fit, back GEM U strip
+  Double_t trk_chiSqr_1D_y_GEMboth;     // y fit, both GEM U strips
+  Double_t trk_chiSqr_1D_GEM0;          // combined (xz+y), front GEM
+  Double_t trk_chiSqr_1D_GEM1;          // combined (xz+y), back GEM
+  Double_t trk_chiSqr_1D_GEMboth;       // combined (xz+y), both GEMs
+  // Degrees of freedom of each track chi-square = (number of measurement
+  // residual terms summed into that chi-square) - (number of free fit
+  // parameters). For the 1D projective fits this is (#GEM clusters + #hodo
+  // points - 1); the combined (xz+y) is the sum of the two projections. For the
+  // 2D fits it is k*(#GEM + #hodo points) - nParams, with k = 3 (full 3D
+  // residual) or 2 (x-z only), nParams = 3 (vertex) or 4 (no-vertex). -1 = none.
+  Int_t trk_ndof;                    // dof of trk_chiSqr (standard 2D, vertex)
+  Int_t trk_ndof_noTrackVertex;      // dof of trk_chiSqr_noTrackVertex
+  Int_t trk_ndof_xz;                 // dof of trk_chiSqr_xz
+  Int_t trk_ndof_noTrackVertex_xz;   // dof of trk_chiSqr_noTrackVertex_xz
+  Int_t trk_ndof_1D_xz_GEM0;         // dof of trk_chiSqr_1D_xz_GEM0
+  Int_t trk_ndof_1D_xz_GEM1;         // dof of trk_chiSqr_1D_xz_GEM1
+  Int_t trk_ndof_1D_xz_GEMboth;      // dof of trk_chiSqr_1D_xz_GEMboth
+  Int_t trk_ndof_1D_y_GEM0;          // dof of trk_chiSqr_1D_y_GEM0
+  Int_t trk_ndof_1D_y_GEM1;          // dof of trk_chiSqr_1D_y_GEM1
+  Int_t trk_ndof_1D_y_GEMboth;       // dof of trk_chiSqr_1D_y_GEMboth
+  Int_t trk_ndof_1D_GEM0;            // dof of trk_chiSqr_1D_GEM0 (= xz + y)
+  Int_t trk_ndof_1D_GEM1;            // dof of trk_chiSqr_1D_GEM1 (= xz + y)
+  Int_t trk_ndof_1D_GEMboth;         // dof of trk_chiSqr_1D_GEMboth (= xz + y)
+  // CLIndex of the winning 1D-cluster per GEM layer (x from the best V/x-z
+  // cluster, y from the best U/y cluster). GEM0 = front (layer 0), GEM1 = back
+  // (layer 1). Index into the clust.* output at the row with matching
+  // clust.layer + clust.axis + clust.index (per-layer unique). -1 = no cluster.
+  // All the per-cluster info (ADC, lab position, APV, time, ...) is looked up
+  // from clust.* via this index instead of stored on each good hit.
+  Int_t trk1D_clidx_x0;              // GEM0 winning V/x-z cluster CLIndex
+  Int_t trk1D_clidx_x1;              // GEM1 winning V/x-z cluster CLIndex
+  Int_t trk1D_clidx_y0;              // GEM0 winning U/y   cluster CLIndex
+  Int_t trk1D_clidx_y1;              // GEM1 winning U/y   cluster CLIndex
   Double_t is_proton[2];
   Double_t hit_time[2];
   Double_t hit_beta[2];

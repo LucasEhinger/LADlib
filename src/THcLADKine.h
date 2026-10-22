@@ -87,11 +87,29 @@ protected:
   Double_t fSigma_GEM; // GEM resolution in cm, used for track fitting, should be set based on detector performance
   Double_t
       fSigma_Hodo; // Hodoscope resolution in cm, used for track fitting, should be set based on detector performance
+  // Hodoscope resolutions used ONLY by the 1D-cluster projective tracking pass
+  // (DB keys lsigma_hodo_x / lsigma_hodo_y / lhodo_xz_zero_hw). The x-z (paddle)
+  // direction is coarse (~ paddle width / sqrt(12)); the along-paddle y from
+  // timing is finer. fHodoXZZeroHW zeroes the x-z hodo residual within this
+  // half-width (cm); 0 disables it (default).
+  Double_t fSigma_Hodo_x;  // cm, x-z / paddle-direction resolution (default 6.0)
+  Double_t fSigma_Hodo_y;  // cm, along-paddle (y) resolution (default 3.0)
+  Double_t fHodoXZZeroHW;  // cm, half-width for zeroing the x-z hodo residual (default 0.0 = off)
 
-  // Tracking-mode toggles (DB keys ldo_noVertex_tracking / ldo_xz_tracking).
-  // Stored as Int_t (0/1) because the DB loader writes kInt.
-  Int_t fDoNoVertexTracking; // 1 = run the no-vertex tracking pass (default 1)
-  Int_t fDoXZTracking;       // 1 = run the x-z (no-y) tracking passes (default 0)
+  // Tracking-mode toggles (DB keys ldo_noVertex_tracking / ldo_xz_tracking /
+  // ldo_1Dcluster_tracking). Stored as Int_t (0/1) because the DB loader writes kInt.
+  Int_t fDoNoVertexTracking;   // 1 = run the no-vertex tracking pass (default 1)
+  Int_t fDoXZTracking;         // 1 = run the x-z (no-y) tracking passes (default 0)
+  Int_t fDo1DClusterTracking;  // 1 = run the 1D-cluster (unpaired U/V) tracking pass (default 0)
+
+  // 1D-cluster tracking candidate selection (DB keys lroad_1Dcluster /
+  // lmax_1Dcluster_per_slot / lmax_1Dcluster_candidates). For each hodo hit, the
+  // clusters of a (layer,axis) slot are candidates if they lie within the road
+  // around the vertex -> hodo prediction; PerSlot then caps them, nearest first;
+  // Candidates caps the total projective fits attempted per event (safety).
+  Double_t f1DClusterRoad;     // road half-width (cm) along the strip axis; <= 0 = no road (default 10)
+  Int_t fMax1DClusterPerSlot;  // max candidates per (layer,axis) slot and hit, nearest first; <= 0 = no cap (default 0)
+  Int_t fMax1DCandidates;      // max projective fits attempted per event (default 2000)
 
   virtual Int_t DefineVariables(EMode mode = kDefine);
   void CalculateTVertex();
@@ -116,6 +134,24 @@ protected:
   // drops the (dy)^2 term so only x and z residuals enter the chi-square.
   Double_t FitTrack_noTrackVertex(std::vector<TVector3> sp_positions, std::vector<double> sp_resolutions, double dir[3],
                                   double anchor[2], bool use_y = true);
+
+  // One-parameter projective fit used by the 1D-cluster tracking pass.
+  // The track passes through the fixed vertex; its direction is the seed tilted
+  // by a single angle along the transverse direction tdir (the orthogonal
+  // transverse angle stays at the seed, giving two independent projective fits
+  // -- an x-z fit along the in-plane V axis and a y fit along ~lab-y). Each GEM
+  // measurement contributes a plane-crossing residual along its true lab axis;
+  // each hodoscope point contributes the transverse (tdir) distance, zeroed
+  // within fHodoXZZeroHW for the x-z projection. Returns the chi-square (>= 0),
+  // or -1 if under-determined. A few Gauss-Newton iterations handle non-small
+  // deflections.
+  Double_t FitProj(const TVector3 &vtx, const TVector3 &seed, const TVector3 &tdir,
+                   const std::vector<GEM1DMeas> &gem, const std::vector<TVector3> &hodo_pts, double hodo_sigma,
+                   bool zero_hodo_xz);
+  // Driver for the 1D-cluster projective tracking pass: for each hodoscope good
+  // hit, fit target+hodo+{front, back, both} GEM clusters in the x-z and y
+  // projections and store the chi-squares on the THcGoodLADHit.
+  void Do1DClusterTracking();
   void MakeProtonCut(TClonesArray *hits);
 
   ClassDef(THcLADKine, 0)

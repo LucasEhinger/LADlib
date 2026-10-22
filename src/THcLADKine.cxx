@@ -13,7 +13,9 @@
 #include "TVector3.h"
 #include "VarDef.h"
 #include "VarType.h"
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 ClassImp(THcLADKine)
     //_____________________________________________________________________________
@@ -53,8 +55,15 @@ ClassImp(THcLADKine)
   fSigma_GEM    = 0.1;                       // default GEM resolution in cm
   fSigma_Hodo   = 10;                        // default Hodoscope resolution in cm
 
-  fDoNoVertexTracking = 1; // run the no-vertex tracking pass by default
-  fDoXZTracking       = 0; // x-z (no-y) tracking off by default
+  fDoNoVertexTracking    = 1; // run the no-vertex tracking pass by default
+  fDoXZTracking          = 0; // x-z (no-y) tracking off by default
+  fDo1DClusterTracking   = 0; // 1D-cluster tracking off by default
+  f1DClusterRoad         = 10.0; // cm, candidate road around the vertex->hodo prediction
+  fMax1DClusterPerSlot   = 0;    // max candidates per (layer,axis) slot and hit (no cap)
+  fMax1DCandidates       = 2000; // max projective fits attempted per event
+  fSigma_Hodo_x          = 6.0;  // cm, x-z / paddle-direction resolution
+  fSigma_Hodo_y          = 3.0;  // cm, along-paddle (y) resolution
+  fHodoXZZeroHW          = 0.0;  // cm, x-z hodo residual zeroing half-width (off)
 }
 //_____________________________________________________________________________
 THcLADKine::~THcLADKine() {
@@ -79,6 +88,9 @@ void THcLADKine::Clear(Option_t *opt) {
   fTVertex_RFcorr = kBig;
   fZTof           = 0.0;
   vertex.SetXYZ(0, 0, 0);
+
+  // 1D-cluster projective tracking writes its results directly onto the
+  // THcGoodLADHit objects (reset in their own Clear), so nothing to clear here.
 }
 //_____________________________________________________________________________
 THaAnalysisObject::EStatus THcLADKine::Init(const TDatime &run_time) {
@@ -160,8 +172,15 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
   fVertexZMax          = 20.0; // cm
   fRejectBadZ          = 1;
   fTrk_dtCut           = 10.0;
-  fDoNoVertexTracking  = 1; // default: no-vertex tracking on
-  fDoXZTracking        = 0; // default: x-z (no-y) tracking off
+  fDoNoVertexTracking  = 1;    // default: no-vertex tracking on
+  fDoXZTracking        = 0;    // default: x-z (no-y) tracking off
+  fDo1DClusterTracking = 0;    // default: 1D-cluster tracking off
+  f1DClusterRoad       = 10.0; // default: 10 cm road around the vertex->hodo prediction
+  fMax1DClusterPerSlot = 0;    // default: no cap on candidates per (layer,axis) slot
+  fMax1DCandidates     = 2000; // default: cap projective fits per event
+  fSigma_Hodo_x        = 6.0;  // default: x-z / paddle-direction resolution (cm)
+  fSigma_Hodo_y        = 3.0;  // default: along-paddle (y) resolution (cm)
+  fHodoXZZeroHW        = 0.0;  // default: no x-z hodo residual zeroing
 
   cout << "Reading LAD Kinematics parameters from database..." << endl;
 
@@ -174,6 +193,13 @@ Int_t THcLADKine::ReadDatabase(const TDatime &date) {
                       {"trk_dt_cut", &fTrk_dtCut, kDouble, 0, 1},
                       {"do_noVertex_tracking", &fDoNoVertexTracking, kInt, 0, 1},
                       {"do_xz_tracking", &fDoXZTracking, kInt, 0, 1},
+                      {"do_1Dcluster_tracking", &fDo1DClusterTracking, kInt, 0, 1},
+                      {"road_1Dcluster", &f1DClusterRoad, kDouble, 0, 1},
+                      {"max_1Dcluster_per_slot", &fMax1DClusterPerSlot, kInt, 0, 1},
+                      {"max_1Dcluster_candidates", &fMax1DCandidates, kInt, 0, 1},
+                      {"sigma_hodo_x", &fSigma_Hodo_x, kDouble, 0, 1},
+                      {"sigma_hodo_y", &fSigma_Hodo_y, kDouble, 0, 1},
+                      {"hodo_xz_zero_hw", &fHodoXZZeroHW, kDouble, 0, 1},
                       {"_rf_period", &rf_period, kDouble, 0, 1},
                       {"proton_front_edep_cut", &fFrontPlaneEdepCut, kDouble, 0, 1},
                       {"proton_back_dt_min", &fBackPlaneDtMin, kDouble, 0, 1},
@@ -1202,6 +1228,11 @@ Int_t THcLADKine::Process(const THaEvData &evdata) {
 
   MakeProtonCut(LADHits_unfiltered);
 
+  // Optional alternative tracking that seeds from individual GEM strip clusters
+  // (unpaired U/V) instead of 2D space points. Enabled with ldo_1Dcluster_tracking.
+  if (fDo1DClusterTracking)
+    Do1DClusterTracking();
+
   return kOK;
 }
 //_____________________________________________________________________________
@@ -1433,6 +1464,10 @@ Int_t THcLADKine::DefineVariables(EMode mode) {
         // {"goodhit_tof_1", "Good hit time of flight (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitTOFHit1()"},
         // {"goodhit_alpha_0", "Good hit alpha", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit0()"},
         // {"goodhit_alpha_1", "Good hit alpha (second plane)", "fGoodLADHits.THcGoodLADHit.GetHitAlphaHit1()"},
+
+        // 1D-cluster projective tracking (ldo_1Dcluster_tracking) writes its
+        // per-hodo-hit chi-squares onto the THcGoodLADHit objects; see the
+        // goodhit_chiSquare_1D_* leaves defined by the hodoscope.
         {0}};
     return DefineVarsFromList(vars, mode);
   }
@@ -1669,4 +1704,286 @@ Double_t THcLADKine::FitTrack_noTrackVertex(std::vector<TVector3> sp_positions, 
   // minimizer is reused across calls; do not delete here
 
   return chi2;
+}
+//_____________________________________________________________________________
+Double_t THcLADKine::FitProj(const TVector3 &vtx, const TVector3 &seed, const TVector3 &tdir,
+                             const std::vector<GEM1DMeas> &gem, const std::vector<TVector3> &hodo_pts,
+                             double hodo_sigma, bool zero_hodo_xz) {
+  // One-parameter projective fit. The track passes through the fixed vertex; its
+  // direction is d(a) = (seed + a*tdir).Unit(), i.e. the seed tilted by a single
+  // transverse angle 'a' along tdir. Each GEM cluster contributes a plane-crossing
+  // residual along its true lab axis; each hodo point contributes the transverse
+  // (tdir) distance between the track and the point. A few Gauss-Newton steps
+  // handle non-small deflections. Returns chi-square (>= 0), or -1 if there is no
+  // residual to fit.
+  int nres = (int)gem.size() + (int)hodo_pts.size();
+  if (nres < 1 || seed.Mag() < 1e-9 || tdir.Mag() < 1e-9)
+    return -1;
+
+  const double eps = 1e-4; // finite-difference step in the transverse angle (rad-ish)
+
+  auto residuals = [&](double a, std::vector<double> &r, std::vector<double> &sig) {
+    TVector3 d = (seed + a * tdir).Unit();
+    r.clear();
+    sig.clear();
+    for (const auto &m : gem) {
+      double ndotd = m.normal.Dot(d);
+      if (fabs(ndotd) < 1e-6) { // track nearly parallel to the plane
+        r.push_back(1e3);
+        sig.push_back(fSigma_GEM);
+        continue;
+      }
+      double t   = m.normal.Dot(m.origin - vtx) / ndotd;
+      TVector3 P = vtx + t * d; // track/plane crossing
+      r.push_back(m.axisHat.Dot(P - m.origin) - m.meas);
+      sig.push_back(fSigma_GEM);
+    }
+    for (const auto &H : hodo_pts) {
+      double t    = (H - vtx).Dot(d);
+      TVector3 Pc = vtx + t * d; // closest point on the track to H
+      double res  = tdir.Dot(Pc - H);
+      if (zero_hodo_xz && fabs(res) < fHodoXZZeroHW)
+        res = 0.0;
+      r.push_back(res);
+      sig.push_back(hodo_sigma);
+    }
+  };
+
+  double a = 0.0;
+  std::vector<double> r, sig, rp, sp;
+  for (int iter = 0; iter < 4; iter++) {
+    residuals(a, r, sig);
+    residuals(a + eps, rp, sp);
+    double num = 0.0, den = 0.0;
+    for (size_t i = 0; i < r.size(); i++) {
+      double g = (rp[i] - r[i]) / eps; // d r_i / d a
+      double w = 1.0 / (sig[i] * sig[i]);
+      num += g * r[i] * w;
+      den += g * g * w;
+    }
+    if (den < 1e-12)
+      break; // no sensitivity to a (e.g. a single zeroed hodo residual)
+    a -= num / den;
+  }
+
+  residuals(a, r, sig);
+  double chi2 = 0.0;
+  for (size_t i = 0; i < r.size(); i++)
+    chi2 += (r[i] * r[i]) / (sig[i] * sig[i]);
+  return chi2;
+}
+
+//_____________________________________________________________________________
+void THcLADKine::Do1DClusterTracking() {
+  // Projective 1D-cluster tracking. For each hodoscope good hit we require the
+  // target vertex and at least one hodo plane hit, then fit target + hodo + GEM
+  // clusters in two INDEPENDENT projections (x-z from the V strips, y from the U
+  // strips) for three GEM sets: front only (GEM0), back only (GEM1), and both.
+  // The nine chi-squares (xz/y/combined x GEM0/GEM1/both) are stored on the good
+  // hit. Hypotheses with no usable cluster keep the -1 sentinel, so the many
+  // hodo hits that have no real track simply carry -1. The clusters tried for a
+  // hit are those within a road (f1DClusterRoad) of the vertex -> hodo line.
+  if (fGEM == nullptr || fHodoscope == nullptr)
+    return;
+
+  Int_t nLayers = fGEM->GetNLayers();
+  if (nLayers < 2)
+    return;
+  Int_t layFront = nLayers - 2; // nearer the target (GEM0, z ~ 79 cm)
+  Int_t layBack  = nLayers - 1; // farther from the target (GEM1, z ~ 96 cm)
+
+  // Vertex-constrained pass: nothing to do without a vertex.
+  if (!(fVertexModule && fVertexModule->HasVertex()))
+    return;
+  TVector3 vtx = fVertexModule->GetVertex();
+  if (fNfixed_z > 0 && fFixed_z) { // snap z to the nearest fixed foil, like the main pass
+    double best = 1e30, bz = vtx.Z();
+    for (Int_t j = 0; j < fNfixed_z; j++) {
+      double dd = fabs(vtx.Z() - fFixed_z[j]);
+      if (dd < best) {
+        best = dd;
+        bz   = fFixed_z[j];
+      }
+    }
+    vtx.SetZ(bz);
+  }
+
+  // All clusters per (layer,axis) slot. Candidates are chosen per hodo hit below
+  // (road around the vertex -> hodo prediction), not per event: a busy GEM plane
+  // has ~10-30 clusters per slot and a proton's own cluster is usually not among
+  // the highest-ADC ones, so an event-wide ADC ranking would drop it.
+  auto collect = [&](Int_t layer, Int_t axis) {
+    std::vector<GEM1DMeas> v;
+    for (const auto &m : fGEM->Get1DMeas(layer))
+      if (m.axis == axis)
+        v.push_back(m);
+    return v;
+  };
+  const std::vector<GEM1DMeas> allFrontV = collect(layFront, LADGEM::kVaxis); // x-z strips, front
+  const std::vector<GEM1DMeas> allBackV  = collect(layBack, LADGEM::kVaxis);  // x-z strips, back
+  const std::vector<GEM1DMeas> allFrontU = collect(layFront, LADGEM::kUaxis); // y strips, front
+  const std::vector<GEM1DMeas> allBackU  = collect(layBack, LADGEM::kUaxis);  // y strips, back
+
+  // Candidates of one slot for one hodo hit: the clusters within f1DClusterRoad of
+  // where the straight line vertex -> hodo point (dpred) crosses the module plane,
+  // measured along the strip axis, nearest first and capped at
+  // fMax1DClusterPerSlot. A road <= 0 keeps every cluster (still nearest first).
+  const Int_t maxPerSlot = (fMax1DClusterPerSlot > 0) ? fMax1DClusterPerSlot : std::numeric_limits<Int_t>::max();
+  auto inRoad = [&](const std::vector<GEM1DMeas> &all, const TVector3 &dpred) {
+    std::vector<std::pair<double, size_t>> near; // (|meas - prediction|, index)
+    for (size_t k = 0; k < all.size(); k++) {
+      const GEM1DMeas &m = all[k];
+      double nd = m.normal.Dot(dpred);
+      if (fabs(nd) < 1e-9)
+        continue;
+      TVector3 P  = vtx + (m.normal.Dot(m.origin - vtx) / nd) * dpred; // line / plane crossing
+      double dist = fabs(m.meas - m.axisHat.Dot(P - m.origin));
+      if (f1DClusterRoad <= 0 || dist < f1DClusterRoad)
+        near.emplace_back(dist, k);
+    }
+    std::sort(near.begin(), near.end());
+    if ((Int_t)near.size() > maxPerSlot)
+      near.resize(maxPerSlot);
+    std::vector<GEM1DMeas> v;
+    v.reserve(near.size());
+    for (const auto &nk : near)
+      v.push_back(all[nk.second]);
+    return v;
+  };
+
+  const Int_t maxFits = (fMax1DCandidates > 0) ? fMax1DCandidates : std::numeric_limits<Int_t>::max();
+  Int_t nFits         = 0;
+
+  // Run one projection (x-z or y) for one GEM set, trying every cluster (or
+  // cluster pair for "both") and keeping the smallest chi-square. Returns -1 if
+  // no fit could be formed.
+  // bestClIdxA/B (when non-null) receive the CLIndex of the winning cluster on
+  // layer A (front) / layer B (back). Set to -1 when no fit is formed. The
+  // CLIndex indexes the clust.* output at the row with matching clust.layer +
+  // clust.axis, so any per-cluster quantity (ADC, lab position, APV, ...) is
+  // recovered from clust.* rather than stored per good hit.
+  auto fitProjection = [&](const std::vector<GEM1DMeas> &clA, const std::vector<GEM1DMeas> &clB, bool both, bool isXZ,
+                           const std::vector<TVector3> &hpts, int *bestClIdxA = nullptr,
+                           int *bestClIdxB = nullptr) -> double {
+    double sigHodo = isXZ ? fSigma_Hodo_x : fSigma_Hodo_y;
+    bool zeroXZ    = isXZ; // only the coarse x-z (paddle) hodo residual is optionally zeroed
+    double bestchi = -1.0;
+    auto tryOne = [&](const std::vector<GEM1DMeas> &gm) {
+      if (nFits >= maxFits || gm.empty())
+        return;
+      nFits++;
+      TVector3 meanO(0, 0, 0);
+      for (const auto &m : gm)
+        meanO += m.origin;
+      meanO *= 1.0 / gm.size();
+      TVector3 seed = meanO - vtx;
+      if (seed.Mag() < 1e-9)
+        return;
+      seed = seed.Unit();
+      TVector3 yhat(0, 1, 0);
+      TVector3 ey = yhat - (yhat.Dot(seed)) * seed; // lab-y made transverse to the seed
+      if (ey.Mag() < 1e-6)
+        return; // seed ~ parallel to lab y (never happens for LAD)
+      ey            = ey.Unit();
+      TVector3 exz  = seed.Cross(ey).Unit(); // transverse direction in the x-z plane
+      TVector3 tdir = isXZ ? exz : ey;
+      double chi    = FitProj(vtx, seed, tdir, gm, hpts, sigHodo, zeroXZ);
+      if (chi >= 0 && (bestchi < 0 || chi < bestchi)) {
+        bestchi = chi;
+        // gm[0] is the layer-A (front) cluster; for "both", gm[1] is layer-B (back).
+        if (bestClIdxA)
+          *bestClIdxA = gm[0].clusID;
+        if (bestClIdxB)
+          *bestClIdxB = (gm.size() > 1) ? gm[1].clusID : -1;
+      }
+    };
+    if (bestClIdxA)
+      *bestClIdxA = -1;
+    if (bestClIdxB)
+      *bestClIdxB = -1;
+    if (!both) {
+      for (const auto &c : clA)
+        tryOne({c});
+    } else {
+      for (const auto &a : clA)
+        for (const auto &b : clB)
+          tryOne({a, b});
+    }
+    return bestchi;
+  };
+
+  TClonesArray *ladHits = fHodoscope->GetLADGoodHits();
+  Int_t nHodo           = (ladHits ? ladHits->GetLast() + 1 : 0);
+
+  std::vector<GEM1DMeas> empty;
+  for (int ih = 0; ih < nHodo; ih++) {
+    THcGoodLADHit *gh = static_cast<THcGoodLADHit *>(ladHits->At(ih));
+    if (gh == nullptr)
+      continue;
+
+    // Hodo point(s): at least one is mandatory; use both if the good hit spans
+    // both hodoscope planes.
+    std::vector<TVector3> hpts;
+    if (gh->GetPlaneHit0() >= 0 && gh->GetPlaneHit0() < 999)
+      hpts.push_back(fHodoscope->GetHitPositionLab(gh->GetPlaneHit0(), gh->GetPaddleHit0(), gh->GetHitYPosHit0()));
+    if (gh->GetPlaneHit1() >= 0 && gh->GetPlaneHit1() < 999)
+      hpts.push_back(fHodoscope->GetHitPositionLab(gh->GetPlaneHit1(), gh->GetPaddleHit1(), gh->GetHitYPosHit1()));
+    if (hpts.empty())
+      continue; // hodo hit mandatory
+
+    // Candidate clusters for this hit: road around the line vertex -> hodo point
+    // (the back-plane point when both planes are hit: longest lever arm).
+    const TVector3 dpred                = hpts.back() - vtx;
+    const std::vector<GEM1DMeas> frontV = inRoad(allFrontV, dpred);
+    const std::vector<GEM1DMeas> backV  = inRoad(allBackV, dpred);
+    const std::vector<GEM1DMeas> frontU = inRoad(allFrontU, dpred);
+    const std::vector<GEM1DMeas> backU  = inRoad(allBackU, dpred);
+
+    // Winning-cluster CLIndex from the single-GEM projections: x from the x-z (V)
+    // fit, y from the y (U) fit, per layer. GEM0 = front, GEM1 = back.
+    int ci_x0 = -1, ci_x1 = -1, ci_y0 = -1, ci_y1 = -1;
+    // x-z projection (V strips)
+    double xz0 = frontV.empty() ? -1.0 : fitProjection(frontV, empty, false, true, hpts, &ci_x0);
+    double xz1 = backV.empty() ? -1.0 : fitProjection(backV, empty, false, true, hpts, &ci_x1);
+    double xzB = (frontV.empty() || backV.empty()) ? -1.0 : fitProjection(frontV, backV, true, true, hpts);
+    // y projection (U strips)
+    double y0 = frontU.empty() ? -1.0 : fitProjection(frontU, empty, false, false, hpts, &ci_y0);
+    double y1 = backU.empty() ? -1.0 : fitProjection(backU, empty, false, false, hpts, &ci_y1);
+    double yB = (frontU.empty() || backU.empty()) ? -1.0 : fitProjection(frontU, backU, true, false, hpts);
+
+    gh->SetTrkChiSqr_1D_xz_GEM0(xz0);
+    gh->SetTrkChiSqr_1D_xz_GEM1(xz1);
+    gh->SetTrkChiSqr_1D_xz_GEMboth(xzB);
+    gh->SetTrkChiSqr_1D_y_GEM0(y0);
+    gh->SetTrkChiSqr_1D_y_GEM1(y1);
+    gh->SetTrkChiSqr_1D_y_GEMboth(yB);
+    // Combined = like-to-like sum, only when both projections exist for that GEM set.
+    gh->SetTrkChiSqr_1D_GEM0((xz0 >= 0 && y0 >= 0) ? xz0 + y0 : -1.0);
+    gh->SetTrkChiSqr_1D_GEM1((xz1 >= 0 && y1 >= 0) ? xz1 + y1 : -1.0);
+    gh->SetTrkChiSqr_1D_GEMboth((xzB >= 0 && yB >= 0) ? xzB + yB : -1.0);
+    // Degrees of freedom of each projective fit = (#GEM clusters + #hodo points)
+    // - 1 free param. Single GEM -> nH; both GEMs -> nH + 1. The combined (xz+y)
+    // dof is the sum of the two projections'. -1 mirrors a missing chi-square.
+    const int nH    = (int)hpts.size();
+    const int dof_s = nH;     // one GEM cluster + nH hodo - 1
+    const int dof_b = nH + 1; // two GEM clusters + nH hodo - 1
+    gh->SetTrkNdof_1D_xz_GEM0(xz0 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_xz_GEM1(xz1 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_xz_GEMboth(xzB >= 0 ? dof_b : -1);
+    gh->SetTrkNdof_1D_y_GEM0(y0 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_y_GEM1(y1 >= 0 ? dof_s : -1);
+    gh->SetTrkNdof_1D_y_GEMboth(yB >= 0 ? dof_b : -1);
+    gh->SetTrkNdof_1D_GEM0((xz0 >= 0 && y0 >= 0) ? 2 * dof_s : -1);
+    gh->SetTrkNdof_1D_GEM1((xz1 >= 0 && y1 >= 0) ? 2 * dof_s : -1);
+    gh->SetTrkNdof_1D_GEMboth((xzB >= 0 && yB >= 0) ? 2 * dof_b : -1);
+    // Winning-cluster lab (x,y) per GEM layer (x from the x-z fit, y from the y
+    // fit). Parallels the 2D trk.x1/y1 (GEM0) and trk.x2/y2 (GEM1). -1000 = none.
+    // CLIndex of those winning clusters (index into clust.* via clust.layer +
+    // clust.axis + clust.index). ADC, lab position, APV, etc. are looked up
+    // downstream from clust.* rather than stored per good hit.
+    gh->SetTrk1DClIdxX0(ci_x0);
+    gh->SetTrk1DClIdxX1(ci_x1);
+    gh->SetTrk1DClIdxY0(ci_y0);
+    gh->SetTrk1DClIdxY1(ci_y1);
+  }
 }

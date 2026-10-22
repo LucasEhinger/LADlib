@@ -54,8 +54,10 @@ void THcLADGEM::Clear(Option_t *opt) {
   for (auto &module : fModules)
     module->Clear();
 
-  for (int i = 0; i < fNLayers; i++)
+  for (int i = 0; i < fNLayers; i++) {
     f2DHits[i].clear();
+    f1DMeas[i].clear();
+  }
 
   fNhits = 0;
   fPosX.clear();
@@ -144,6 +146,10 @@ Int_t THcLADGEM::DefineVariables(EMode mode) {
       {"clust.maxsamp", "Time sample with max ADC", "fClusOutData.maxsamp"},
       {"clust.maxadc", "Max strip ADC", "fClusOutData.maxadc"},
       {"clust.apvGain", "APV gain correction factor", "fClusOutData.apvGain"},
+      {"clust.apv", "APV adc id of the cluster max strip", "fClusOutData.apv"},
+      {"clust.labx", "Cluster lab-frame x (origin + pos*axisHat)", "fClusOutData.labx"},
+      {"clust.laby", "Cluster lab-frame y (origin + pos*axisHat)", "fClusOutData.laby"},
+      {"clust.labz", "Cluster lab-frame z (origin + pos*axisHat)", "fClusOutData.labz"},
       {0}};
 
   DefineVarsFromList(vars_clus, mode);
@@ -337,6 +343,7 @@ Int_t THcLADGEM::ReadDatabase(const TDatime &date) {
   }
 
   f2DHits.resize(fNLayers);
+  f1DMeas.resize(fNLayers);
   fNstripsU_layer.resize(fNLayers);
   fNstripsV_layer.resize(fNLayers);
   fNclustU_layer.resize(fNLayers);
@@ -424,9 +431,29 @@ Int_t THcLADGEM::CoarseProcess(TClonesArray &tracks) {
         fClusOutData.apvGain.push_back(
             module->GetAPVGain(cluster.GetStripMaxReal() / 128,
                                cluster.GetAxis())); // FIXME: Assumes 128 strips per APV, should get from module
+        fClusOutData.apv.push_back(cluster.GetAPV());
+        // Lab-frame position of the cluster's measured coordinate (same
+        // origin + meas*axisHat used by the 1D tracking's GEM1DMeas). Lets any
+        // consumer recover a 1D cluster's lab x/y via the clust.index linkage.
+        TVector3 clab = module->GetOriginLab() + cluster.GetPos() * module->GetAxisHatLab((int)cluster.GetAxis());
+        fClusOutData.labx.push_back(clab.X());
+        fClusOutData.laby.push_back(clab.Y());
+        fClusOutData.labz.push_back(clab.Z());
         fNClusters++;
       }
     }
+  }
+
+  // Build the per-layer 1D strip-cluster measurements (lab frame) used by the
+  // optional 1D-cluster tracking pass in THcLADKine. These do NOT require both
+  // U and V on a plane, so they survive a missing coordinate. Cheap: only a
+  // handful of clusters per event.
+  for (auto module : fModules) {
+    Int_t ilayer = module->GetLayerNum();
+    if (ilayer < 0 || ilayer >= fNLayers)
+      continue;
+    std::vector<GEM1DMeas> meas = module->Get1DMeas();
+    f1DMeas[ilayer].insert(f1DMeas[ilayer].end(), meas.begin(), meas.end());
   }
 
   // Loop over all 2D hits and find track candidates
